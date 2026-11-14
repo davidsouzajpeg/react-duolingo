@@ -4,9 +4,10 @@ import { Avatar } from "~/farol/components/Avatar";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { CoinIcon, ShieldIcon } from "~/farol/components/Icons";
 import { OfensivaCard } from "~/farol/components/Ofensiva";
-import { Button, Eyebrow, Feixe, card } from "~/farol/components/ui";
+import { Button, Eyebrow, card } from "~/farol/components/ui";
 import {
   type ItemSlot,
+  beardStyles,
   hairColors,
   hairStyles,
   randomAvatar,
@@ -60,6 +61,37 @@ const Price = ({ value }: { value: number }) => (
 
 const slots: ItemSlot[] = ["chapeu", "oculos", "acessorio", "fundo"];
 
+type Tab = "avatar" | "itens" | "ofensiva";
+
+const tabs: { id: Tab; label: string }[] = [
+  { id: "avatar", label: "Avatar" },
+  { id: "itens", label: "Itens" },
+  { id: "ofensiva", label: "Ofensiva" },
+];
+
+const Choice = ({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: string;
+}) => (
+  <button
+    type="button"
+    aria-pressed={active}
+    onClick={onClick}
+    className={`rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${
+      active
+        ? "border-farol-accent bg-farol-accent-soft text-farol-ink"
+        : "border-farol-line text-farol-muted hover:bg-farol-surface2"
+    }`}
+  >
+    {children}
+  </button>
+);
+
 const Loja = () => {
   const avatar = useFarolStore((s) => s.avatar);
   const coins = useFarolStore((s) => s.coins);
@@ -68,62 +100,49 @@ const Loja = () => {
   const name = useFarolStore((s) => s.name);
   const { setAvatar, buyItem, equipItem, buyStreakFreeze } = useFarolStore.getState();
   const [message, setMessage] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("avatar");
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Avatar */}
-      <section className={`${card} relative overflow-hidden p-5 sm:p-6`}>
-        <Feixe />
-        <div className="relative">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <Eyebrow className="text-farol-accent">Seu avatar</Eyebrow>
-              <h1 className="mt-1 font-display text-3xl font-extrabold leading-none tracking-tight">
-                {name || "Consultor"}
-              </h1>
-            </div>
-            <span className="flex items-center gap-1.5 rounded-full border border-farol-line bg-farol-lamp px-3 py-1.5 font-num text-lg font-extrabold tabular-nums text-farol-warn">
-              <CoinIcon className="h-6 w-6" /> {coins}
-            </span>
+    <div className="flex flex-col gap-6">
+      {/* Palco: o avatar em destaque */}
+      <section className={`${card} overflow-hidden`}>
+        <div className="flex items-center justify-between gap-3 px-5 pt-5">
+          <div className="min-w-0">
+            <Eyebrow className="text-farol-accent">Escolha o seu visual</Eyebrow>
+            <h1 className="mt-1 truncate font-display text-3xl font-extrabold leading-none tracking-tight">
+              {name || "Consultor"}
+            </h1>
           </div>
-
-          <div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:items-start">
-            <div className="flex flex-col items-center gap-3">
-              <Avatar config={avatar} className="h-40 w-40 rounded-full border-4 border-farol-accent" />
-              <button
-                type="button"
-                onClick={() => setAvatar(randomAvatar())}
-                className="text-sm font-semibold uppercase tracking-[.09em] text-farol-accent hover:brightness-125"
-              >
-                Sortear visual
-              </button>
-            </div>
-            <div className="flex w-full flex-col gap-4">
-              <Swatches label="Pele" colors={skinTones} value={avatar.skin} onPick={(skin) => setAvatar({ skin })} />
-              <fieldset>
-                <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Cabelo</legend>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {hairStyles.map((h) => (
-                    <button
-                      key={h.id}
-                      type="button"
-                      aria-pressed={avatar.hair === h.id}
-                      onClick={() => setAvatar({ hair: h.id })}
-                      className={`rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${
-                        avatar.hair === h.id
-                          ? "border-farol-accent bg-farol-accent-soft text-farol-ink"
-                          : "border-farol-line text-farol-muted hover:bg-farol-surface2"
-                      }`}
-                    >
-                      {h.label}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-              <Swatches label="Cor do cabelo" colors={hairColors} value={avatar.hairColor} onPick={(hairColor) => setAvatar({ hairColor })} />
-              <Swatches label="Camisa" colors={shirtColors} value={avatar.shirt} onPick={(shirt) => setAvatar({ shirt })} />
-            </div>
-          </div>
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-farol-line bg-farol-lamp px-3 py-1.5 font-num text-lg font-extrabold tabular-nums text-farol-warn">
+            <CoinIcon className="h-6 w-6" /> {coins}
+          </span>
+        </div>
+        <div className="mt-4 flex flex-col items-center gap-2 bg-farol-lamp px-5 pb-4 pt-6">
+          <Avatar config={avatar} round={false} className="h-64 w-64 sm:h-72 sm:w-72" />
+          <button
+            type="button"
+            onClick={() => setAvatar(randomAvatar())}
+            className="text-sm font-semibold uppercase tracking-[.09em] text-farol-accent hover:brightness-125"
+          >
+            Sortear visual
+          </button>
+        </div>
+        <div className="flex border-t border-farol-line" role="tablist">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex-1 border-b-4 py-3 font-display text-sm font-extrabold uppercase tracking-wide transition ${
+                tab === t.id
+                  ? "border-farol-accent text-farol-accent"
+                  : "border-transparent text-farol-muted hover:text-farol-ink"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </section>
 
@@ -133,10 +152,40 @@ const Loja = () => {
         </p>
       )}
 
-      {/* Bloqueio de ofensiva */}
-      <section>
-        <h2 className="mb-3 font-display text-xl font-extrabold tracking-tight">Ofensiva</h2>
-        <div className="flex flex-col gap-3">
+      {tab === "avatar" && (
+        <section className={`${card} flex flex-col gap-5 p-5`}>
+          <Swatches label="Pele" colors={skinTones} value={avatar.skin} onPick={(skin) => setAvatar({ skin })} />
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Cabelo</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {hairStyles.map((h) => (
+                <Choice key={h.id} active={avatar.hair === h.id} onClick={() => setAvatar({ hair: h.id })}>
+                  {h.label}
+                </Choice>
+              ))}
+            </div>
+          </fieldset>
+          <Swatches label="Cor do cabelo" colors={hairColors} value={avatar.hairColor} onPick={(hairColor) => setAvatar({ hairColor })} />
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Barba</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {beardStyles.map((b) => (
+                <Choice
+                  key={b.id}
+                  active={(avatar.beard ?? "nenhuma") === b.id}
+                  onClick={() => setAvatar({ beard: b.id })}
+                >
+                  {b.label}
+                </Choice>
+              ))}
+            </div>
+          </fieldset>
+          <Swatches label="Camisa" colors={shirtColors} value={avatar.shirt} onPick={(shirt) => setAvatar({ shirt })} />
+        </section>
+      )}
+
+      {tab === "ofensiva" && (
+        <section className="flex flex-col gap-3">
           <div className={`${card} flex items-center gap-3 p-4 sm:gap-4`}>
             <ShieldIcon className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
             <div className="min-w-0 grow">
@@ -155,55 +204,56 @@ const Loja = () => {
             </Button>
           </div>
           <OfensivaCard showShopLink={false} />
-        </div>
-      </section>
-
-      {/* Itens do avatar */}
-      {slots.map((slot) => (
-        <section key={slot}>
-          <h2 className="mb-3 font-display text-xl font-extrabold tracking-tight">{slotLabels[slot]}</h2>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {shopItems
-              .filter((item) => item.slot === slot)
-              .map((item) => {
-                const isOwned = owned.includes(item.id);
-                const isEquipped = avatar.equipped[slot] === item.id;
-                return (
-                  <li
-                    key={item.id}
-                    className={`${card} flex flex-col items-center gap-2 p-3 text-center ${
-                      isEquipped ? "border-farol-accent" : ""
-                    }`}
-                  >
-                    <Avatar
-                      config={{ ...avatar, equipped: { ...avatar.equipped, [slot]: item.id } }}
-                      className="h-20 w-20 rounded-full"
-                      label={`Prévia: ${item.name}`}
-                    />
-                    <p className="text-sm font-semibold leading-tight">{item.name}</p>
-                    {isOwned ? (
-                      <Button
-                        variant={isEquipped ? "ghost" : "success"}
-                        className="w-full px-2 py-1.5 text-xs"
-                        onClick={() => equipItem(slot, isEquipped ? null : item.id)}
-                      >
-                        {isEquipped ? "Tirar" : "Equipar"}
-                      </Button>
-                    ) : (
-                      <Button
-                        className="flex w-full justify-center px-2 py-1.5 text-xs"
-                        disabled={coins < item.price}
-                        onClick={() => buyItem(item.id) && setMessage(`${item.name} comprado e equipado!`)}
-                      >
-                        <Price value={item.price} />
-                      </Button>
-                    )}
-                  </li>
-                );
-              })}
-          </ul>
         </section>
-      ))}
+      )}
+
+      {tab === "itens" &&
+        slots.map((slot) => (
+          <section key={slot}>
+            <h2 className="mb-3 font-display text-xl font-extrabold tracking-tight">{slotLabels[slot]}</h2>
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {shopItems
+                .filter((item) => item.slot === slot)
+                .map((item) => {
+                  const isOwned = owned.includes(item.id);
+                  const isEquipped = avatar.equipped[slot] === item.id;
+                  return (
+                    <li
+                      key={item.id}
+                      className={`${card} flex flex-col items-center gap-2 overflow-hidden p-3 text-center ${
+                        isEquipped ? "border-farol-accent" : ""
+                      }`}
+                    >
+                      <Avatar
+                        config={{ ...avatar, equipped: { ...avatar.equipped, [slot]: item.id } }}
+                        round={false}
+                        className="h-28 w-28"
+                        label={`Prévia: ${item.name}`}
+                      />
+                      <p className="text-sm font-semibold leading-tight">{item.name}</p>
+                      {isOwned ? (
+                        <Button
+                          variant={isEquipped ? "ghost" : "success"}
+                          className="w-full px-2 py-1.5 text-xs"
+                          onClick={() => equipItem(slot, isEquipped ? null : item.id)}
+                        >
+                          {isEquipped ? "Tirar" : "Equipar"}
+                        </Button>
+                      ) : (
+                        <Button
+                          className="flex w-full justify-center px-2 py-1.5 text-xs"
+                          disabled={coins < item.price}
+                          onClick={() => buyItem(item.id) && setMessage(`${item.name} comprado e equipado!`)}
+                        >
+                          <Price value={item.price} />
+                        </Button>
+                      )}
+                    </li>
+                  );
+                })}
+            </ul>
+          </section>
+        ))}
 
       <p className="text-center text-sm text-farol-muted">
         Você ganha moedas concluindo lições, fazendo lições perfeitas e subindo de divisão.

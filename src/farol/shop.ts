@@ -10,11 +10,21 @@ export const shirtColors = ["#ff0084", "#3fcf86", "#f5b331", "#4f8cff", "#ffffff
 
 export const hairStyles = [
   { id: "curto", label: "Curto" },
+  { id: "topete", label: "Topete" },
+  { id: "cacheado", label: "Cacheado" },
+  { id: "chanel", label: "Chanel" },
   { id: "longo", label: "Longo" },
   { id: "coque", label: "Coque" },
-  { id: "cacheado", label: "Cacheado" },
   { id: "careca", label: "Careca" },
 ] as const;
+
+export const beardStyles = [
+  { id: "nenhuma", label: "Sem barba" },
+  { id: "bigode", label: "Bigode" },
+  { id: "barba", label: "Barba" },
+] as const;
+
+export type BeardStyle = (typeof beardStyles)[number]["id"];
 
 export type HairStyle = (typeof hairStyles)[number]["id"];
 
@@ -55,6 +65,8 @@ export type AvatarConfig = {
   skin: string;
   hair: HairStyle;
   hairColor: string;
+  /** barba ou bigode (opcional: avatares antigos não têm) */
+  beard?: BeardStyle;
   shirt: string;
   equipped: Partial<Record<ItemSlot, string>>;
 };
@@ -73,6 +85,7 @@ export const randomAvatar = (): AvatarConfig => ({
   skin: pick(skinTones),
   hair: pick(hairStyles).id,
   hairColor: pick(hairColors),
+  beard: Math.random() < 0.3 ? pick(beardStyles).id : "nenhuma",
   shirt: pick(shirtColors),
   equipped: {},
 });
