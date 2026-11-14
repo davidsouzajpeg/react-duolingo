@@ -4,17 +4,24 @@
  * - Os itens abaixo são comprados com moedas e equipados por espaço (slot).
  */
 
-export const skinTones = ["#f6d3b8", "#e8b48c", "#c98c62", "#9a623f", "#6b4027"] as const;
-export const hairColors = ["#1f1a17", "#5a3a22", "#a8672f", "#d9b25f", "#c0392b", "#9aa0aa"] as const;
-export const shirtColors = ["#ff0084", "#3fcf86", "#f5b331", "#4f8cff", "#ffffff", "#2d2f36"] as const;
+export const skinTones = ["#fbe3d2", "#f6d3b8", "#e8b48c", "#d9a273", "#c98c62", "#9a623f", "#6b4027", "#4a2a18"] as const;
+export const hairColors = ["#1f1a17", "#5a3a22", "#a8672f", "#d9b25f", "#c0392b", "#9aa0aa", "#f2f2f2", "#ff0084", "#3f7fd9", "#8f5bff"] as const;
+export const shirtColors = ["#ff0084", "#f2c6d6", "#c0392b", "#ff7a45", "#f5b331", "#7a8a3a", "#3fcf86", "#16a3a3", "#4f8cff", "#8f5bff", "#ffffff", "#2d2f36"] as const;
 
 export const hairStyles = [
   { id: "curto", label: "Curto" },
   { id: "raspado", label: "Raspado" },
+  { id: "militar", label: "Militar" },
   { id: "topete", label: "Topete" },
+  { id: "lateral", label: "De lado" },
   { id: "moicano", label: "Moicano" },
+  { id: "entradas", label: "Entradas" },
   { id: "cacheado", label: "Cacheado" },
   { id: "afro", label: "Afro" },
+  { id: "dreads", label: "Dreads" },
+  { id: "trancas", label: "Tranças" },
+  { id: "chiquinhas", label: "Chiquinhas" },
+  { id: "ondulado", label: "Ondulado" },
   { id: "franja", label: "Franja" },
   { id: "chanel", label: "Chanel" },
   { id: "longo", label: "Longo" },
@@ -26,9 +33,13 @@ export const hairStyles = [
 export const beardStyles = [
   { id: "nenhuma", label: "Sem barba" },
   { id: "porfazer", label: "Por fazer" },
+  { id: "costeleta", label: "Costeleta" },
+  { id: "mosca", label: "Mosca" },
   { id: "bigode", label: "Bigode" },
+  { id: "bigodao", label: "Bigodão" },
   { id: "cavanhaque", label: "Cavanhaque" },
   { id: "barba", label: "Barba cheia" },
+  { id: "longa", label: "Barba longa" },
 ] as const;
 
 export const bodyTypes = [
@@ -43,8 +54,26 @@ export const outfitTypes = [
   { id: "polo", label: "Polo" },
   { id: "social", label: "Camisa social" },
   { id: "blazer", label: "Blazer" },
+  { id: "uniforme", label: "Uniforme" },
+  { id: "colete", label: "Colete" },
+  { id: "jaqueta", label: "Jaqueta" },
   { id: "moletom", label: "Moletom" },
+  { id: "golaalta", label: "Gola alta" },
+  { id: "listrada", label: "Listrada" },
   { id: "regata", label: "Regata" },
+] as const;
+
+export const faceShapes = [
+  { id: "oval", label: "Oval" },
+  { id: "redondo", label: "Redondo" },
+  { id: "quadrado", label: "Quadrado" },
+  { id: "fino", label: "Fino" },
+] as const;
+
+export const faceMarks = [
+  { id: "nenhum", label: "Nenhum" },
+  { id: "sardas", label: "Sardas" },
+  { id: "pinta", label: "Pinta" },
 ] as const;
 
 export const moods = [
@@ -104,6 +133,10 @@ export type AvatarConfig = {
   beard?: BeardStyle;
   body?: BodyType;
   outfit?: OutfitType;
+  /** formato do rosto */
+  face?: (typeof faceShapes)[number]["id"];
+  /** detalhe no rosto */
+  marks?: (typeof faceMarks)[number]["id"];
   /** cor dos olhos */
   eyes?: string;
   /** expressão padrão do rosto */
@@ -130,6 +163,7 @@ export const randomAvatar = (): AvatarConfig => ({
   beard: Math.random() < 0.3 ? pick(beardStyles).id : "nenhuma",
   body: pick(bodyTypes).id,
   outfit: pick(outfitTypes).id,
+  face: pick(faceShapes).id,
   eyes: pick(eyeColors),
   shirt: pick(shirtColors),
   equipped: {},

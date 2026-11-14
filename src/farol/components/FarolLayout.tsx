@@ -10,7 +10,7 @@ import {
   useStreak,
 } from "../hooks";
 import { divisions } from "../gamification";
-import { randomAvatar } from "../shop";
+import { defaultAvatar, randomAvatar } from "../shop";
 import { Avatar } from "./Avatar";
 import { OfensivaCard } from "./Ofensiva";
 import { useFarolStore, xpOn, xpThisWeek } from "../store";
@@ -41,8 +41,12 @@ const navItems = [
 
 /** Ícones coloridos da navegação (o do perfil é o próprio avatar do vendedor) */
 const NavGlyph = ({ id }: { id: (typeof navItems)[number]["id"] }) => {
-  const avatar = useFarolStore((s) => s.avatar);
-  const tier = useFarolStore((s) => s.league.tier);
+  // antes de o navegador carregar o progresso salvo, usa o padrão (igual ao servidor)
+  const hydrated = useHydrated();
+  const savedAvatar = useFarolStore((s) => s.avatar);
+  const savedTier = useFarolStore((s) => s.league.tier);
+  const avatar = hydrated ? savedAvatar : defaultAvatar;
+  const tier = hydrated ? savedTier : 0;
   const size = "h-9 w-9 shrink-0";
   switch (id) {
     case "trilha":

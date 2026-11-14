@@ -10,6 +10,8 @@ import {
   beardStyles,
   bodyTypes,
   eyeColors,
+  faceMarks,
+  faceShapes,
   hairColors,
   hairStyles,
   moods,
@@ -108,29 +110,27 @@ const Loja = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Palco: o avatar em destaque */}
-      <section className={`${card} overflow-hidden`}>
-        <div className="flex items-center justify-between gap-3 px-5 pt-5">
-          <div className="min-w-0">
+      {/* Palco: o avatar fica preso no topo enquanto as opções rolam por baixo */}
+      <section className={`${card} sticky top-[4.6rem] z-10 overflow-hidden shadow-[0_12px_24px_-8px_rgba(0,0,0,.6)] md:top-4`}>
+        <div className="flex items-center gap-4 bg-farol-lamp p-3 sm:p-4">
+          <Avatar config={avatar} round={false} animated interactive className="h-32 w-32 sm:h-44 sm:w-44" />
+          <div className="min-w-0 grow">
             <Eyebrow className="text-farol-accent">Escolha o seu visual</Eyebrow>
-            <h1 className="mt-1 truncate font-display text-3xl font-extrabold leading-none tracking-tight">
+            <h1 className="mt-1 truncate font-display text-2xl font-extrabold leading-none tracking-tight sm:text-3xl">
               {name || "Consultor"}
             </h1>
+            <p className="mt-2 flex w-fit items-center gap-1.5 rounded-full border border-farol-line bg-farol-bg px-3 py-1 font-num text-base font-extrabold tabular-nums text-farol-warn">
+              <CoinIcon className="h-5 w-5" /> {coins}
+            </p>
+            <button
+              type="button"
+              onClick={() => setAvatar(randomAvatar())}
+              className="mt-2 block text-xs font-semibold uppercase tracking-[.09em] text-farol-accent hover:brightness-125"
+            >
+              Sortear visual
+            </button>
+            <p className="mt-1 hidden text-xs text-farol-muted sm:block">Toque no avatar para um tchau</p>
           </div>
-          <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-farol-line bg-farol-lamp px-3 py-1.5 font-num text-lg font-extrabold tabular-nums text-farol-warn">
-            <CoinIcon className="h-6 w-6" /> {coins}
-          </span>
-        </div>
-        <div className="mt-4 flex flex-col items-center gap-2 bg-farol-lamp px-5 pb-4 pt-6">
-          <Avatar config={avatar} round={false} animated interactive className="h-64 w-64 sm:h-72 sm:w-72" />
-          <p className="text-xs text-farol-muted">Toque no avatar para um tchau</p>
-          <button
-            type="button"
-            onClick={() => setAvatar(randomAvatar())}
-            className="text-sm font-semibold uppercase tracking-[.09em] text-farol-accent hover:brightness-125"
-          >
-            Sortear visual
-          </button>
         </div>
         <div className="flex border-t border-farol-line" role="tablist">
           {tabs.map((t) => (
@@ -165,6 +165,26 @@ const Loja = () => {
               {bodyTypes.map((b) => (
                 <Choice key={b.id} active={(avatar.body ?? "medio") === b.id} onClick={() => setAvatar({ body: b.id })}>
                   {b.label}
+                </Choice>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Rosto</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {faceShapes.map((f) => (
+                <Choice key={f.id} active={(avatar.face ?? "oval") === f.id} onClick={() => setAvatar({ face: f.id })}>
+                  {f.label}
+                </Choice>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Detalhe do rosto</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {faceMarks.map((f) => (
+                <Choice key={f.id} active={(avatar.marks ?? "nenhum") === f.id} onClick={() => setAvatar({ marks: f.id })}>
+                  {f.label}
                 </Choice>
               ))}
             </div>
