@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { notifyGestorTrailCompleted } from "./notify";
+import { sfx } from "./sounds";
 import { computeStreak, useFarolStore } from "./store";
 
 /**
@@ -46,62 +47,19 @@ export const useGestorNoticeRetry = () => {
 
 /* ---------------------------------- Sons ---------------------------------- */
 
-let audioCtx: AudioContext | null = null;
+type Sfx = typeof sfx;
 
-const playNotes = (notes: [number, number][], type: OscillatorType) => {
-  if (typeof window === "undefined") return;
-  try {
-    audioCtx ??= new AudioContext();
-    const ctx = audioCtx;
-    let t = ctx.currentTime;
-    for (const [freq, dur] of notes) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.12, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + dur);
-      t += dur * 0.8;
-    }
-  } catch {
-    // áudio indisponível: segue sem som
-  }
-};
-
-export const useSounds = () => {
+/** Sons do Vendê, respeitando a configuração "Efeitos sonoros" do vendedor */
+export const useSounds = (): Sfx => {
   const soundOn = useFarolStore((s) => s.soundOn);
+  if (soundOn) return sfx;
+  const silent = () => undefined;
   return {
-    correct: () =>
-      soundOn &&
-      playNotes(
-        [
-          [660, 0.12],
-          [880, 0.2],
-        ],
-        "sine",
-      ),
-    wrong: () =>
-      soundOn &&
-      playNotes(
-        [
-          [220, 0.15],
-          [180, 0.25],
-        ],
-        "triangle",
-      ),
-    finish: () =>
-      soundOn &&
-      playNotes(
-        [
-          [523, 0.12],
-          [659, 0.12],
-          [784, 0.12],
-          [1047, 0.35],
-        ],
-        "sine",
-      ),
+    correct: silent,
+    wrong: silent,
+    coin: silent,
+    pop: silent,
+    finish: silent,
+    levelUp: silent,
   };
 };

@@ -4,6 +4,7 @@ import { Avatar } from "~/farol/components/Avatar";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { CoinIcon, ShieldIcon } from "~/farol/components/Icons";
 import { OfensivaCard } from "~/farol/components/Ofensiva";
+import { useSounds } from "~/farol/hooks";
 import { Button, Eyebrow, card } from "~/farol/components/ui";
 import {
   type ItemSlot,
@@ -107,6 +108,7 @@ const Loja = () => {
   const { setAvatar, buyItem, equipItem, buyStreakFreeze } = useFarolStore.getState();
   const [message, setMessage] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("avatar");
+  const sounds = useSounds();
 
   return (
     <div className="flex flex-col gap-6">
@@ -254,7 +256,11 @@ const Loja = () => {
             <Button
               className="shrink-0 px-4 py-2 text-sm"
               disabled={freezes >= MAX_STREAK_FREEZES || coins < STREAK_FREEZE_COST}
-              onClick={() => buyStreakFreeze() && setMessage("Protetor de chama equipado!")}
+              onClick={() => {
+                if (!buyStreakFreeze()) return;
+                sounds.coin();
+                setMessage("Protetor de chama equipado!");
+              }}
             >
               <Price value={STREAK_FREEZE_COST} />
             </Button>
@@ -299,7 +305,11 @@ const Loja = () => {
                         <Button
                           className="flex w-full justify-center px-2 py-1.5 text-xs"
                           disabled={coins < item.price}
-                          onClick={() => buyItem(item.id) && setMessage(`${item.name} comprado e equipado!`)}
+                          onClick={() => {
+                            if (!buyItem(item.id)) return;
+                            sounds.coin();
+                            setMessage(`${item.name} comprado e equipado!`);
+                          }}
                         >
                           <Price value={item.price} />
                         </Button>

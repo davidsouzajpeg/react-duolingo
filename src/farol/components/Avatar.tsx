@@ -610,6 +610,7 @@ export const Avatar = ({
   interactive = false,
   mood,
   waveOnMount = false,
+  celebrate = false,
 }: {
   config: AvatarConfig;
   className?: string;
@@ -621,10 +622,13 @@ export const Avatar = ({
   /** expressão; sem ela vale a escolhida pelo vendedor */
   mood?: AvatarMood;
   waveOnMount?: boolean;
+  /** pula de alegria com os dois braços para cima (fim de lição) */
+  celebrate?: boolean;
 }) => {
   const uid = useId().replace(/:/g, "");
   const ref = useRef<SVGSVGElement>(null);
-  const [waving, setWaving] = useState(waveOnMount);
+  const [waving, setWaving] = useState(waveOnMount && !celebrate);
+  const [cheering, setCheering] = useState(celebrate);
   const clip = `av-clip-${uid}`;
   const { equipped } = config;
   const hat = equipped.chapeu;
@@ -644,7 +648,7 @@ export const Avatar = ({
     shape === "quadrado" ? 26 : shape === "redondo" ? hw - 1 : Math.min(47, hw - 3);
   const headH =
     (bodyType === "gordo" ? 112 : 108) + (shape === "fino" ? 5 : shape === "redondo" ? -3 : 0);
-  const face: AvatarMood = waving ? "feliz" : (mood ?? config.mood ?? "neutro");
+  const face: AvatarMood = waving || cheering ? "feliz" : (mood ?? config.mood ?? "neutro");
   const sleeve = outfit === "regata" ? skin : outfit === "blazer" ? "#2b2d36" : shirt;
   // cabelo, barba, chapéu e headset acompanham a largura da cabeça
   const fit = `translate(100 0) scale(${hw / 50} 1) translate(-100 0)`;
@@ -667,13 +671,38 @@ export const Avatar = ({
     return () => window.removeEventListener("pointermove", onMove);
   }, [animated]);
 
-  const wave = () => interactive && setWaving(true);
+  // comemoração: pula com os braços para cima por alguns segundos
+  useEffect(() => {
+    if (!cheering) return;
+    const id = setTimeout(() => setCheering(false), 4300);
+    return () => clearTimeout(id);
+  }, [cheering]);
+
+  const wave = () => {
+    if (!interactive) return;
+    if (celebrate) setCheering(true);
+    else setWaving(true);
+  };
+
+  const arm = (
+    <>
+      <rect x="166" y="130" width="26" height="90" rx="13" fill={sleeve} />
+      <rect x="166" y="130" width="26" height="26" rx="13" fill={skin} />
+      <circle cx="179" cy="118" r="17" fill={skin} />
+      <rect x="163" y="94" width="8" height="22" rx="4" fill={skin} />
+      <rect x="172" y="88" width="8" height="26" rx="4" fill={skin} />
+      <rect x="181" y="90" width="8" height="24" rx="4" fill={skin} />
+      <rect x="190" y="96" width="7" height="20" rx="3.5" fill={skin} />
+      <ellipse cx="163" cy="122" rx="6" ry="9" fill={skin} transform="rotate(-35 163 122)" />
+      <path d="M170 124c5 5 13 5 18 0" stroke={skinDark} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+    </>
+  );
 
   return (
     <svg
       ref={ref}
       viewBox="0 0 200 200"
-      className={`shrink-0 ${className} ${animated ? "vd-anim" : ""} ${waving ? "vd-waving" : ""} ${interactive ? "cursor-pointer select-none rounded-[14%] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-farol-accent" : ""}`}
+      className={`shrink-0 ${className} ${animated ? "vd-anim" : ""} ${waving ? "vd-waving" : ""} ${cheering ? "vd-cheer" : ""} ${interactive ? "cursor-pointer select-none rounded-[14%] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-farol-accent" : ""}`}
       role={interactive ? "button" : "img"}
       tabIndex={interactive ? 0 : undefined}
       aria-label={interactive ? `${label}: toque para um tchau` : label}
@@ -692,6 +721,7 @@ export const Avatar = ({
       </defs>
       <g clipPath={`url(#${clip})`}>
         <Background id={equipped.fundo} gid={`av-g-${uid}`} />
+        <g className="vd-jump">
         <g className="vd-head">
           <g transform={fit}>
             <HairBack style={config.hair} color={shade(hair, -0.12)} />
@@ -759,20 +789,18 @@ export const Avatar = ({
           </g>
         </g>
 
-        {/* braço do tchau: fica escondido embaixo e sobe quando o avatar é tocado */}
-        {(interactive || waveOnMount) && (
+        {/* braços: ficam escondidos embaixo; sobem no tchau e na comemoração */}
+        {(interactive || waveOnMount || celebrate) && (
           <g className="vd-arm" onAnimationEnd={() => setWaving(false)}>
-            <rect x="166" y="130" width="26" height="90" rx="13" fill={sleeve} />
-            <rect x="166" y="130" width="26" height="26" rx="13" fill={skin} />
-            <circle cx="179" cy="118" r="17" fill={skin} />
-            <rect x="163" y="94" width="8" height="22" rx="4" fill={skin} />
-            <rect x="172" y="88" width="8" height="26" rx="4" fill={skin} />
-            <rect x="181" y="90" width="8" height="24" rx="4" fill={skin} />
-            <rect x="190" y="96" width="7" height="20" rx="3.5" fill={skin} />
-            <ellipse cx="163" cy="122" rx="6" ry="9" fill={skin} transform="rotate(-35 163 122)" />
-            <path d="M170 124c5 5 13 5 18 0" stroke={skinDark} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+            {arm}
           </g>
         )}
+        {celebrate && (
+          <g transform="translate(200 0) scale(-1 1)">
+            <g className="vd-arm">{arm}</g>
+          </g>
+        )}
+        </g>
       </g>
     </svg>
   );

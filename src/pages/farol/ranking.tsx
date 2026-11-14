@@ -1,5 +1,7 @@
 import dayjs from "dayjs";
 import type { NextPage } from "next";
+import { useEffect } from "react";
+import { useSounds } from "~/farol/hooks";
 import { Avatar } from "~/farol/components/Avatar";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { CoinIcon, XpIcon } from "~/farol/components/Icons";
@@ -42,6 +44,12 @@ const DivisionBadge = ({
 const WeekResult = () => {
   const result = useFarolStore((s) => s.league.lastResult);
   const markSeen = useFarolStore((s) => s.markLeagueResultSeen);
+  const sounds = useSounds();
+  const promoted = !!result && !result.seen && result.outcome === "subiu";
+  useEffect(() => {
+    if (promoted) sounds.levelUp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [promoted]);
   if (!result || result.seen) return null;
   const to = divisions[result.toTier]!;
   const title =

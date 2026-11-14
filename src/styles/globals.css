@@ -103,3 +103,36 @@
   .vd-burst, .vd-rain { display: none; }
   .vd-in, .vd-slide-up, .vd-pop, .vd-shake, .vd-hop, .vd-glow, .vd-stagger > * { animation: none; }
 }
+
+/* --------------------- Vendê: comemoração do avatar --------------------- */
+@keyframes vd-jump {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  12% { transform: translateY(7px) scale(1.05, 0.93); }
+  42% { transform: translateY(-24px) scale(0.97, 1.05); }
+  64% { transform: translateY(0) scale(1.04, 0.95); }
+  80% { transform: translateY(-7px) scale(1, 1); }
+}
+@keyframes vd-cheer-arm {
+  from { transform: translateY(-12px) rotate(-12deg); }
+  to { transform: translateY(-22px) rotate(12deg); }
+}
+@keyframes vd-spin { to { transform: rotate(360deg); } }
+@keyframes vd-twinkle {
+  0%, 100% { transform: scale(0.2) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1) rotate(45deg); opacity: 1; }
+}
+.vd-jump { transform-origin: 100px 200px; }
+.vd-cheer .vd-jump { animation: vd-jump 0.72s ease-in-out infinite; }
+.vd-cheer .vd-arm { animation: vd-cheer-arm 0.36s ease-in-out infinite alternate; }
+.vd-rays {
+  border-radius: 9999px;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 0, 132, 0.42) 0deg 11deg, transparent 11deg 30deg);
+  -webkit-mask-image: radial-gradient(circle, #000 28%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 28%, transparent 70%);
+  animation: vd-spin 16s linear infinite;
+}
+.vd-twinkle { animation: vd-twinkle 1.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .vd-cheer .vd-jump, .vd-cheer .vd-arm, .vd-rays, .vd-twinkle { animation: none; }
+  .vd-twinkle { opacity: 1; }
+}

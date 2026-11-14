@@ -129,7 +129,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     if (status !== "answering" || !canCheck(current.question, answer)) return;
     setAnswered((n) => n + 1);
     if (isCorrect(current.question, answer)) {
-      sounds.correct();
+      sounds.correct(combo + 1);
       setStatus("right");
       setSolved((n) => n + 1);
       const nextCombo = combo + 1;
@@ -183,7 +183,8 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     // finishLesson já deixou o aviso "pendente"; tenta enviar agora
     if (trailJustCompleted) void notifyGestorTrailCompleted();
 
-    sounds.finish();
+    sounds.finish(sinalDaPrecisao(accuracy));
+    if (levelAfter.index > levelBefore) setTimeout(() => sounds.levelUp(), 2300);
     window.scrollTo(0, 0);
     setSummary({
       xp,
@@ -446,19 +447,42 @@ const LessonSummary = ({
           <Pill tone={sinal} className="uppercase tracking-[.09em]">
             {info.label} · {Math.round(summary.accuracy * 100)}% de precisão
           </Pill>
-          <h1 className="mt-3 font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl">
+          <h1 className="vd-pop mt-3 font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl" style={{ animationDelay: "0.25s" }}>
             {perfect ? "Lição perfeita!" : "Lição concluída!"}
           </h1>
           <p className="mt-2 text-farol-muted">{lesson.title}</p>
         </div>
-        <Avatar
-          config={avatar}
-          animated
-          interactive
-          waveOnMount={sinal === "verde"}
-          mood={sinal === "verde" ? "feliz" : sinal === "amarelo" ? "neutro" : "surpreso"}
-          className="h-28 w-28 rounded-full border-4 border-farol-accent"
-        />
+        <div className="relative flex h-44 w-44 items-center justify-center">
+          {sinal !== "vermelho" && (
+            <>
+              <div aria-hidden className="vd-rays absolute -inset-12" />
+              {[
+                ["-left-6 top-2", "0s", "text-farol-warn"],
+                ["-right-5 top-8", "0.5s", "text-white"],
+                ["-left-3 bottom-4", "0.9s", "text-farol-accent"],
+                ["-right-7 bottom-8", "0.3s", "text-farol-warn"],
+                ["left-1/2 -top-7", "0.7s", "text-farol-ok"],
+              ].map(([pos, delay, tone]) => (
+                <span
+                  key={pos}
+                  aria-hidden
+                  className={`vd-twinkle absolute text-2xl ${pos} ${tone}`}
+                  style={{ animationDelay: delay }}
+                >
+                  ✦
+                </span>
+              ))}
+            </>
+          )}
+          <Avatar
+            config={avatar}
+            animated
+            interactive
+            celebrate={sinal !== "vermelho"}
+            mood={sinal === "vermelho" ? "surpreso" : "feliz"}
+            className="relative h-36 w-36 rounded-full border-4 border-farol-accent"
+          />
+        </div>
 
         <div className="flex w-full gap-3">
           <StatCard label="Faíscas" value={<CountUp value={summary.xp} prefix="+" delay={500} />} tone="text-farol-accent" />
