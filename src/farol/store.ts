@@ -117,6 +117,9 @@ type FarolState = {
   lessons: Record<string, LessonRecord>;
   sims: Record<string, SimRecord>;
   simHistory: SimHistoryEntry[];
+  /** linha de treino aberta na trilha */
+  linhaAtiva: string;
+  setLinhaAtiva: (id: string) => void;
   stats: FarolStats;
   soundOn: boolean;
   /** ISO da primeira vez em que todas as lições da versão atual foram concluídas */
@@ -161,6 +164,7 @@ const initialData = {
   ownedItems: [] as string[],
   league: { tier: 0, week: "", lastResult: null } as LeagueState,
   lessons: {} as Record<string, LessonRecord>,
+  linhaAtiva: "consultiva",
   sims: {} as Record<string, SimRecord>,
   simHistory: [] as SimHistoryEntry[],
   stats: {
@@ -220,6 +224,8 @@ export const useFarolStore = create<FarolState>()(
         set({ name: name.trim(), dailyGoal, onboarded: true }),
 
       setDailyGoal: (dailyGoal) => set({ dailyGoal }),
+
+      setLinhaAtiva: (linhaAtiva) => set({ linhaAtiva }),
 
       toggleSound: () => set({ soundOn: !get().soundOn }),
 
@@ -469,7 +475,12 @@ export const useFarolStore = create<FarolState>()(
           };
         }
         if (version < 5) {
-          state = { ...state, sims: state.sims ?? {}, simHistory: state.simHistory ?? [] };
+          state = {
+            ...state,
+            sims: state.sims ?? {},
+            simHistory: state.simHistory ?? [],
+            linhaAtiva: state.linhaAtiva ?? "consultiva",
+          };
         }
         return state as FarolState;
       },

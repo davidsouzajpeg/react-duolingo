@@ -2,7 +2,9 @@
 
 **Vender se aprende.** Experiência de aprendizagem gamificada em vendas, uma experiência Meu Farol, feita para o time comercial da Open.
 
-- Trilha **Venda Consultiva** baseada no Playbook Vendas Open 2025: 8 unidades, 24 lições e 8 desafios.
+- Linha **Venda Consultiva**, baseada no Playbook Vendas Open 2025: 8 unidades, 24 lições e 8 desafios.
+- Linha **Materiais e Produtos**: 4 unidades sobre ACM e chapas, impressão e tintas, mídias, acabamento e iluminação.
+- **Simulador de vendas** em modo guiado: 5 conversas com clientes fictícios e avaliação por competência.
 - Cinco tipos de questão (situação real, múltipla escolha, verdadeiro ou falso, ordenar e completar), sempre com explicação.
 - **Faíscas** (os pontos do Vendê), meta diária, moedas, níveis e conquistas.
 - **Chama** (dias seguidos de prática) com **protetor de chama**, usado sozinho quando o vendedor perde um dia.
@@ -22,7 +24,8 @@ pnpm build && pnpm start
 
 | O quê | Arquivo |
 |---|---|
-| Conteúdo das lições e versão da trilha | `src/farol/content.ts` |
+| Conteúdo das lições e versão da trilha | `src/farol/content.ts`, `src/farol/content-materiais.ts` |
+| Cenários do simulador | `src/farol/simulador.ts` |
 | Progresso do vendedor (salvo no navegador) | `src/farol/store.ts` |
 | Níveis, conquistas e divisões | `src/farol/gamification.ts` |
 | Avatar e itens da loja | `src/farol/shop.ts` e `src/farol/components/Avatar.tsx` |

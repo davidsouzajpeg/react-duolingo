@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { allLessons, linhaAtual, units } from "~/farol/content";
+import { lessonsByLinha, linhaAtual, linhas } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { Avatar } from "~/farol/components/Avatar";
 import { TrailEndCard } from "~/farol/components/TrailEnd";
@@ -233,22 +233,65 @@ const FreezeNotice = () => {
   );
 };
 
+/** Linha de treino aberta (a escolha do vendedor fica salva) */
+const useLinha = () => {
+  const id = useFarolStore((s) => s.linhaAtiva);
+  const linha = linhas.find((l) => l.id === id) ?? linhas[0]!;
+  return { linha, list: lessonsByLinha[linha.id]! };
+};
+
+/** Abas para trocar de linha de treino */
+const LinhaTabs = () => {
+  const { linha } = useLinha();
+  const setLinha = useFarolStore((s) => s.setLinhaAtiva);
+  const records = useFarolStore((s) => s.lessons);
+  return (
+    <div className="mb-4 flex gap-2" role="tablist" aria-label="Linhas de treino">
+      {linhas.map((l) => {
+        const list = lessonsByLinha[l.id]!;
+        const active = l.id === linha.id;
+        return (
+          <button
+            key={l.id}
+            role="tab"
+            aria-selected={active}
+            onClick={() => setLinha(l.id)}
+            className={`min-w-0 flex-1 rounded-2xl border border-b-4 px-3 py-2.5 text-left transition active:translate-y-0.5 ${
+              active
+                ? "border-farol-accent bg-farol-accent-soft"
+                : "border-farol-line bg-farol-surface hover:bg-farol-surface2"
+            }`}
+          >
+            <span className="block truncate font-display text-sm font-extrabold tracking-tight">
+              {l.title}
+            </span>
+            <span className="font-num text-xs font-extrabold tabular-nums text-farol-muted">
+              {completedLessonCount(records, list)}/{list.length}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 const LinhaHero = () => {
   const records = useFarolStore((s) => s.lessons);
   const name = useFarolStore((s) => s.name);
   const avatar = useFarolStore((s) => s.avatar);
-  const current = getCurrentLesson(records);
-  const done = completedLessonCount(records);
-  const total = allLessons.length;
+  const { linha, list } = useLinha();
+  const current = getCurrentLesson(records, list);
+  const done = completedLessonCount(records, list);
+  const total = list.length;
   return (
     <section className={`${card} relative mb-8 overflow-hidden p-5 sm:p-6`}>
       <Feixe />
       <div className="relative">
         <Eyebrow className="text-farol-accent">Linha de treino</Eyebrow>
         <h1 className="mt-1 font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl">
-          {linhaAtual.title}
+          {linha.title}
         </h1>
-        <p className="mt-2 max-w-md text-sm text-farol-muted">{linhaAtual.description}</p>
+        <p className="mt-2 max-w-md text-sm text-farol-muted">{linha.description}</p>
         <div className="mt-5 flex items-center gap-3">
           <ProgressBar value={done / total} className="h-2.5" />
           <span className="shrink-0 font-num text-sm font-extrabold tabular-nums">
@@ -282,8 +325,10 @@ const Trail = () => {
   const records = useFarolStore((s) => s.lessons);
   const [selected, setSelected] = useState<string | null>(null);
   const currentRef = useRef<HTMLDivElement>(null);
-  const current = getCurrentLesson(records);
-  const started = completedLessonCount(records) > 0;
+  const { linha, list } = useLinha();
+  const current = getCurrentLesson(records, list);
+  const started = completedLessonCount(records, list) > 0;
+  const linhaDone = completedLessonCount(records, list) === list.length;
 
   useEffect(() => {
     if (started) currentRef.current?.scrollIntoView({ block: "center" });
@@ -299,9 +344,10 @@ const Trail = () => {
   return (
     <>
       <FreezeNotice />
+      <LinhaTabs />
       <LinhaHero />
       <div className="flex flex-col gap-10">
-        {units.map((unit) => (
+        {linha.units.map((unit) => (
           <section key={unit.id} className="flex flex-col gap-12">
             <UnitHeader unit={unit} />
             <div className="flex flex-col items-center gap-12 pb-4">
@@ -327,12 +373,22 @@ const Trail = () => {
         ))}
       </div>
       {/* fim da trilha: parabéns + aviso ao gestor; senão, espaço para o balão da última lição */}
-      {completedLessonCount(records) === allLessons.length ? (
+      {!linhaDone ? (
+        <div className="h-40" />
+      ) : linha.id === linhaAtual.id ? (
         <div className="mt-40">
           <TrailEndCard />
         </div>
       ) : (
-        <div className="h-40" />
+        <div className={`${card} mt-40 border-farol-ok/60 p-5`}>
+          <Eyebrow className="text-farol-ok">Linha concluída</Eyebrow>
+          <p className="mt-1 font-display text-xl font-extrabold leading-tight tracking-tight">
+            Você concluiu a linha {linha.title}.
+          </p>
+          <p className="mt-1 text-sm text-farol-muted">
+            As lições continuam abertas para você praticar quando quiser.
+          </p>
+        </div>
       )}
     </>
   );

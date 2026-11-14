@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import { useState } from "react";
-import { allLessons, linhaAtual } from "~/farol/content";
+import { everyLesson, linhaAtual } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import Link from "next/link";
 import { Avatar } from "~/farol/components/Avatar";
@@ -87,7 +87,7 @@ const Conquistas = () => {
         <div className="grid grid-cols-2 gap-3">
           <Stat icon="🔥" value={streak} label="dias de chama acesa" />
           <Stat icon="⚡" value={state.xpTotal} label="faíscas no total" />
-          <Stat icon="📚" value={`${completedLessonCount(state.lessons)}/${allLessons.length}`} label="lições concluídas" />
+          <Stat icon="📚" value={`${completedLessonCount(state.lessons, everyLesson)}/${everyLesson.length}`} label="lições concluídas" />
           <Stat icon="🎯" value={`${accuracy}%`} label="precisão geral" />
         </div>
       </section>

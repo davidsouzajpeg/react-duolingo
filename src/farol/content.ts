@@ -1,14 +1,6 @@
-import type {
-  CenarioQuestion,
-  CompletarQuestion,
-  Lesson,
-  Linha,
-  MultiplaQuestion,
-  OrdenarQuestion,
-  Question,
-  Unit,
-  VerdadeiroFalsoQuestion,
-} from "./types";
+import { cenario, completar, multipla, ordenar, vf, type UnitSeed } from "./autoria";
+import { materiaisSeeds } from "./content-materiais";
+import type { Lesson, Linha, Question, Unit } from "./types";
 
 /**
  * LINHA DE TREINO "VENDA CONSULTIVA" — Open (comunicação visual)
@@ -35,63 +27,7 @@ import type {
  *   docs/farol-integracao-gestor.md).
  */
 
-/* ----------------------------- Atalhos de autoria ---------------------------- */
-
-const multipla = (
-  prompt: string,
-  options: string[],
-  answer: number,
-  explanation: string,
-): MultiplaQuestion => ({ kind: "multipla", prompt, options, answer, explanation });
-
-const cenario = (
-  context: string,
-  customer: string,
-  prompt: string,
-  options: string[],
-  answer: number,
-  explanation: string,
-): CenarioQuestion => ({
-  kind: "cenario",
-  context,
-  customer,
-  prompt,
-  options,
-  answer,
-  explanation,
-});
-
-const ordenar = (
-  prompt: string,
-  steps: string[],
-  explanation: string,
-): OrdenarQuestion => ({ kind: "ordenar", prompt, steps, explanation });
-
-const completar = (
-  sentence: string,
-  answer: string[],
-  distractors: string[],
-  explanation: string,
-): CompletarQuestion => ({
-  kind: "completar",
-  prompt: "Complete a frase",
-  sentence,
-  answer,
-  distractors,
-  explanation,
-});
-
-const vf = (
-  statement: string,
-  answer: boolean,
-  explanation: string,
-): VerdadeiroFalsoQuestion => ({ kind: "vf", statement, answer, explanation });
-
 /* --------------------------------- Conteúdo --------------------------------- */
-
-type UnitSeed = Omit<Unit, "lessons" | "color" | "shade"> & {
-  lessons: Omit<Lesson, "kind">[];
-};
 
 const seeds: UnitSeed[] = [
   /* ------------------------------ Unidade 1 ------------------------------ */
@@ -1534,18 +1470,22 @@ const buildChallenge = (unit: UnitSeed): Lesson => {
   };
 };
 
-export const units: Unit[] = seeds.map((seed) => ({
-  ...seed,
-  // todas as unidades usam o rosa Open (tokens farol.accent / accent-dark)
-  color: "#ff0084",
-  shade: "#c4006a",
-  lessons: [
-    ...seed.lessons.map((l) => ({ ...l, kind: "licao" as const })),
-    buildChallenge(seed),
-  ],
-}));
+const buildUnits = (list: UnitSeed[]): Unit[] =>
+  list.map((seed) => ({
+    ...seed,
+    // todas as unidades usam o rosa Open (tokens farol.accent / accent-dark)
+    color: "#ff0084",
+    shade: "#c4006a",
+    lessons: [
+      ...seed.lessons.map((l) => ({ ...l, kind: "licao" as const })),
+      buildChallenge(seed),
+    ],
+  }));
 
-/** Linhas de treino disponíveis. Por enquanto, uma: Venda Consultiva. */
+/** Unidades da linha Venda Consultiva (a trilha principal) */
+export const units: Unit[] = buildUnits(seeds);
+
+/** Linhas de treino disponíveis */
 export const linhas: Linha[] = [
   {
     id: "consultiva",
@@ -1558,14 +1498,39 @@ export const linhas: Linha[] = [
     ],
     units,
   },
+  {
+    id: "materiais",
+    title: "Materiais e Produtos",
+    description:
+      "Conheça o que você vende: ACM e chapas, tipos de impressão e tintas, mídias, acabamento e durabilidade, sempre ligando a técnica ao que o cliente ganha.",
+    fontes: [
+      "conhecimento técnico geral de comunicação visual",
+      "revisão da produção da Open (pendente)",
+    ],
+    units: buildUnits(materiaisSeeds),
+  },
 ];
 
+/** Linha principal: é a conclusão dela que avisa o gestor */
 export const linhaAtual = linhas[0]!;
 
-/** Todas as lições em ordem de desbloqueio */
-export const allLessons: { lesson: Lesson; unit: Unit }[] = units.flatMap(
-  (unit) => unit.lessons.map((lesson) => ({ lesson, unit })),
-);
+const lessonsOf = (linha: Linha) =>
+  linha.units.flatMap((unit) => unit.lessons.map((lesson) => ({ lesson, unit })));
+
+/** Lições da linha principal, em ordem de desbloqueio */
+export const allLessons: { lesson: Lesson; unit: Unit }[] = lessonsOf(linhaAtual);
+
+/** Lições de cada linha, em ordem de desbloqueio (cada linha desbloqueia por conta própria) */
+export const lessonsByLinha: Record<string, { lesson: Lesson; unit: Unit }[]> =
+  Object.fromEntries(linhas.map((l) => [l.id, lessonsOf(l)]));
+
+/** Todas as lições de todas as linhas */
+export const everyLesson = Object.values(lessonsByLinha).flat();
+
+/** Lista (linha) à qual uma lição pertence */
+export const lessonListOf = (lessonId: string) =>
+  Object.values(lessonsByLinha).find((list) => list.some((l) => l.lesson.id === lessonId)) ??
+  allLessons;
 
 export const findLesson = (id: string) =>
-  allLessons.find(({ lesson }) => lesson.id === id);
+  everyLesson.find(({ lesson }) => lesson.id === id);

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { allLessons, findLesson } from "~/farol/content";
+import { findLesson, lessonListOf } from "~/farol/content";
 import {
   CloseIcon,
   CoinIcon,
@@ -475,8 +475,10 @@ const LessonSummary = ({
   onRestart: () => void;
 }) => {
   const avatar = useFarolStore((s) => s.avatar);
-  const index = allLessons.findIndex((l) => l.lesson.id === lesson.id);
-  const nextLessonId = allLessons[index + 1]?.lesson.id;
+  // a próxima lição é sempre da mesma linha de treino
+  const list = lessonListOf(lesson.id);
+  const index = list.findIndex((l) => l.lesson.id === lesson.id);
+  const nextLessonId = list[index + 1]?.lesson.id;
   const perfect = summary.accuracy === 1;
   const sinal = sinalDaPrecisao(summary.accuracy);
   const info = sinalInfo[sinal];

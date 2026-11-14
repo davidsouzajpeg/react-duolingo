@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { allLessons, units } from "./content";
+import { allLessons, lessonListOf, units } from "./content";
 import type { FarolStats, LessonRecord } from "./store";
 
 /* ------------------------- Níveis (carreira consultiva) ------------------------- */
@@ -33,22 +33,30 @@ export const getLevel = (xp: number) => {
 
 export type LessonStatus = "locked" | "current" | "done";
 
+type LessonList = { lesson: { id: string } }[];
+
+/** Cada linha de treino desbloqueia por conta própria, na ordem das suas lições */
 export const getLessonStatus = (
   lessonId: string,
   records: Record<string, LessonRecord>,
 ): LessonStatus => {
   if (records[lessonId]?.completions) return "done";
-  const index = allLessons.findIndex(({ lesson }) => lesson.id === lessonId);
+  const list = lessonListOf(lessonId);
+  const index = list.findIndex(({ lesson }) => lesson.id === lessonId);
   if (index <= 0) return "current";
-  const prevId = allLessons[index - 1]!.lesson.id;
+  const prevId = list[index - 1]!.lesson.id;
   return records[prevId]?.completions ? "current" : "locked";
 };
 
-export const getCurrentLesson = (records: Record<string, LessonRecord>) =>
-  allLessons.find(({ lesson }) => !records[lesson.id]?.completions) ?? null;
+export const getCurrentLesson = <T extends LessonList[number]>(
+  records: Record<string, LessonRecord>,
+  list: T[] = allLessons as unknown as T[],
+) => list.find(({ lesson }) => !records[lesson.id]?.completions) ?? null;
 
-export const completedLessonCount = (records: Record<string, LessonRecord>) =>
-  allLessons.filter(({ lesson }) => records[lesson.id]?.completions).length;
+export const completedLessonCount = (
+  records: Record<string, LessonRecord>,
+  list: LessonList = allLessons,
+) => list.filter(({ lesson }) => records[lesson.id]?.completions).length;
 
 export const isUnitDone = (
   unitId: string,

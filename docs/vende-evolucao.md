@@ -44,6 +44,15 @@ Para a fase de servidor é preciso definir **onde ele vive**:
 - **Dentro do Meu Farol** (mesmo login, mesmo banco): exige acesso ao código e ao banco do Meu Farol.
 - **Servidor próprio do Vendê** (por exemplo, rotas de API neste app com um banco Postgres), recebendo do Meu Farol apenas a identidade do vendedor.
 
+## Linhas de treino
+
+O Vendê tem duas linhas, cada uma com a sua trilha e o seu desbloqueio:
+
+- **Venda Consultiva** (`src/farol/content.ts`): 8 unidades, baseada no Playbook Vendas Open 2025. É a conclusão dela que avisa o gestor.
+- **Materiais e Produtos** (`src/farol/content-materiais.ts`): 4 unidades sobre ACM e chapas, impressão e tintas, mídias, acabamento, iluminação e como indicar a solução certa. Foi escrita com conhecimento técnico geral do setor e **precisa da revisão da produção da Open** antes de ir para o time: marcas, garantias e prazos reais não estão no texto.
+
+Para criar outra linha, adicione um arquivo de conteúdo no mesmo formato e inclua-o em `linhas`, em `content.ts`.
+
 ## Como entram novas lições (inclusive a partir de livros)
 
 Hoje, uma lição é um bloco em `src/farol/content.ts` (dica do Faroldo + 4 ou 5 situações com explicação) e um cenário do simulador é um bloco em `src/farol/simulador.ts`. Fluxo proposto para conteúdo novo:
