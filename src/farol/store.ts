@@ -2,10 +2,24 @@ import dayjs from "dayjs";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { TRAIL_VERSION, allLessons } from "./content";
+import {
+  PROMOTION_COINS,
+  TOP_DIVISION,
+  buildLeague,
+  weekKeyOf,
+  zoneOf,
+  type LeagueOutcome,
+} from "./gamification";
+import {
+  defaultAvatar,
+  findItem,
+  type AvatarConfig,
+  type ItemSlot,
+} from "./shop";
 
+/** Bloqueio de ofensiva: protege a ofensiva em um dia sem prática */
 export const STREAK_FREEZE_COST = 120;
 export const MAX_STREAK_FREEZES = 2;
-
 
 export const today = () => dayjs().format("YYYY-MM-DD");
 
@@ -42,6 +56,26 @@ export type GestorNotice = {
   trailVersion: string;
 };
 
+/** Resultado da última semana encerrada na divisão */
+export type LeagueResult = {
+  week: string;
+  fromTier: number;
+  toTier: number;
+  position: number;
+  xp: number;
+  outcome: LeagueOutcome;
+  coins: number;
+  seen: boolean;
+};
+
+export type LeagueState = {
+  /** índice em `divisions` */
+  tier: number;
+  /** segunda-feira da semana em disputa (YYYY-MM-DD) */
+  week: string;
+  lastResult: LeagueResult | null;
+};
+
 export const isTrailComplete = (lessons: Record<string, LessonRecord>) =>
   allLessons.every(({ lesson }) => (lessons[lesson.id]?.completions ?? 0) > 0);
 
@@ -52,8 +86,16 @@ type FarolState = {
   xpTotal: number;
   xpByDate: Record<string, number>;
   activeDays: string[];
+  /** dias sem prática cobertos por um bloqueio de ofensiva */
+  frozenDays: string[];
+  /** dias que o bloqueio acabou de salvar (aviso na trilha) */
+  freezeNotice: string[];
+  bestStreak: number;
   streakFreezes: number;
   coins: number;
+  avatar: AvatarConfig;
+  ownedItems: string[];
+  league: LeagueState;
   lessons: Record<string, LessonRecord>;
   stats: FarolStats;
   soundOn: boolean;
@@ -65,6 +107,15 @@ type FarolState = {
   setDailyGoal: (goal: number) => void;
   toggleSound: () => void;
   buyStreakFreeze: () => boolean;
+  /** usa bloqueios para cobrir dias perdidos (ao abrir o app e ao concluir lição) */
+  syncStreak: () => void;
+  dismissFreezeNotice: () => void;
+  setAvatar: (patch: Partial<Omit<AvatarConfig, "equipped">>) => void;
+  buyItem: (id: string) => boolean;
+  equipItem: (slot: ItemSlot, id: string | null) => void;
+  /** fecha a semana anterior da divisão: sobe, permanece ou desce */
+  syncLeague: () => void;
+  markLeagueResultSeen: () => void;
   finishLesson: (result: LessonResult) => void;
   /** marca a conclusão da trilha (uma vez por versão) e deixa o aviso pendente */
   syncTrailCompletion: () => void;
@@ -79,8 +130,14 @@ const initialData = {
   xpTotal: 0,
   xpByDate: {} as Record<string, number>,
   activeDays: [] as string[],
+  frozenDays: [] as string[],
+  freezeNotice: [] as string[],
+  bestStreak: 0,
   streakFreezes: 0,
   coins: 50,
+  avatar: defaultAvatar,
+  ownedItems: [] as string[],
+  league: { tier: 0, week: "", lastResult: null } as LeagueState,
   lessons: {} as Record<string, LessonRecord>,
   stats: {
     answered: 0,
@@ -94,14 +151,23 @@ const initialData = {
   gestorNotice: { status: "nenhum", trailVersion: "" } as GestorNotice,
 };
 
-/** Sequência atual: conta dias seguidos até hoje (ou até ontem, se hoje ainda não praticou) */
-export const computeStreak = (activeDays: string[]): number => {
-  const set = new Set(activeDays);
+/**
+ * Ofensiva atual: dias seguidos de prática até hoje (ou até ontem, se hoje
+ * ainda não praticou). Dias cobertos por bloqueio mantêm a ofensiva, mas não
+ * somam.
+ */
+export const computeStreak = (
+  activeDays: string[],
+  frozenDays: string[] = [],
+): number => {
+  const active = new Set(activeDays);
+  const frozen = new Set(frozenDays);
+  const key = (d: dayjs.Dayjs) => d.format("YYYY-MM-DD");
   let day = dayjs();
-  if (!set.has(day.format("YYYY-MM-DD"))) day = day.subtract(1, "day");
+  if (!active.has(key(day)) && !frozen.has(key(day))) day = day.subtract(1, "day");
   let streak = 0;
-  while (set.has(day.format("YYYY-MM-DD"))) {
-    streak += 1;
+  while (active.has(key(day)) || frozen.has(key(day))) {
+    if (active.has(key(day))) streak += 1;
     day = day.subtract(1, "day");
   }
   return streak;
@@ -110,16 +176,16 @@ export const computeStreak = (activeDays: string[]): number => {
 export const xpOn = (xpByDate: Record<string, number>, date: dayjs.Dayjs) =>
   xpByDate[date.format("YYYY-MM-DD")] ?? 0;
 
-/** XP da semana atual (segunda a domingo) */
-export const xpThisWeek = (xpByDate: Record<string, number>) => {
-  const now = dayjs();
-  const daysSinceMonday = (now.day() + 6) % 7;
+/** XP de uma semana (segunda a domingo), dada a segunda-feira dela */
+export const xpOfWeek = (xpByDate: Record<string, number>, weekKey: string) => {
   let total = 0;
-  for (let i = 0; i <= daysSinceMonday; i++) {
-    total += xpOn(xpByDate, now.subtract(i, "day"));
-  }
+  for (let i = 0; i < 7; i++) total += xpOn(xpByDate, dayjs(weekKey).add(i, "day"));
   return total;
 };
+
+/** XP da semana atual */
+export const xpThisWeek = (xpByDate: Record<string, number>) =>
+  xpOfWeek(xpByDate, weekKeyOf());
 
 export const useFarolStore = create<FarolState>()(
   persist(
@@ -145,24 +211,16 @@ export const useFarolStore = create<FarolState>()(
       },
 
       finishLesson: (result) => {
-        const state = get();
         const todayStr = today();
 
-        // Protetor de sequência: cobre os dias perdidos desde a última prática
+        // bloqueios cobrem os dias perdidos antes de contar a prática de hoje
+        get().syncStreak();
+        get().syncLeague();
+        const state = get();
         let activeDays = [...state.activeDays];
-        let streakFreezes = state.streakFreezes;
-        if (!activeDays.includes(todayStr) && activeDays.length > 0) {
-          const last = activeDays.reduce((a, b) => (a > b ? a : b));
-          const missed = dayjs(todayStr).diff(dayjs(last), "day") - 1;
-          if (missed > 0 && missed <= streakFreezes) {
-            for (let i = 1; i <= missed; i++) {
-              activeDays.push(dayjs(last).add(i, "day").format("YYYY-MM-DD"));
-            }
-            streakFreezes -= missed;
-          }
-        }
         if (!activeDays.includes(todayStr)) activeDays.push(todayStr);
         activeDays = activeDays.slice(-400);
+        const streakNow = computeStreak(activeDays, state.frozenDays);
 
         const prev = state.lessons[result.lessonId];
         const perfect = result.accuracy === 1;
@@ -175,7 +233,7 @@ export const useFarolStore = create<FarolState>()(
           },
           coins: state.coins + result.coins,
           activeDays,
-          streakFreezes,
+          bestStreak: Math.max(state.bestStreak, streakNow),
           lessons: {
             ...state.lessons,
             [result.lessonId]: {
@@ -193,6 +251,98 @@ export const useFarolStore = create<FarolState>()(
           },
         });
         get().syncTrailCompletion();
+      },
+
+      syncStreak: () => {
+        const { activeDays, frozenDays, streakFreezes } = get();
+        if (streakFreezes <= 0 || activeDays.length === 0) return;
+        const covered = [...activeDays, ...frozenDays];
+        const last = covered.reduce((a, b) => (a > b ? a : b));
+        // dias inteiros perdidos entre a última prática e hoje
+        const missed = dayjs(today()).diff(dayjs(last), "day") - 1;
+        if (missed <= 0 || missed > streakFreezes) return;
+        const saved: string[] = [];
+        for (let i = 1; i <= missed; i++) {
+          saved.push(dayjs(last).add(i, "day").format("YYYY-MM-DD"));
+        }
+        set({
+          frozenDays: [...frozenDays, ...saved].slice(-400),
+          streakFreezes: streakFreezes - missed,
+          freezeNotice: saved,
+        });
+      },
+
+      dismissFreezeNotice: () => set({ freezeNotice: [] }),
+
+      setAvatar: (patch) => set({ avatar: { ...get().avatar, ...patch } }),
+
+      buyItem: (id) => {
+        const item = findItem(id);
+        const { coins, ownedItems, avatar } = get();
+        if (!item || ownedItems.includes(id) || coins < item.price) return false;
+        set({
+          coins: coins - item.price,
+          ownedItems: [...ownedItems, id],
+          // item novo já sai equipado
+          avatar: { ...avatar, equipped: { ...avatar.equipped, [item.slot]: id } },
+        });
+        return true;
+      },
+
+      equipItem: (slot, id) => {
+        const { avatar, ownedItems } = get();
+        if (id && !ownedItems.includes(id)) return;
+        const equipped = { ...avatar.equipped };
+        if (id) equipped[slot] = id;
+        else delete equipped[slot];
+        set({ avatar: { ...avatar, equipped } });
+      },
+
+      syncLeague: () => {
+        const { league, xpByDate, name, coins } = get();
+        const currentWeek = weekKeyOf();
+        if (!league.week) {
+          set({ league: { ...league, week: currentWeek } });
+          return;
+        }
+        if (league.week === currentWeek) return;
+
+        // fecha a semana que estava em disputa
+        const xp = xpOfWeek(xpByDate, league.week);
+        const table = buildLeague(name, xp, league.tier, league.week, true);
+        const position = table.findIndex((e) => e.isMe) + 1;
+        const outcome = zoneOf(position, table.length, league.tier);
+        const toTier = Math.max(
+          0,
+          Math.min(
+            TOP_DIVISION,
+            league.tier + (outcome === "subiu" ? 1 : outcome === "caiu" ? -1 : 0),
+          ),
+        );
+        const reward = outcome === "subiu" ? PROMOTION_COINS : 0;
+        set({
+          coins: coins + reward,
+          league: {
+            tier: toTier,
+            week: currentWeek,
+            lastResult: {
+              week: league.week,
+              fromTier: league.tier,
+              toTier,
+              position,
+              xp,
+              outcome,
+              coins: reward,
+              seen: false,
+            },
+          },
+        });
+      },
+
+      markLeagueResultSeen: () => {
+        const { league } = get();
+        if (!league.lastResult) return;
+        set({ league: { ...league, lastResult: { ...league.lastResult, seen: true } } });
       },
 
       syncTrailCompletion: () => {
@@ -227,7 +377,8 @@ export const useFarolStore = create<FarolState>()(
       // u1-l1… continuam, mas apontam para lições novas: mantemos XP, moedas,
       // sequência e estatísticas, e zeramos o progresso por lição.
       // v3: conclusão da trilha + aviso ao gestor.
-      version: 3,
+      // v4: ofensiva com bloqueio, avatar, itens e divisões.
+      version: 4,
       migrate: (persisted, version) => {
         let state = (persisted ?? {}) as Partial<FarolState>;
         if (version < 2) state = { ...state, lessons: {} };
@@ -239,6 +390,18 @@ export const useFarolStore = create<FarolState>()(
               status: "nenhum",
               trailVersion: "",
             },
+          };
+        }
+        if (version < 4) {
+          state = {
+            ...state,
+            frozenDays: state.frozenDays ?? [],
+            freezeNotice: [],
+            bestStreak:
+              state.bestStreak ?? computeStreak(state.activeDays ?? []),
+            avatar: state.avatar ?? defaultAvatar,
+            ownedItems: state.ownedItems ?? [],
+            league: state.league ?? { tier: 0, week: "", lastResult: null },
           };
         }
         return state as FarolState;

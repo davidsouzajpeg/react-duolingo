@@ -68,7 +68,7 @@ const badgeContext = (): BadgeContext => {
   const s = useFarolStore.getState();
   return {
     xpTotal: s.xpTotal,
-    streak: computeStreak(s.activeDays),
+    streak: computeStreak(s.activeDays, s.frozenDays),
     stats: s.stats,
     lessons: s.lessons,
   };
@@ -452,7 +452,7 @@ const LessonSummary = ({
           )}
           {streakGrew && (
             <Row className="bg-farol-warn-soft text-farol-warn">
-              <FlameIcon className="h-6 w-6" /> Sequência de {summary.streakAfter} {summary.streakAfter === 1 ? "dia" : "dias"}!
+              <FlameIcon className="h-6 w-6" /> Ofensiva de {summary.streakAfter} {summary.streakAfter === 1 ? "dia" : "dias"}!
             </Row>
           )}
           {summary.levelUp && (

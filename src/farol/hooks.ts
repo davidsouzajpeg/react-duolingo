@@ -13,7 +13,20 @@ export const useHydrated = () => {
   return hydrated;
 };
 
-export const useStreak = () => computeStreak(useFarolStore((s) => s.activeDays));
+export const useStreak = () => {
+  const activeDays = useFarolStore((s) => s.activeDays);
+  const frozenDays = useFarolStore((s) => s.frozenDays);
+  return computeStreak(activeDays, frozenDays);
+};
+
+/** Ao abrir o app: aplica bloqueios de ofensiva e fecha a semana da divisão */
+export const useDailySync = () => {
+  useEffect(() => {
+    const { syncStreak, syncLeague } = useFarolStore.getState();
+    syncStreak();
+    syncLeague();
+  }, []);
+};
 
 /**
  * Confere se a trilha foi concluída e tenta (re)enviar o aviso pendente ao

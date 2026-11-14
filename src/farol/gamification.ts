@@ -104,14 +104,14 @@ export const badges: Badge[] = [
     id: "streak-3",
     icon: "🔥",
     title: "Em ritmo",
-    description: "Pratique 3 dias seguidos",
+    description: "Chegue a 3 dias de ofensiva",
     progress: ({ streak }) => ({ value: Math.min(streak, 3), goal: 3 }),
   },
   {
     id: "streak-7",
     icon: "📆",
     title: "Follow-up em dia",
-    description: "Pratique 7 dias seguidos",
+    description: "Chegue a 7 dias de ofensiva",
     progress: ({ streak }) => ({ value: Math.min(streak, 7), goal: 7 }),
   },
   {
@@ -153,7 +153,29 @@ export const isBadgeUnlocked = (badge: Badge, ctx: BadgeContext) => {
   return value >= goal;
 };
 
-/* -------------------------------- Ranking --------------------------------- */
+/* -------------------------------- Divisões -------------------------------- */
+
+/**
+ * Divisões semanais. A semana vai de segunda a domingo: os primeiros sobem,
+ * os últimos descem e o resto permanece (ver store.syncLeague).
+ */
+export const divisions = [
+  { name: "Bronze", color: "#c98c62" },
+  { name: "Prata", color: "#c5cbd6" },
+  { name: "Ouro", color: "#f5b331" },
+  { name: "Platina", color: "#6fd3e0" },
+  { name: "Diamante", color: "#8f9bff" },
+  { name: "Farol", color: "#ff0084" },
+] as const;
+
+export const TOP_DIVISION = divisions.length - 1;
+export const PROMOTION_SPOTS = 3;
+export const DEMOTION_SPOTS = 3;
+export const PROMOTION_COINS = 50;
+
+/** segunda-feira da semana de `date`, como YYYY-MM-DD */
+export const weekKeyOf = (date: dayjs.Dayjs = dayjs()) =>
+  date.subtract((date.day() + 6) % 7, "day").format("YYYY-MM-DD");
 
 const colleagues = [
   "Ana Paula",
@@ -184,20 +206,31 @@ export type LeagueEntry = {
   isMe: boolean;
 };
 
+export type LeagueOutcome = "subiu" | "ficou" | "caiu";
+
 /**
- * Liga semanal com colegas simulados. Os pontos deles crescem ao longo da
- * semana de forma determinística, para o ranking parecer vivo.
- * Substitua por dados reais do time quando houver backend.
+ * Classificação da divisão em uma semana, com colegas simulados (os pontos
+ * deles crescem ao longo da semana de forma determinística). Quanto mais alta
+ * a divisão, mais forte a concorrência.
+ * Substitua por dados reais do time quando houver servidor.
+ *
+ * @param finished true para a classificação final de uma semana já encerrada
  */
-export const buildLeague = (myName: string, myWeekXp: number): LeagueEntry[] => {
+export const buildLeague = (
+  myName: string,
+  myWeekXp: number,
+  tier: number,
+  weekKey: string = weekKeyOf(),
+  finished = false,
+): LeagueEntry[] => {
   const now = dayjs();
-  const weekKey = now.startOf("week").format("YYYY-MM-DD");
   const daysSinceMonday = ((now.day() + 6) % 7) + now.hour() / 24;
-  const weekProgress = Math.min(1, (daysSinceMonday + 0.5) / 7);
+  const weekProgress = finished ? 1 : Math.min(1, (daysSinceMonday + 0.5) / 7);
+  const strength = 1 + tier * 0.35;
 
   const others = colleagues.map((name) => {
-    const seed = hash(name + weekKey);
-    const potential = 60 + (seed % 340);
+    const seed = hash(`${name}|${weekKey}|${tier}`);
+    const potential = (60 + (seed % 340)) * strength;
     return {
       name,
       xp: Math.round(potential * weekProgress),
@@ -210,4 +243,9 @@ export const buildLeague = (myName: string, myWeekXp: number): LeagueEntry[] => 
   );
 };
 
-export const PROMOTION_SPOTS = 3;
+/** zona em que uma posição cai dentro da divisão */
+export const zoneOf = (position: number, size: number, tier: number): LeagueOutcome => {
+  if (position <= PROMOTION_SPOTS && tier < TOP_DIVISION) return "subiu";
+  if (position > size - DEMOTION_SPOTS && tier > 0) return "caiu";
+  return "ficou";
+};

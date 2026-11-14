@@ -49,7 +49,7 @@ export const buildTrailCompletedPayload = (): TrailCompletedPayload => {
     precisao: s.stats.answered
       ? Math.round((s.stats.correct / s.stats.answered) * 100)
       : 0,
-    sequencia: computeStreak(s.activeDays),
+    sequencia: computeStreak(s.activeDays, s.frozenDays),
   };
 };
 

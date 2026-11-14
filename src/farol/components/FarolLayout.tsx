@@ -4,10 +4,15 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { getLevel } from "../gamification";
 import {
+  useDailySync,
   useGestorNoticeRetry,
   useHydrated,
   useStreak,
 } from "../hooks";
+import { divisions } from "../gamification";
+import { randomAvatar } from "../shop";
+import { Avatar } from "./Avatar";
+import { OfensivaCard } from "./Ofensiva";
 import { useFarolStore, xpOn, xpThisWeek } from "../store";
 import dayjs from "dayjs";
 import {
@@ -16,6 +21,7 @@ import {
   MapIcon,
   MedalIcon,
   PodiumIcon,
+  StarIcon,
   XpIcon,
 } from "./Icons";
 import {
@@ -32,8 +38,9 @@ import {
 
 const navItems = [
   { href: "/farol", label: "Trilha", Icon: MapIcon },
-  { href: "/farol/ranking", label: "Ranking", Icon: PodiumIcon },
-  { href: "/farol/conquistas", label: "Conquistas", Icon: MedalIcon },
+  { href: "/farol/ranking", label: "Divisões", Icon: PodiumIcon },
+  { href: "/farol/loja", label: "Loja", Icon: StarIcon },
+  { href: "/farol/conquistas", label: "Perfil", Icon: MedalIcon },
 ];
 
 export const StatsRow = () => {
@@ -46,7 +53,7 @@ export const StatsRow = () => {
     <div className="flex items-center justify-around gap-4 font-num text-lg font-extrabold tabular-nums">
       <span
         className={`flex items-center gap-1.5 ${practicedToday ? "text-farol-warn" : "text-farol-muted"}`}
-        title="Sequência de dias praticando"
+        title="Ofensiva: dias seguidos praticando"
       >
         <FlameIcon className="h-7 w-7" off={!practicedToday} />
         {streak}
@@ -111,18 +118,19 @@ const LevelCard = () => {
 
 const LeagueTeaser = () => {
   const weekXp = useFarolStore((s) => xpThisWeek(s.xpByDate));
+  const tier = useFarolStore((s) => s.league.tier);
   return (
     <section className={`${card} p-5`}>
       <div className="mb-2 flex items-center justify-between">
-        <Eyebrow>Liga do time</Eyebrow>
+        <Eyebrow>Divisão {divisions[tier]!.name}</Eyebrow>
         <Link href="/farol/ranking" className="text-xs font-semibold uppercase tracking-[.09em] text-farol-accent hover:underline">
-          Ver ranking
+          Ver divisão
         </Link>
       </div>
       <p className="text-sm text-farol-muted">
         Você fez{" "}
         <strong className="font-num font-extrabold tabular-nums text-farol-ink">{weekXp} XP</strong>{" "}
-        esta semana. Os 3 primeiros sobem de liga no domingo.
+        esta semana. No domingo, os 3 primeiros sobem e os 3 últimos descem.
       </p>
     </section>
   );
@@ -130,6 +138,8 @@ const LeagueTeaser = () => {
 
 const Onboarding = () => {
   const completeOnboarding = useFarolStore((s) => s.completeOnboarding);
+  const avatar = useFarolStore((s) => s.avatar);
+  const setAvatar = useFarolStore((s) => s.setAvatar);
   const [name, setName] = useState("");
   const [goal, setGoal] = useState(30);
   const goals = [
@@ -175,6 +185,20 @@ const Onboarding = () => {
               autoFocus
             />
           </label>
+          <div className="mt-4 flex items-center gap-4 rounded-2xl border border-farol-line bg-farol-bg p-3">
+            <Avatar config={avatar} className="h-16 w-16 rounded-full" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">Este é o seu avatar</p>
+              <p className="text-sm text-farol-muted">Depois você muda tudo na Loja.</p>
+              <button
+                type="button"
+                onClick={() => setAvatar(randomAvatar())}
+                className="mt-1 text-xs font-semibold uppercase tracking-[.09em] text-farol-accent hover:brightness-125"
+              >
+                Sortear outro
+              </button>
+            </div>
+          </div>
           <fieldset className="mt-4">
             <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">
               Meta diária
@@ -224,6 +248,7 @@ export const FarolLayout = ({
   const hydrated = useHydrated();
   const onboarded = useFarolStore((s) => s.onboarded);
   useGestorNoticeRetry();
+  useDailySync();
 
   return (
     <FarolShell title={title}>
@@ -283,9 +308,10 @@ export const FarolLayout = ({
               <div className={`${card} px-5 py-3`}>
                 <StatsRow />
               </div>
+              <OfensivaCard />
               <DailyGoalCard />
-              <LevelCard />
               <LeagueTeaser />
+              <LevelCard />
             </>
           )}
         </aside>
@@ -300,7 +326,7 @@ export const FarolLayout = ({
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex flex-col items-center border-t-2 px-4 pt-1 text-xs font-semibold ${
+              className={`flex flex-col items-center border-t-2 px-2 pt-1 text-xs font-semibold ${
                 active
                   ? "-mt-2 border-farol-accent pt-3 text-farol-accent"
                   : "border-transparent text-farol-muted"

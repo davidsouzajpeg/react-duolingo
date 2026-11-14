@@ -54,7 +54,7 @@ const Totals = () => {
       <Total label="XP total" value={xpTotal} tone="text-farol-accent" />
       <Total label="Lições" value={`${completedLessonCount(lessons)}/${allLessons.length}`} />
       <Total label="Precisão geral" value={`${accuracy}%`} tone="text-farol-ok" />
-      <Total label={streak === 1 ? "Dia de sequência" : "Dias de sequência"} value={streak} tone="text-farol-warn" />
+      <Total label={streak === 1 ? "Dia de ofensiva" : "Dias de ofensiva"} value={streak} tone="text-farol-warn" />
     </div>
   );
 };

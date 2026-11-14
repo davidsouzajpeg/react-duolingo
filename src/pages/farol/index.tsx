@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { allLessons, linhaAtual, units } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { TrailEndCard } from "~/farol/components/TrailEnd";
-import { CheckIcon, LockIcon, StarIcon } from "~/farol/components/Icons";
+import { CheckIcon, LockIcon, ShieldIcon, StarIcon } from "~/farol/components/Icons";
 import {
   Eyebrow,
   Feixe,
@@ -194,6 +194,27 @@ const UnitHeader = ({ unit }: { unit: Unit }) => {
   );
 };
 
+/** Aviso de que o bloqueio de ofensiva salvou dias sem prática */
+const FreezeNotice = () => {
+  const saved = useFarolStore((s) => s.freezeNotice);
+  const dismiss = useFarolStore((s) => s.dismissFreezeNotice);
+  if (saved.length === 0) return null;
+  return (
+    <div className="mb-4 flex items-center gap-3 rounded-2xl border border-sky-400/60 bg-sky-400/10 p-4" role="status">
+      <ShieldIcon className="h-9 w-9 shrink-0" />
+      <p className="grow text-sm">
+        <b className="font-semibold">Sua ofensiva foi salva!</b>{" "}
+        {saved.length === 1
+          ? "Um bloqueio de ofensiva cobriu o dia em que você não praticou."
+          : `${saved.length} bloqueios de ofensiva cobriram os dias em que você não praticou.`}
+      </p>
+      <button onClick={dismiss} className="shrink-0 text-xs font-semibold uppercase tracking-[.09em] text-farol-accent">
+        Ok
+      </button>
+    </div>
+  );
+};
+
 const LinhaHero = () => {
   const records = useFarolStore((s) => s.lessons);
   const name = useFarolStore((s) => s.name);
@@ -255,6 +276,7 @@ const Trail = () => {
 
   return (
     <>
+      <FreezeNotice />
       <LinhaHero />
       <div className="flex flex-col gap-10">
         {units.map((unit) => (

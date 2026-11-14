@@ -1,9 +1,10 @@
 import type { NextPage } from "next";
-import { useState } from "react";
 import { allLessons, linhaAtual } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
-import { CoinIcon, ShieldIcon } from "~/farol/components/Icons";
-import { Button, Eyebrow, Faroldo, Feixe, Pill, ProgressBar, card } from "~/farol/components/ui";
+import Link from "next/link";
+import { Avatar } from "~/farol/components/Avatar";
+import { OfensivaCard } from "~/farol/components/Ofensiva";
+import { Eyebrow, Faroldo, Feixe, Pill, ProgressBar, card } from "~/farol/components/ui";
 import {
   badges,
   completedLessonCount,
@@ -11,11 +12,7 @@ import {
   levels,
 } from "~/farol/gamification";
 import { useStreak } from "~/farol/hooks";
-import {
-  MAX_STREAK_FREEZES,
-  STREAK_FREEZE_COST,
-  useFarolStore,
-} from "~/farol/store";
+import { useFarolStore } from "~/farol/store";
 
 const Stat = ({ icon, value, label }: { icon: string; value: string | number; label: string }) => (
   <div className={`${card} flex items-center gap-3 p-3`}>
@@ -32,7 +29,6 @@ const Stat = ({ icon, value, label }: { icon: string; value: string | number; la
 const Conquistas = () => {
   const state = useFarolStore();
   const streak = useStreak();
-  const [message, setMessage] = useState<string | null>(null);
   const level = getLevel(state.xpTotal);
   const ctx = { xpTotal: state.xpTotal, streak, stats: state.stats, lessons: state.lessons };
   const accuracy = state.stats.answered
@@ -46,11 +42,11 @@ const Conquistas = () => {
         <Feixe />
         <div className="relative">
           <div className="flex items-center gap-4">
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-farol-line bg-farol-lamp text-4xl" aria-hidden>
-              {level.current.icon}
-            </span>
+            <Link href="/farol/loja" aria-label="Editar avatar na Loja" className="shrink-0">
+              <Avatar config={state.avatar} className="h-20 w-20 rounded-full border-2 border-farol-accent" />
+            </Link>
             <div className="min-w-0 grow">
-              <Eyebrow className="text-farol-accent">{level.current.name}</Eyebrow>
+              <Eyebrow className="text-farol-accent">{level.current.icon} {level.current.name}</Eyebrow>
               <h1 className="mt-1 truncate font-display text-3xl font-extrabold leading-none tracking-tight">
                 {state.name || "Consultor"}
               </h1>
@@ -87,7 +83,7 @@ const Conquistas = () => {
       <section>
         <h2 className="mb-3 font-display text-xl font-extrabold tracking-tight">Estatísticas</h2>
         <div className="grid grid-cols-2 gap-3">
-          <Stat icon="🔥" value={streak} label="dias de sequência" />
+          <Stat icon="🔥" value={streak} label="dias de ofensiva" />
           <Stat icon="⚡" value={state.xpTotal} label="XP total" />
           <Stat icon="📚" value={`${completedLessonCount(state.lessons)}/${allLessons.length}`} label="lições concluídas" />
           <Stat icon="🎯" value={`${accuracy}%`} label="precisão geral" />
@@ -132,38 +128,7 @@ const Conquistas = () => {
         </ul>
       </section>
 
-      {/* Loja */}
-      <section id="loja">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-xl font-extrabold tracking-tight">Loja</h2>
-          <span className="flex items-center gap-1 font-num text-lg font-extrabold tabular-nums text-farol-warn">
-            <CoinIcon className="h-6 w-6" /> {state.coins}
-          </span>
-        </div>
-        {message && (
-          <p className="mb-3 rounded-xl bg-farol-ok-soft px-4 py-2 font-semibold text-farol-ok" role="status">
-            {message}
-          </p>
-        )}
-        <div className="flex flex-col gap-3">
-          <div className={`${card} flex items-center gap-3 p-4 sm:gap-4`}>
-            <ShieldIcon className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
-            <div className="min-w-0 grow">
-              <p className="font-semibold">Protetor de sequência</p>
-              <p className="text-sm text-farol-muted">
-                Protege sua sequência se você ficar um dia sem treinar. Equipados: {state.streakFreezes}/{MAX_STREAK_FREEZES}.
-              </p>
-            </div>
-            <Button
-              className="flex shrink-0 items-center gap-1 px-4 py-2 font-num text-sm tabular-nums"
-              disabled={state.streakFreezes >= MAX_STREAK_FREEZES || state.coins < STREAK_FREEZE_COST}
-              onClick={() => state.buyStreakFreeze() && setMessage("Protetor de sequência equipado! 🛡️")}
-            >
-              <CoinIcon className="h-4 w-4" /> {STREAK_FREEZE_COST}
-            </Button>
-          </div>
-        </div>
-      </section>
+      <OfensivaCard />
 
       {/* Configurações */}
       <section>
