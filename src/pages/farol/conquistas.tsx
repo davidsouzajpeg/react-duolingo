@@ -32,7 +32,7 @@ const Conquistas = () => {
   const streak = useStreak();
   const [confirmReset, setConfirmReset] = useState(false);
   const level = getLevel(state.xpTotal);
-  const ctx = { xpTotal: state.xpTotal, streak, stats: state.stats, lessons: state.lessons };
+  const ctx = { xpTotal: state.xpTotal, streak, stats: state.stats, lessons: state.lessons, sims: state.sims };
   const accuracy = state.stats.answered
     ? Math.round((state.stats.correct / state.stats.answered) * 100)
     : 0;

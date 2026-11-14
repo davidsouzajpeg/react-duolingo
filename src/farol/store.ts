@@ -11,6 +11,13 @@ import {
   type LeagueOutcome,
 } from "./gamification";
 import {
+  SIM_COINS_FIRST,
+  SIM_XP_FIRST,
+  SIM_XP_REPEAT,
+  type Competencia,
+  type SimEvaluation,
+} from "./simulador";
+import {
   defaultAvatar,
   findItem,
   type AvatarConfig,
@@ -76,6 +83,17 @@ export type LeagueState = {
   lastResult: LeagueResult | null;
 };
 
+/** Melhor resultado e tentativas em cada cenário do simulador */
+export type SimRecord = { attempts: number; best: number };
+
+/** Uma simulação concluída (histórico) */
+export type SimHistoryEntry = {
+  id: string;
+  date: string;
+  geral: number;
+  por: { id: Competencia; pct: number }[];
+};
+
 export const isTrailComplete = (lessons: Record<string, LessonRecord>) =>
   allLessons.every(({ lesson }) => (lessons[lesson.id]?.completions ?? 0) > 0);
 
@@ -97,6 +115,8 @@ type FarolState = {
   ownedItems: string[];
   league: LeagueState;
   lessons: Record<string, LessonRecord>;
+  sims: Record<string, SimRecord>;
+  simHistory: SimHistoryEntry[];
   stats: FarolStats;
   soundOn: boolean;
   /** ISO da primeira vez em que todas as lições da versão atual foram concluídas */
@@ -117,6 +137,8 @@ type FarolState = {
   syncLeague: () => void;
   markLeagueResultSeen: () => void;
   finishLesson: (result: LessonResult) => void;
+  /** registra uma simulação e devolve a recompensa (reduzida nas repetições) */
+  finishSimulation: (id: string, evaluation: SimEvaluation) => { xp: number; coins: number };
   /** marca a conclusão da trilha (uma vez por versão) e deixa o aviso pendente */
   syncTrailCompletion: () => void;
   markGestorNotified: (trailVersion: string) => void;
@@ -139,6 +161,8 @@ const initialData = {
   ownedItems: [] as string[],
   league: { tier: 0, week: "", lastResult: null } as LeagueState,
   lessons: {} as Record<string, LessonRecord>,
+  sims: {} as Record<string, SimRecord>,
+  simHistory: [] as SimHistoryEntry[],
   stats: {
     answered: 0,
     correct: 0,
@@ -251,6 +275,45 @@ export const useFarolStore = create<FarolState>()(
           },
         });
         get().syncTrailCompletion();
+      },
+
+      finishSimulation: (id, evaluation) => {
+        const todayStr = today();
+        get().syncStreak();
+        get().syncLeague();
+        const state = get();
+        const prev = state.sims[id];
+        // primeira conclusão vale as faíscas cheias; repetir é treino, com recompensa menor
+        const base = prev ? SIM_XP_REPEAT : SIM_XP_FIRST;
+        const xp = Math.max(1, Math.round((base * evaluation.geral) / 100));
+        const coins = prev ? 0 : SIM_COINS_FIRST;
+        let activeDays = [...state.activeDays];
+        if (!activeDays.includes(todayStr)) activeDays.push(todayStr);
+        activeDays = activeDays.slice(-400);
+        set({
+          xpTotal: state.xpTotal + xp,
+          xpByDate: { ...state.xpByDate, [todayStr]: (state.xpByDate[todayStr] ?? 0) + xp },
+          coins: state.coins + coins,
+          activeDays,
+          bestStreak: Math.max(state.bestStreak, computeStreak(activeDays, state.frozenDays)),
+          sims: {
+            ...state.sims,
+            [id]: {
+              attempts: (prev?.attempts ?? 0) + 1,
+              best: Math.max(prev?.best ?? 0, evaluation.geral),
+            },
+          },
+          simHistory: [
+            ...state.simHistory,
+            {
+              id,
+              date: new Date().toISOString(),
+              geral: evaluation.geral,
+              por: evaluation.porCompetencia.map((c) => ({ id: c.id, pct: c.pct })),
+            },
+          ].slice(-40),
+        });
+        return { xp, coins };
       },
 
       syncStreak: () => {
@@ -378,7 +441,8 @@ export const useFarolStore = create<FarolState>()(
       // sequência e estatísticas, e zeramos o progresso por lição.
       // v3: conclusão da trilha + aviso ao gestor.
       // v4: ofensiva com bloqueio, avatar, itens e divisões.
-      version: 4,
+      // v5: simulador de vendas.
+      version: 5,
       migrate: (persisted, version) => {
         let state = (persisted ?? {}) as Partial<FarolState>;
         if (version < 2) state = { ...state, lessons: {} };
@@ -403,6 +467,9 @@ export const useFarolStore = create<FarolState>()(
             ownedItems: state.ownedItems ?? [],
             league: state.league ?? { tier: 0, week: "", lastResult: null },
           };
+        }
+        if (version < 5) {
+          state = { ...state, sims: state.sims ?? {}, simHistory: state.simHistory ?? [] };
         }
         return state as FarolState;
       },

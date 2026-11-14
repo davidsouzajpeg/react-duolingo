@@ -34,6 +34,7 @@ import {
 
 const navItems = [
   { href: "/farol", label: "Trilha", id: "trilha" },
+  { href: "/farol/simulador", label: "Simulador", id: "simulador" },
   { href: "/farol/ranking", label: "Divisões", id: "divisoes" },
   { href: "/farol/loja", label: "Loja", id: "loja" },
   { href: "/farol/conquistas", label: "Perfil", id: "perfil" },
@@ -67,6 +68,16 @@ const NavGlyph = ({ id }: { id: (typeof navItems)[number]["id"] }) => {
           <path d="M18 2 32 7v10c0 9-6 14.500-14 17C10 31.500 4 26 4 17V7Z" fill={divisions[tier]!.color} />
           <path d="M18 6v24.500c6-2.500 10-7 10-13.500V9.500Z" fill="#000" opacity=".18" />
           <path d="m18 10 2.200 4.600 5 .7-3.600 3.500.900 5-4.500-2.400-4.500 2.400.900-5-3.600-3.500 5-.7Z" fill="#fff" />
+        </svg>
+      );
+    case "simulador":
+      return (
+        <svg viewBox="0 0 36 36" className={size} aria-hidden>
+          <path d="M4 9a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5h-9l-6 5v-5.3A5 5 0 0 1 4 17Z" fill="#3fcf86" />
+          <path d="M16 18a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4v4l-5-4h-4a4 4 0 0 1-4-4Z" fill="#ff0084" />
+          <circle cx="21.5" cy="21" r="1.6" fill="#fff" />
+          <circle cx="25.5" cy="21" r="1.6" fill="#fff" />
+          <circle cx="29.5" cy="21" r="1.6" fill="#fff" />
         </svg>
       );
     case "loja":

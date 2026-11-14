@@ -65,6 +65,8 @@ export type BadgeContext = {
   streak: number;
   stats: FarolStats;
   lessons: Record<string, LessonRecord>;
+  /** melhor resultado por cenário do simulador */
+  sims?: Record<string, { attempts: number; best: number }>;
 };
 
 export type Badge = {
@@ -137,6 +139,23 @@ export const badges: Badge[] = [
     title: "Meta batida",
     description: "Acumule 500 faíscas",
     progress: ({ xpTotal }) => ({ value: Math.min(xpTotal, 500), goal: 500 }),
+  },
+  {
+    id: "sim-1",
+    icon: "💬",
+    title: "Primeira negociação",
+    description: "Conclua a sua primeira simulação de vendas",
+    progress: ({ sims }) => ({ value: Math.min(1, Object.keys(sims ?? {}).length), goal: 1 }),
+  },
+  {
+    id: "sim-3",
+    icon: "🤝",
+    title: "Negociador experiente",
+    description: "Chegue a 80% ou mais em 3 cenários do simulador",
+    progress: ({ sims }) => ({
+      value: Math.min(3, Object.values(sims ?? {}).filter((r) => r.best >= 80).length),
+      goal: 3,
+    }),
   },
   unitBadge(1, "💡", "Cultura Open"),
   unitBadge(2, "🔎", "Lição de casa feita"),

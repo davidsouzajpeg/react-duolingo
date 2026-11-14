@@ -9,6 +9,7 @@ import Trilha from "~/pages/farol/index";
 import Licao from "~/pages/farol/licao/[id]";
 import Loja from "~/pages/farol/loja";
 import Ranking from "~/pages/farol/ranking";
+import Simulador from "~/pages/farol/simulador";
 import { getPath, navigate, subscribe } from "./shims/router-core";
 
 // links comuns (<a href="/farol/...">) também navegam dentro do artefato
@@ -102,7 +103,9 @@ const App = () => {
     ? Licao
     : path === "/farol/ranking"
       ? Ranking
-      : path === "/farol/loja"
+      : path === "/farol/simulador"
+        ? Simulador
+        : path === "/farol/loja"
         ? Loja
         : path === "/farol/conquistas"
           ? Conquistas
