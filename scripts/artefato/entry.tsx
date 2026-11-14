@@ -11,9 +11,6 @@ import Loja from "~/pages/farol/loja";
 import Ranking from "~/pages/farol/ranking";
 import { getPath, navigate, subscribe } from "./shims/router-core";
 
-// o visualizador de artefatos não mostra confirm(): aqui a confirmação é dispensada
-window.confirm = () => true;
-
 // links comuns (<a href="/farol/...">) também navegam dentro do artefato
 document.addEventListener("click", (e) => {
   const a = (e.target as HTMLElement | null)?.closest?.("a");

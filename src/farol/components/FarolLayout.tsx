@@ -332,7 +332,7 @@ export const FarolLayout = ({
       </nav>
 
       {/* Topo (mobile) */}
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-farol-line bg-farol-surface/95 px-4 py-3 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-farol-line bg-farol-surface/95 px-4 py-3 backdrop-blur md:hidden">
         <Link href="/farol" aria-label="Vendê">
           <Brand compact />
         </Link>
@@ -359,7 +359,7 @@ export const FarolLayout = ({
       </div>
 
       {/* Navegação inferior (mobile) */}
-      <nav aria-label="Navegação" className="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-around border-t-2 border-farol-line bg-farol-bg pb-[max(.6rem,env(safe-area-inset-bottom))] pt-2.5 md:hidden">
+      <nav aria-label="Navegação" className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t-2 border-farol-line bg-farol-bg pb-[max(.6rem,env(safe-area-inset-bottom))] pt-2.5 md:hidden">
         {navItems.map(({ href, label, id }) => {
           const active = router.pathname === href;
           return (

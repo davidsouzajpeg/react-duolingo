@@ -1,10 +1,11 @@
 import type { NextPage } from "next";
+import { useState } from "react";
 import { allLessons, linhaAtual } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import Link from "next/link";
 import { Avatar } from "~/farol/components/Avatar";
 import { OfensivaCard } from "~/farol/components/Ofensiva";
-import { Eyebrow, Faroldo, Feixe, Pill, ProgressBar, card } from "~/farol/components/ui";
+import { Eyebrow, buttonBase, buttonVariants, Faroldo, Feixe, Pill, ProgressBar, card } from "~/farol/components/ui";
 import {
   badges,
   completedLessonCount,
@@ -29,6 +30,7 @@ const Stat = ({ icon, value, label }: { icon: string; value: string | number; la
 const Conquistas = () => {
   const state = useFarolStore();
   const streak = useStreak();
+  const [confirmReset, setConfirmReset] = useState(false);
   const level = getLevel(state.xpTotal);
   const ctx = { xpTotal: state.xpTotal, streak, stats: state.stats, lessons: state.lessons };
   const accuracy = state.stats.answered
@@ -154,9 +156,7 @@ const Conquistas = () => {
           </label>
           <button
             className="self-start text-sm font-semibold text-farol-bad hover:underline"
-            onClick={() => {
-              if (window.confirm("Apagar todo o seu progresso no Vendê?")) state.reset();
-            }}
+            onClick={() => setConfirmReset(true)}
           >
             Reiniciar progresso
           </button>
@@ -192,6 +192,48 @@ const Conquistas = () => {
           </div>
         </div>
       </section>
+      {confirmReset && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-farol-lamp/85 backdrop-blur-sm sm:items-center sm:p-4"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="reset-title"
+          aria-describedby="reset-desc"
+          onClick={() => setConfirmReset(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-3xl border border-farol-line bg-farol-surface p-6 sm:rounded-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="reset-title" className="font-display text-xl font-extrabold tracking-tight">
+              Reiniciar todo o seu progresso?
+            </h2>
+            <p id="reset-desc" className="mt-2 text-farol-muted">
+              Isso apaga suas faíscas, moedas, chama, lições concluídas, conquistas,
+              divisão, avatar e itens comprados neste aparelho.{" "}
+              <b className="text-farol-ink">Não dá para desfazer.</b>
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
+              <button
+                className={`flex-1 ${buttonBase} ${buttonVariants.danger}`}
+                onClick={() => {
+                  state.reset();
+                  setConfirmReset(false);
+                }}
+              >
+                Apagar tudo
+              </button>
+              <button
+                autoFocus
+                className={`flex-1 ${buttonBase} ${buttonVariants.ghost}`}
+                onClick={() => setConfirmReset(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

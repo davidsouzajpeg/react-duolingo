@@ -97,6 +97,14 @@ const LessonNode = ({
         >
           {nodeIcon(lesson, status)}
         </button>
+        {selected && (
+          <LessonPopover
+            lesson={lesson}
+            status={status}
+            offset={offset}
+            nodeSize={isChallenge ? 76 : 70}
+          />
+        )}
       </div>
 
       {/* Farol da lição: melhor precisão já alcançada */}
@@ -109,7 +117,6 @@ const LessonNode = ({
         />
       )}
 
-      {selected && <LessonPopover lesson={lesson} status={status} offset={offset} />}
     </div>
   );
 };
@@ -118,12 +125,19 @@ const LessonPopover = ({
   lesson,
   status,
   offset,
+  nodeSize,
 }: {
   lesson: Lesson;
   status: LessonStatus;
   /** deslocamento do nó: o balão volta para o centro da coluna */
   offset: number;
+  nodeSize: number;
 }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  // garante que o balão inteiro apareça, sem ficar atrás do topo ou do rodapé
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, []);
   const record = useFarolStore((s) => s.lessons[lesson.id]);
   const locked = status === "locked";
   const isChallenge = lesson.kind === "desafio";
@@ -131,14 +145,17 @@ const LessonPopover = ({
 
   return (
     <div
-      className="absolute top-[94px] z-20 w-72 rounded-2xl border border-farol-line bg-farol-surface2 p-4 text-left shadow-2xl"
-      style={{ transform: `translateX(${-offset}px)` }}
+      ref={ref}
+      className="vd-pop absolute left-1/2 z-20 w-72 origin-bottom scroll-mb-28 scroll-mt-24 rounded-2xl border border-farol-line bg-farol-surface2 p-4 text-left shadow-2xl"
+      // o botão de ação fica exatamente sobre o ponto tocado: o centro do
+      // botão (16px de borda + 26px de meia altura) coincide com o centro do nó
+      style={{
+        bottom: nodeSize / 2 - 42,
+        marginLeft: -144 - offset,
+        animationDuration: "0.22s",
+      }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div
-        className="absolute -top-2 h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-farol-line bg-farol-surface2"
-        style={{ left: `calc(50% + ${offset}px)` }}
-      />
       <div className="relative flex items-start justify-between gap-3">
         <div>
           <Eyebrow className={isChallenge ? "text-farol-warn" : "text-farol-muted"}>
