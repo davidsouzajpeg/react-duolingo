@@ -4,12 +4,12 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { lessonsByLinha, linhaAtual, linhas } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { Avatar } from "~/farol/components/Avatar";
-import { Confetti } from "~/farol/components/Celebrate";
+import { Confetti, CountUp } from "~/farol/components/Celebrate";
 import { useSounds } from "~/farol/hooks";
 import { GIFT_AFTER_LESSON, type Gift, giftOfUnit } from "~/farol/presentes";
 import { findItem } from "~/farol/shop";
 import { TrailEndCard } from "~/farol/components/TrailEnd";
-import { CheckIcon, LockIcon, ShieldIcon, StarIcon } from "~/farol/components/Icons";
+import { CheckIcon, CoinIcon, LockIcon, ShieldIcon, StarIcon, XpIcon } from "~/farol/components/Icons";
 import {
   Button,
   Eyebrow,
@@ -279,27 +279,54 @@ const GiftNode = ({
   );
 };
 
-const rewardLabel = (r: GiftResult) =>
-  r.kind === "moedas"
-    ? `+${r.amount} moedas`
-    : r.kind === "faiscas"
-      ? `+${r.amount} faíscas`
-      : r.name;
+/** Caixa de presente: a tampa é um grupo separado, para voar na abertura */
+const GiftBox = ({ className = "", open = false }: { className?: string; open?: boolean }) => (
+  <svg viewBox="0 0 120 120" className={className} aria-hidden>
+    <rect x="18" y="52" width="84" height="58" rx="8" fill="#ff0084" />
+    <rect x="18" y="52" width="84" height="14" fill="#c4006a" opacity=".55" />
+    <rect x="52" y="52" width="16" height="58" fill="#f5b331" />
+    <g className={open ? "vd-lid" : ""}>
+      <rect x="10" y="34" width="100" height="22" rx="7" fill="#ff3a9d" />
+      <rect x="52" y="34" width="16" height="22" fill="#f5b331" />
+      <path d="M60 34C44 6 22 16 34 30c6 6 18 6 26 4Z" fill="#f5b331" />
+      <path d="M60 34c16-28 38-18 26-4-6 6-18 6-26 4Z" fill="#ffd778" />
+      <circle cx="60" cy="33" r="7" fill="#b9841c" />
+    </g>
+  </svg>
+);
 
-/** O e-mail do cliente, com o presente para receber */
+/**
+ * O e-mail do cliente. Tem três momentos:
+ * 1. a mensagem, avisando que há um presente (sem dizer qual);
+ * 2. a caixa chacoalhando e abrindo;
+ * 3. a revelação do que veio dentro.
+ */
 const GiftEmail = ({ gift, onClose }: { gift: Gift; onClose: () => void }) => {
   const already = useFarolStore((s) => s.gifts.includes(gift.unitId));
   const claimGift = useFarolStore((s) => s.claimGift);
   const avatar = useFarolStore((s) => s.avatar);
   const sounds = useSounds();
+  const [stage, setStage] = useState<"email" | "abrindo" | "revelado">("email");
   const [result, setResult] = useState<GiftResult | null>(null);
-  const item = gift.reward.kind === "item" ? findItem(gift.reward.itemId) : undefined;
-  const promised =
-    gift.reward.kind === "moedas"
-      ? `${gift.reward.amount} moedas`
-      : gift.reward.kind === "faiscas"
-        ? `${gift.reward.amount} faíscas`
-        : (item?.name ?? "um item para o seu avatar");
+  // quem reabre um e-mail antigo vê só a mensagem
+  const [wasClaimed] = useState(already);
+  const timer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const open = () => {
+    setStage("abrindo");
+    sounds.giftShake();
+    timer.current = setTimeout(() => {
+      const r = claimGift(gift.unitId);
+      if (!r) return onClose();
+      setResult(r);
+      setStage("revelado");
+      sounds.giftOpen();
+    }, 1150);
+  };
+
+  const item = result?.kind === "item" ? findItem(result.itemId) : undefined;
+  const busy = stage === "abrindo";
 
   return (
     <div
@@ -307,79 +334,117 @@ const GiftEmail = ({ gift, onClose }: { gift: Gift; onClose: () => void }) => {
       role="dialog"
       aria-modal="true"
       aria-label={`E-mail de ${gift.from.nome}`}
-      onClick={onClose}
+      onClick={busy ? undefined : onClose}
     >
       <div
         className="vd-slide-up relative w-full max-w-md overflow-hidden rounded-t-3xl border border-farol-line bg-farol-surface sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {result && (
-          <div className="pointer-events-none absolute left-1/2 top-1/2">
-            <Confetti kind="burst" count={40} />
-          </div>
-        )}
-        <header className="flex items-center gap-3 border-b border-farol-line bg-farol-lamp px-5 py-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-farol-surface2 text-2xl" aria-hidden>
-            {gift.from.emoji}
-          </span>
-          <div className="min-w-0 grow">
-            <p className="truncate font-semibold leading-tight">{gift.from.nome}</p>
-            <p className="truncate text-xs text-farol-muted">{gift.from.empresa} · para você</p>
-          </div>
-          <Pill tone="neutro">Cliente fictício</Pill>
-        </header>
-        <div className="p-5">
-          <h2 className="font-display text-xl font-extrabold leading-tight tracking-tight">{gift.subject}</h2>
-          <p className="mt-3 leading-relaxed text-farol-ink/90">{gift.body}</p>
-
-          <div className={`mt-5 flex items-center gap-4 rounded-2xl border p-4 ${result || already ? "border-farol-ok/60 bg-farol-ok-soft" : "border-farol-warn/60 bg-farol-warn-soft"}`}>
-            {(result?.kind === "item" || (!result && item)) && item ? (
-              <Avatar
-                config={{ ...avatar, equipped: { ...avatar.equipped, [item.slot]: item.id } }}
-                round={false}
-                className="h-16 w-16"
-                label=""
-              />
-            ) : (
-              <span className="text-4xl" aria-hidden>🎁</span>
-            )}
-            <div className="min-w-0">
-              <Eyebrow className={result || already ? "text-farol-ok" : "text-farol-warn"}>
-                {result ? "Você recebeu" : already ? "Presente já recebido" : "Presente anexado"}
-              </Eyebrow>
-              <p className="font-display text-lg font-extrabold leading-tight tracking-tight">
-                {result ? rewardLabel(result) : promised}
-              </p>
-              {result?.kind === "moedas" && result.insteadOf && (
-                <p className="text-sm text-farol-muted">
-                  Você já tinha “{result.insteadOf}”, então virou moedas.
+        {stage === "email" ? (
+          <>
+            <header className="flex items-center gap-3 border-b border-farol-line bg-farol-lamp px-5 py-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-farol-surface2 text-2xl" aria-hidden>
+                {gift.from.emoji}
+              </span>
+              <div className="min-w-0 grow">
+                <p className="truncate font-semibold leading-tight">{gift.from.nome}</p>
+                <p className="truncate text-xs text-farol-muted">{gift.from.empresa} · para você</p>
+              </div>
+              <Pill tone="neutro">Cliente fictício</Pill>
+            </header>
+            <div className="p-5">
+              <h2 className="font-display text-xl font-extrabold leading-tight tracking-tight">{gift.subject}</h2>
+              <p className="mt-3 leading-relaxed text-farol-ink/90">{gift.body}</p>
+              {wasClaimed ? (
+                <p className="mt-5 rounded-2xl border border-farol-ok/60 bg-farol-ok-soft px-4 py-3 text-sm font-semibold text-farol-ok">
+                  ✓ Você já abriu o presente deste e-mail.
                 </p>
+              ) : (
+                <div className="mt-5 flex items-center gap-4 rounded-2xl border border-farol-warn/60 bg-farol-warn-soft p-4">
+                  <GiftBox className="vd-gift h-16 w-16 shrink-0" />
+                  <div className="min-w-0">
+                    <Eyebrow className="text-farol-warn">Anexo</Eyebrow>
+                    <p className="font-display text-lg font-extrabold leading-tight tracking-tight">
+                      Tem um presente para você
+                    </p>
+                    <p className="text-sm text-farol-muted">Abra para descobrir o que é.</p>
+                  </div>
+                </div>
               )}
-              {result?.kind === "item" && (
-                <p className="text-sm text-farol-muted">Já está equipado no seu avatar.</p>
+              {wasClaimed ? (
+                <Button variant="ghost" className="mt-5 w-full" onClick={onClose}>
+                  Fechar
+                </Button>
+              ) : (
+                <Button className="mt-5 w-full" autoFocus onClick={open}>
+                  Abrir presente
+                </Button>
               )}
             </div>
+          </>
+        ) : (
+          <div className="relative flex min-h-[26rem] flex-col items-center justify-center gap-4 overflow-hidden px-5 py-10 text-center">
+            {stage === "abrindo" ? (
+              <>
+                <GiftBox className="vd-box-shake h-44 w-44" />
+                <p className="font-display text-xl font-extrabold tracking-tight text-farol-warn" role="status">
+                  Abrindo…
+                </p>
+              </>
+            ) : (
+              result && (
+                <>
+                  <div aria-hidden className="vd-rays absolute left-1/2 top-[38%] h-[30rem] w-[30rem] -translate-x-1/2 -translate-y-1/2" />
+                  <div aria-hidden className="vd-flash absolute left-1/2 top-[38%] h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+                  <div className="pointer-events-none absolute left-1/2 top-[38%]">
+                    <Confetti kind="burst" count={60} />
+                  </div>
+                  <div className="relative h-44 w-44">
+                    <GiftBox open className="absolute inset-0 h-44 w-44 opacity-40" />
+                    <div className="vd-reveal absolute inset-0 flex items-center justify-center">
+                      {result.kind === "item" && item ? (
+                        <Avatar
+                          config={{ ...avatar, equipped: { ...avatar.equipped, [item.slot]: item.id } }}
+                          animated
+                          celebrate
+                          className="h-36 w-36 rounded-full border-4 border-farol-warn"
+                          label=""
+                        />
+                      ) : result.kind === "moedas" ? (
+                        <CoinIcon className="h-32 w-32 drop-shadow-[0_0_24px_rgba(245,179,49,.7)]" />
+                      ) : (
+                        <XpIcon className="h-32 w-32 drop-shadow-[0_0_24px_rgba(255,0,132,.7)]" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="vd-stagger relative flex flex-col items-center gap-1" role="status">
+                    <Eyebrow className="text-farol-warn">Você ganhou</Eyebrow>
+                    <p className="font-display text-4xl font-extrabold leading-none tracking-tight">
+                      {result.kind === "item" ? (
+                        result.name
+                      ) : (
+                        <>
+                          <CountUp value={result.amount} prefix="+" delay={250} duration={700} />{" "}
+                          {result.kind === "moedas" ? "moedas" : "faíscas"}
+                        </>
+                      )}
+                    </p>
+                    <p className="text-sm text-farol-muted">
+                      {result.kind === "item"
+                        ? "Já está equipado no seu avatar."
+                        : result.kind === "moedas" && result.insteadOf
+                          ? `Você já tinha “${result.insteadOf}”, então virou moedas.`
+                          : `Presente de ${gift.from.nome}.`}
+                    </p>
+                  </div>
+                  <Button className="relative mt-3 w-full" autoFocus onClick={onClose}>
+                    Continuar
+                  </Button>
+                </>
+              )
+            )}
           </div>
-
-          {result || already ? (
-            <Button variant="ghost" className="mt-5 w-full" onClick={onClose}>
-              Fechar
-            </Button>
-          ) : (
-            <Button
-              className="mt-5 w-full"
-              autoFocus
-              onClick={() => {
-                const r = claimGift(gift.unitId);
-                if (!r) return onClose();
-                sounds.levelUp();
-                setResult(r);
-              }}
-            >
-              Receber presente
-            </Button>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

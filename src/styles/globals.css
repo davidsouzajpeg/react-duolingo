@@ -146,3 +146,37 @@
 }
 .vd-gift { animation: vd-gift 1.8s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .vd-gift { animation: none; } }
+
+/* ------------------------ Vendê: abertura do presente ------------------------ */
+@keyframes vd-box-shake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  12% { transform: rotate(-10deg) scale(1.04); }
+  26% { transform: rotate(9deg) scale(1.06); }
+  40% { transform: rotate(-8deg) scale(1.09); }
+  54% { transform: rotate(7deg) scale(1.12); }
+  68% { transform: rotate(-6deg) scale(1.15); }
+  82% { transform: rotate(5deg) scale(1.2); }
+  94% { transform: rotate(0deg) scale(1.26); }
+}
+@keyframes vd-lid {
+  to { transform: translate(46px, -130px) rotate(55deg); opacity: 0; }
+}
+@keyframes vd-flash {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  30% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(3.2); }
+}
+@keyframes vd-reveal {
+  0% { transform: translateY(40px) scale(0.2) rotate(-25deg); opacity: 0; }
+  55% { transform: translateY(-18px) scale(1.18) rotate(6deg); opacity: 1; }
+  78% { transform: translateY(4px) scale(0.96) rotate(-2deg); }
+  100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+}
+.vd-box-shake { animation: vd-box-shake 1.15s ease-in both; transform-origin: 50% 80%; }
+.vd-lid { animation: vd-lid 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) both; transform-box: fill-box; transform-origin: center; }
+.vd-flash { animation: vd-flash 0.7s ease-out both; }
+.vd-reveal { animation: vd-reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both; }
+@media (prefers-reduced-motion: reduce) {
+  .vd-box-shake, .vd-lid, .vd-reveal { animation: none; }
+  .vd-flash { display: none; }
+}

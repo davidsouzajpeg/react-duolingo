@@ -49,17 +49,12 @@ export const useGestorNoticeRetry = () => {
 
 type Sfx = typeof sfx;
 
+const silent = Object.fromEntries(
+  Object.keys(sfx).map((name) => [name, () => undefined]),
+) as unknown as Sfx;
+
 /** Sons do Vendê, respeitando a configuração "Efeitos sonoros" do vendedor */
 export const useSounds = (): Sfx => {
   const soundOn = useFarolStore((s) => s.soundOn);
-  if (soundOn) return sfx;
-  const silent = () => undefined;
-  return {
-    correct: silent,
-    wrong: silent,
-    coin: silent,
-    pop: silent,
-    finish: silent,
-    levelUp: silent,
-  };
+  return soundOn ? sfx : silent;
 };

@@ -125,6 +125,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
   // a lição abre com a dica do Faroldo: primeiro aprende, depois pratica
   const [started, setStarted] = useState(!lesson.tip);
   const start = () => {
+    sounds.whoosh();
     startedAt.current = Date.now();
     setStarted(true);
   };
@@ -357,7 +358,10 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
             question={current.question}
             order={current.order}
             value={answer}
-            onChange={setAnswer}
+            onChange={(value) => {
+              sounds.tap();
+              setAnswer(value);
+            }}
             revealed={status !== "answering"}
             help={current.help}
           />

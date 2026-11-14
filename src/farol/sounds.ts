@@ -1,7 +1,10 @@
 /**
  * Sons do Vendê, sintetizados na hora com Web Audio (sem arquivos de áudio).
- * Timbre de sino com um eco curto: acerto, erro, compra e as fanfarras de
- * fim de lição.
+ *
+ * A linguagem é a de jogo, não a de notificação: ondas quadradas e dente de
+ * serra com ataque seco, arpejos rápidos, bumbo, caixa e prato. Cada evento
+ * tem a sua assinatura (acerto, erro, moeda, combo, fim de lição, subida de
+ * nível, presente).
  */
 
 type AudioWindow = Window & { webkitAudioContext?: typeof AudioContext };
@@ -41,59 +44,54 @@ const engine = () => {
 
 const note = (semitonesFromA4: number) => 440 * Math.pow(2, semitonesFromA4 / 12);
 // atalhos (semitons a partir do Lá 4)
-const C5 = 3, E5 = 7, G5 = 10, C6 = 15, E6 = 19, G6 = 22, C7 = 27;
+const G4 = -2, C5 = 3, D5 = 5, E5 = 7, G5 = 10, A5 = 12, B5 = 14, C6 = 15, D6 = 17, E6 = 19, G6 = 22, C7 = 27;
 
-/** sino: fundamental + parciais, ataque rápido e cauda longa */
-const bell = (freq: number, at: number, dur = 0.9, vol = 0.16) => {
-  const e = engine();
-  if (!e) return;
-  const t = e.ctx.currentTime + at;
-  const partials: [number, number][] = [
-    [1, 1],
-    [2, 0.42],
-    [3, 0.2],
-    [4.2, 0.09],
-  ];
-  for (const [ratio, level] of partials) {
-    const osc = e.ctx.createOscillator();
-    const gain = e.ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq * ratio;
-    const d = dur / Math.sqrt(ratio);
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(vol * level, t + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    osc.connect(gain);
-    gain.connect(e.out);
-    gain.connect(e.echo);
-    osc.start(t);
-    osc.stop(t + d + 0.05);
-  }
+type ToneOptions = {
+  type?: OscillatorType;
+  vol?: number;
+  /** desliza a frequência até este valor */
+  slideTo?: number;
+  /** corte do filtro passa-baixa (Hz) */
+  cutoff?: number;
+  echo?: boolean;
 };
 
-/** nota grave e macia (base das fanfarras e som de erro) */
-const soft = (freq: number, at: number, dur = 0.35, vol = 0.16, glideTo?: number) => {
+/** nota de sintetizador com ataque seco (a base dos sons de jogo) */
+const tone = (freq: number, at: number, dur: number, o: ToneOptions = {}) => {
   const e = engine();
   if (!e) return;
   const t = e.ctx.currentTime + at;
   const osc = e.ctx.createOscillator();
-  const filter = e.ctx.createBiquadFilter();
   const gain = e.ctx.createGain();
-  osc.type = "triangle";
+  osc.type = o.type ?? "square";
   osc.frequency.setValueAtTime(freq, t);
-  if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
-  filter.type = "lowpass";
-  filter.frequency.value = 900;
+  if (o.slideTo) osc.frequency.exponentialRampToValueAtTime(o.slideTo, t + dur);
+  const vol = o.vol ?? 0.09;
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+  gain.gain.exponentialRampToValueAtTime(vol, t + 0.006);
+  gain.gain.setValueAtTime(vol, t + dur * 0.55);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  osc.connect(filter).connect(gain).connect(e.out);
+  let last: AudioNode = osc;
+  if (o.cutoff) {
+    const filter = e.ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = o.cutoff;
+    osc.connect(filter);
+    last = filter;
+  }
+  last.connect(gain);
+  gain.connect(e.out);
+  if (o.echo) gain.connect(e.echo);
   osc.start(t);
-  osc.stop(t + dur + 0.05);
+  osc.stop(t + dur + 0.03);
 };
 
-/** brilho: ruído filtrado subindo, como confete caindo */
-const shimmer = (at: number, dur = 0.9, vol = 0.05) => {
+/** ruído filtrado: caixa, prato, chocalho e "whoosh" */
+const noise = (
+  at: number,
+  dur: number,
+  o: { vol?: number; from?: number; to?: number; q?: number; type?: BiquadFilterType } = {},
+) => {
   const e = engine();
   if (!e) return;
   const t = e.ctx.currentTime + at;
@@ -103,89 +101,170 @@ const shimmer = (at: number, dur = 0.9, vol = 0.05) => {
   const src = e.ctx.createBufferSource();
   src.buffer = buffer;
   const filter = e.ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.Q.value = 1.2;
-  filter.frequency.setValueAtTime(1800, t);
-  filter.frequency.exponentialRampToValueAtTime(9000, t + dur);
+  filter.type = o.type ?? "bandpass";
+  filter.Q.value = o.q ?? 1;
+  filter.frequency.setValueAtTime(o.from ?? 3000, t);
+  if (o.to) filter.frequency.exponentialRampToValueAtTime(o.to, t + dur);
   const gain = e.ctx.createGain();
-  gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(vol, t + dur * 0.25);
+  gain.gain.setValueAtTime(o.vol ?? 0.08, t);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   src.connect(filter).connect(gain).connect(e.out);
   src.start(t);
 };
 
-const sparkles = (at: number, count: number, span: number) => {
-  const scale = [C6, E6, G6, C7, 29, 31]; // pentatônica aguda
-  for (let i = 0; i < count; i++) {
-    const n = scale[Math.floor(Math.random() * scale.length)]!;
-    bell(note(n), at + (span * i) / count + Math.random() * 0.04, 0.35, 0.05);
-  }
+/** bumbo: senoide que despenca de tom */
+const kick = (at: number, vol = 0.32) => {
+  const e = engine();
+  if (!e) return;
+  const t = e.ctx.currentTime + at;
+  const osc = e.ctx.createOscillator();
+  const gain = e.ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(170, t);
+  osc.frequency.exponentialRampToValueAtTime(45, t + 0.13);
+  gain.gain.setValueAtTime(vol, t);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+  osc.connect(gain).connect(e.out);
+  osc.start(t);
+  osc.stop(t + 0.22);
 };
+
+const snare = (at: number, vol = 0.14) => {
+  noise(at, 0.12, { vol, from: 1900, q: 0.7 });
+  tone(190, at, 0.07, { type: "triangle", vol: vol * 0.6 });
+};
+
+const cymbal = (at: number, dur = 0.9, vol = 0.07) =>
+  noise(at, dur, { vol, from: 7500, q: 0.4, type: "highpass" });
+
+/** metal de fanfarra: dente de serra + quadrada, com filtro */
+const brass = (semitone: number, at: number, dur: number, vol = 0.085) => {
+  tone(note(semitone), at, dur, { type: "sawtooth", vol, cutoff: 2600, echo: true });
+  tone(note(semitone), at, dur, { type: "square", vol: vol * 0.45, cutoff: 3200 });
+};
+
+/** arpejo rápido de onda quadrada */
+const run = (notes: number[], at: number, step: number, vol = 0.07, len = step * 1.6) =>
+  notes.forEach((n, i) => tone(note(n), at + i * step, len, { vol, echo: true }));
 
 const majorScale = [0, 2, 4, 5, 7, 9, 11, 12];
 
 export const sfx = {
-  /** acerto: "tim-tim" que sobe de tom a cada acerto seguido */
+  /** toque em opção ou botão: clique seco */
+  tap: () => {
+    tone(1100, 0, 0.035, { vol: 0.045 });
+    noise(0, 0.02, { vol: 0.03, from: 5000 });
+  },
+
+  /** acerto: três notas subindo, com estalo; sobe de tom a cada acerto seguido */
   correct: (combo = 1) => {
-    const step = majorScale[Math.min(combo - 1, majorScale.length - 1)] ?? 0;
-    bell(note(E5 + step), 0, 0.5, 0.17);
-    bell(note(E5 + step + 7), 0.09, 0.8, 0.17);
-    if (combo >= 3) sparkles(0.16, 3, 0.25);
+    const up = majorScale[Math.min(combo - 1, majorScale.length - 1)] ?? 0;
+    run([E5 + up, B5 + up, E6 + up], 0, 0.065, 0.08, 0.16);
+    tone(note(E5 + up - 12), 0, 0.14, { type: "triangle", vol: 0.14 });
+    noise(0, 0.04, { vol: 0.05, from: 6000 });
+    if (combo >= 3) {
+      // combo: mais uma subida brilhante por cima
+      run([E6 + up, G6 + up, C7 + up - 1], 0.2, 0.05, 0.05, 0.12);
+      cymbal(0.2, 0.3, 0.035);
+    }
   },
 
-  /** erro: duas notas graves e macias, sem susto */
+  /** erro: "bonk" grave, que não assusta */
   wrong: () => {
-    soft(311, 0, 0.2, 0.15);
-    soft(233, 0.14, 0.38, 0.15, 196);
+    tone(196, 0, 0.16, { type: "sawtooth", vol: 0.12, slideTo: 140, cutoff: 900 });
+    tone(147, 0.13, 0.26, { type: "sawtooth", vol: 0.12, slideTo: 98, cutoff: 700 });
+    noise(0, 0.07, { vol: 0.06, from: 300, q: 0.6, type: "lowpass" });
   },
 
-  /** compra ou recompensa: moedinha */
+  /** moeda: o clássico "plim" de duas notas */
   coin: () => {
-    bell(note(14), 0, 0.25, 0.13);
-    bell(note(E6), 0.07, 0.6, 0.13);
+    tone(note(B5), 0, 0.07, { vol: 0.09 });
+    tone(note(E6), 0.07, 0.32, { vol: 0.09, echo: true });
   },
 
-  /** tchau do avatar e pequenos destaques */
+  /** balão de conversa e pequenos destaques */
   pop: () => {
-    bell(note(G5), 0, 0.25, 0.1);
-    bell(note(C6), 0.06, 0.35, 0.1);
+    tone(320, 0, 0.09, { type: "sine", vol: 0.16, slideTo: 760 });
+  },
+
+  /** entrada em uma lição ou tela */
+  whoosh: () => {
+    noise(0, 0.32, { vol: 0.09, from: 350, to: 4200, q: 1.4 });
+    tone(220, 0, 0.3, { type: "triangle", vol: 0.05, slideTo: 880 });
+  },
+
+  /** algo foi liberado */
+  unlock: () => {
+    tone(note(C5), 0, 0.08, { type: "triangle", vol: 0.14 });
+    tone(note(G5), 0.08, 0.2, { type: "triangle", vol: 0.14, echo: true });
+    noise(0, 0.03, { vol: 0.05, from: 4000 });
   },
 
   /** fim de lição: fanfarra de acordo com o farol */
   finish: (sinal: "verde" | "amarelo" | "vermelho") => {
     if (sinal === "vermelho") {
       // incentivo curto: sobe, não pune
-      bell(note(-2), 0, 0.5, 0.14);
-      bell(note(C5), 0.16, 0.9, 0.14);
+      tone(note(G4), 0, 0.22, { type: "triangle", vol: 0.14 });
+      tone(note(C5), 0.2, 0.5, { type: "triangle", vol: 0.14, echo: true });
       return;
     }
-    // arpejo de entrada
-    [C5, E5, G5, C6].forEach((n, i) => bell(note(n), i * 0.085, 0.5, 0.15));
-    soft(note(-21), 0, 0.5, 0.2);
-    // acorde aberto
-    const chordAt = 0.4;
-    [C6, E6, G6].forEach((n) => bell(note(n), chordAt, 1.6, 0.12));
-    soft(note(-21), chordAt, 0.9, 0.22);
-    soft(note(-14), chordAt, 0.9, 0.14);
-    shimmer(chordAt, 1.1, 0.045);
-    if (sinal === "verde") {
-      // "ta-da-dá" final + brilhos
-      [E6, G6, C7].forEach((n, i) => bell(note(n), 0.78 + i * 0.11, i === 2 ? 1.8 : 0.5, 0.14));
-      soft(note(-21), 1.0, 1.2, 0.22);
-      sparkles(1.05, 9, 1.1);
-      shimmer(1.0, 1.5, 0.05);
-    } else {
-      sparkles(0.6, 4, 0.6);
+    // virada de bateria e entrada
+    snare(0);
+    snare(0.09);
+    snare(0.18, 0.18);
+    kick(0.27);
+    cymbal(0.27, 0.9);
+    brass(C5, 0.27, 0.13);
+    brass(E5, 0.4, 0.13);
+    brass(G5, 0.53, 0.13);
+    if (sinal === "amarelo") {
+      kick(0.66);
+      [C5, E5, G5, C6].forEach((n) => brass(n, 0.66, 0.7, 0.06));
+      return;
     }
+    // verde: frase completa, acorde final e brilhos
+    brass(C6, 0.66, 0.26);
+    kick(0.66);
+    brass(G5, 0.94, 0.11);
+    brass(C6, 1.06, 0.11);
+    kick(1.2, 0.36);
+    cymbal(1.2, 1.5, 0.09);
+    [C5, E5, G5, C6, E6].forEach((n) => brass(n, 1.2, 1.1, 0.055));
+    run([C6, E6, G6, C7, G6, C7], 1.3, 0.07, 0.05, 0.14);
+    run([E6, G6, C7], 1.8, 0.09, 0.04, 0.3);
   },
 
-  /** subir de nível ou de divisão */
+  /** subir de nível ou de divisão: escala disparada e acorde */
   levelUp: () => {
-    [G5, C6, E6, G6].forEach((n, i) => bell(note(n), i * 0.1, 0.6, 0.14));
-    [C6, E6, G6, C7].forEach((n) => bell(note(n), 0.46, 1.8, 0.11));
-    soft(note(-21), 0.46, 1.2, 0.22);
-    sparkles(0.6, 8, 1);
-    shimmer(0.46, 1.4, 0.05);
+    run([C5, D5, E5, G5, A5, C6, D6, E6, G6], 0, 0.045, 0.07, 0.09);
+    kick(0.42, 0.34);
+    cymbal(0.42, 1.2, 0.08);
+    [C5, G5, C6, E6, G6].forEach((n) => brass(n, 0.42, 0.9, 0.055));
+    run([G6, C7, G6, C7], 0.6, 0.08, 0.045, 0.2);
+  },
+
+  /** presente: a caixa chacoalhando antes de abrir */
+  giftShake: () => {
+    for (let i = 0; i < 6; i++) {
+      noise(i * 0.16, 0.07, { vol: 0.07, from: 2400 + (i % 2) * 900, q: 2 });
+      tone(180 + i * 25, i * 0.16, 0.05, { type: "triangle", vol: 0.07 });
+    }
+    // tensão subindo até a abertura
+    tone(160, 0.1, 0.95, { type: "sawtooth", vol: 0.05, slideTo: 900, cutoff: 1800 });
+    noise(0.3, 0.75, { vol: 0.05, from: 500, to: 6000, q: 1.2 });
+  },
+
+  /** presente: a tampa voa e o prêmio aparece */
+  giftOpen: () => {
+    kick(0, 0.36);
+    cymbal(0, 1.4, 0.1);
+    noise(0, 0.25, { vol: 0.1, from: 900, to: 5000, q: 0.8 });
+    [C5, E5, G5, C6].forEach((n) => brass(n, 0, 0.5, 0.06));
+    run([G5, C6, E6, G6, C7], 0.08, 0.06, 0.06, 0.14);
+    brass(C6, 0.5, 0.12);
+    brass(E6, 0.62, 0.12);
+    [C6, E6, G6].forEach((n) => brass(n, 0.76, 1.0, 0.06));
+    kick(0.76, 0.3);
+    run([C7, G6, C7, E6, C7], 0.9, 0.08, 0.04, 0.22);
   },
 };
