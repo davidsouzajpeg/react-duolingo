@@ -142,7 +142,7 @@ const LessonPopover = ({
       <div className="relative flex items-start justify-between gap-3">
         <div>
           <Eyebrow className={isChallenge ? "text-farol-warn" : "text-farol-muted"}>
-            {isChallenge ? "Desafio · XP em dobro" : "Lição"}
+            {isChallenge ? "Desafio · faíscas em dobro" : "Lição"}
           </Eyebrow>
           <p className="mt-1 font-display text-lg font-extrabold leading-tight tracking-tight">
             {lesson.title}
@@ -204,10 +204,10 @@ const FreezeNotice = () => {
     <div className="mb-4 flex items-center gap-3 rounded-2xl border border-sky-400/60 bg-sky-400/10 p-4" role="status">
       <ShieldIcon className="h-9 w-9 shrink-0" />
       <p className="grow text-sm">
-        <b className="font-semibold">Sua ofensiva foi salva!</b>{" "}
+        <b className="font-semibold">Sua chama continua acesa!</b>{" "}
         {saved.length === 1
-          ? "Um bloqueio de ofensiva cobriu o dia em que você não praticou."
-          : `${saved.length} bloqueios de ofensiva cobriram os dias em que você não praticou.`}
+          ? "Um protetor de chama cobriu o dia em que você não praticou."
+          : `${saved.length} protetores de chama cobriram os dias em que você não praticou.`}
       </p>
       <button onClick={dismiss} className="shrink-0 text-xs font-semibold uppercase tracking-[.09em] text-farol-accent">
         Ok

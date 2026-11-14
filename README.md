@@ -4,8 +4,8 @@
 
 - Trilha **Venda Consultiva** baseada no Playbook Vendas Open 2025: 8 unidades, 24 lições e 8 desafios.
 - Cinco tipos de questão (situação real, múltipla escolha, verdadeiro ou falso, ordenar e completar), sempre com explicação.
-- XP, meta diária, moedas, níveis e conquistas.
-- **Ofensiva** (dias seguidos de prática) com **bloqueio de ofensiva**, usado sozinho quando o vendedor perde um dia.
+- **Faíscas** (os pontos do Vendê), meta diária, moedas, níveis e conquistas.
+- **Chama** (dias seguidos de prática) com **protetor de chama**, usado sozinho quando o vendedor perde um dia.
 - **Avatar** montado pelo vendedor (corpo, pele, olhos, cabelo, barba, tipo e cor de roupa) e **loja** com itens para equipar (chapéus, óculos, acessórios e fundos).
 - **Divisões semanais** (Bronze, Prata, Ouro, Platina, Diamante e Farol): no fim da semana os 3 primeiros sobem, os 3 últimos descem e os demais permanecem.
 - Ao concluir a última unidade, o vendedor vê os parabéns e o gestor é avisado para liberar novos módulos.

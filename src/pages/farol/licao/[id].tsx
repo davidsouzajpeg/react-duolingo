@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findLesson } from "~/farol/content";
+import { allLessons, findLesson } from "~/farol/content";
 import {
   CloseIcon,
   CoinIcon,
@@ -46,6 +46,7 @@ import {
   type BadgeContext,
 } from "~/farol/gamification";
 import { Avatar } from "~/farol/components/Avatar";
+import { Confetti, CountUp } from "~/farol/components/Celebrate";
 import { useHydrated, useSounds } from "~/farol/hooks";
 import { notifyGestorTrailCompleted } from "~/farol/notify";
 import { Parabens } from "~/farol/components/TrailEnd";
@@ -91,7 +92,7 @@ type Summary = {
 
 /* ------------------------------ Player ------------------------------------ */
 
-const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
+const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => void }) => {
   const finishLesson = useFarolStore((s) => s.finishLesson);
   const sounds = useSounds();
 
@@ -183,6 +184,7 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
     if (trailJustCompleted) void notifyGestorTrailCompleted();
 
     sounds.finish();
+    window.scrollTo(0, 0);
     setSummary({
       xp,
       coins,
@@ -204,6 +206,8 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
     if (status === "answering") return;
     if (solved >= total) return finish();
     const nextPos = pos + 1;
+    // a próxima questão começa do topo, mesmo que a anterior tenha sido rolada
+    window.scrollTo(0, 0);
     setPos(nextPos);
     setAnswer(initialAnswer(queue[nextPos]!.question));
     setStatus("answering");
@@ -239,6 +243,7 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
       <LessonSummary
         summary={summary}
         lesson={lesson}
+        onRestart={onRestart}
         onCelebrate={
           summary.trailJustCompleted ? () => setCelebrating(true) : undefined
         }
@@ -257,9 +262,11 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
           <CloseIcon className="h-7 w-7" />
         </button>
         <div className="relative grow">
-          <ProgressBar value={solved / total} className="h-4" />
+          <div key={solved} className={solved > 0 ? "vd-glow" : ""}>
+            <ProgressBar value={solved / total} className="h-4" />
+          </div>
           {combo >= 3 && (
-            <span className="absolute -top-6 right-0 font-num text-sm font-extrabold text-farol-warn">
+            <span key={combo} className="vd-pop absolute -top-6 right-0 font-num text-sm font-extrabold text-farol-warn">
               🔥 combo x{combo}
             </span>
           )}
@@ -269,7 +276,7 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
       <main className="mx-auto w-full max-w-2xl grow px-4 pb-64 pt-8 sm:pt-14">
         {isChallenge && pos === 0 && status === "answering" && (
           <Pill tone="amarelo" className="mb-3 uppercase tracking-[.09em]">
-            🏆 Desafio · XP em dobro
+            🏆 Desafio · faíscas em dobro
           </Pill>
         )}
         {missed.has(questionId(current)) && status === "answering" && pos >= total && (
@@ -277,18 +284,27 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
             ↻ Revisando um erro
           </p>
         )}
-        <QuestionView
-          key={current.key}
-          question={current.question}
-          order={current.order}
-          value={answer}
-          onChange={setAnswer}
-          revealed={status !== "answering"}
-        />
+        <div key={current.key} className={`vd-in ${status === "wrong" ? "vd-shake" : ""}`}>
+          <QuestionView
+            question={current.question}
+            order={current.order}
+            value={answer}
+            onChange={setAnswer}
+            revealed={status !== "answering"}
+          />
+        </div>
       </main>
 
+      {status === "right" && (
+        <div key={`burst-${current.key}`} className="pointer-events-none fixed bottom-40 left-0 right-0 z-20">
+          <div className="relative mx-auto h-0 w-0">
+            <Confetti kind="burst" />
+          </div>
+        </div>
+      )}
       <footer
-        className={`fixed bottom-0 left-0 right-0 z-10 max-h-[78vh] overflow-y-auto border-t ${
+        key={status === "answering" ? "ask" : `fb-${current.key}`}
+        className={`fixed bottom-0 left-0 right-0 z-10 max-h-[78vh] overflow-y-auto border-t ${status === "answering" ? "" : "vd-slide-up"} ${
           status === "right"
             ? "border-farol-ok bg-farol-ok-soft"
             : status === "wrong"
@@ -315,7 +331,7 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
             <>
               <div className="flex gap-3" role="status" aria-live="polite">
                 <Faroldo
-                  className="h-11 w-11 sm:h-14 sm:w-14"
+                  className={`h-11 w-11 sm:h-14 sm:w-14 ${status === "right" ? "vd-hop" : ""}`}
                   mood={status === "right" ? "feliz" : "atento"}
                 />
                 <div className="min-w-0">
@@ -375,7 +391,7 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
 
 /* ------------------------------ Telas finais ------------------------------ */
 
-const StatCard = ({ label, value, tone }: { label: string; value: string; tone: string }) => (
+const StatCard = ({ label, value, tone }: { label: string; value: ReactNode; tone: string }) => (
   <div className={`${card} flex-1 px-2 py-3`}>
     <Eyebrow>{label}</Eyebrow>
     <p className={`mt-1 font-num text-2xl font-black tabular-nums ${tone}`}>{value}</p>
@@ -401,13 +417,17 @@ const LessonSummary = ({
   summary,
   lesson,
   onCelebrate,
+  onRestart,
 }: {
   summary: Summary;
   lesson: Lesson;
   /** última lição da trilha: "Continuar" leva à tela de parabéns */
   onCelebrate?: () => void;
+  onRestart: () => void;
 }) => {
   const avatar = useFarolStore((s) => s.avatar);
+  const index = allLessons.findIndex((l) => l.lesson.id === lesson.id);
+  const nextLessonId = allLessons[index + 1]?.lesson.id;
   const perfect = summary.accuracy === 1;
   const sinal = sinalDaPrecisao(summary.accuracy);
   const info = sinalInfo[sinal];
@@ -416,9 +436,12 @@ const LessonSummary = ({
   const streakGrew = summary.streakAfter > summary.streakBefore;
   return (
     <div className="relative mx-auto flex min-h-screen max-w-lg flex-col overflow-hidden px-4 py-8 text-center sm:py-10">
+      {sinal !== "vermelho" && <Confetti kind="rain" count={sinal === "verde" ? 90 : 40} />}
       <Feixe className="-top-40 left-1/2 -ml-56 h-[28rem] w-[28rem]" />
-      <div className="relative flex grow flex-col items-center justify-center gap-4">
-        <Semaforo sinal={sinal} size="lg" />
+      <div className="vd-stagger relative flex grow flex-col items-center justify-center gap-4">
+        <div className="vd-pop">
+          <Semaforo sinal={sinal} size="lg" />
+        </div>
         <div>
           <Pill tone={sinal} className="uppercase tracking-[.09em]">
             {info.label} · {Math.round(summary.accuracy * 100)}% de precisão
@@ -438,8 +461,8 @@ const LessonSummary = ({
         />
 
         <div className="flex w-full gap-3">
-          <StatCard label="XP" value={`+${summary.xp}`} tone="text-farol-accent" />
-          <StatCard label="Precisão" value={`${Math.round(summary.accuracy * 100)}%`} tone={info.text} />
+          <StatCard label="Faíscas" value={<CountUp value={summary.xp} prefix="+" delay={500} />} tone="text-farol-accent" />
+          <StatCard label="Precisão" value={<CountUp value={Math.round(summary.accuracy * 100)} suffix="%" delay={650} />} tone={info.text} />
           <StatCard label="Tempo" value={`${mins}:${secs}`} tone="text-farol-ink" />
         </div>
 
@@ -451,7 +474,7 @@ const LessonSummary = ({
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-2 text-left">
+        <div className="vd-stagger flex w-full flex-col gap-2 text-left">
           <Row className="bg-farol-warn-soft text-farol-warn">
             <CoinIcon className="h-6 w-6" /> +{summary.coins} moedas
           </Row>
@@ -462,7 +485,7 @@ const LessonSummary = ({
           )}
           {streakGrew && (
             <Row className="bg-farol-warn-soft text-farol-warn">
-              <FlameIcon className="h-6 w-6" /> Ofensiva de {summary.streakAfter} {summary.streakAfter === 1 ? "dia" : "dias"}!
+              <FlameIcon className="h-6 w-6" /> Chama acesa há {summary.streakAfter} {summary.streakAfter === 1 ? "dia" : "dias"}!
             </Row>
           )}
           {summary.levelUp && (
@@ -486,18 +509,25 @@ const LessonSummary = ({
           >
             Continuar
           </button>
+        ) : nextLessonId ? (
+          <Link href={`/farol/licao/${nextLessonId}`} className={`flex-1 ${buttonBase} ${buttonVariants.primary}`}>
+            Próxima lição
+          </Link>
         ) : (
           <Link href="/farol" className={`flex-1 ${buttonBase} ${buttonVariants.primary}`}>
             Continuar
           </Link>
         )}
-        <a
-          href={`/farol/licao/${lesson.id}`}
-          className={`flex-1 ${buttonBase} ${buttonVariants.ghost}`}
-        >
-          Refazer lição
-        </a>
+        <Link href="/farol" className={`flex-1 ${buttonBase} ${buttonVariants.ghost}`}>
+          Voltar à trilha
+        </Link>
       </div>
+      <button
+        onClick={onRestart}
+        className="relative mt-4 self-center text-sm font-semibold uppercase tracking-[.09em] text-farol-muted hover:text-farol-ink"
+      >
+        Refazer esta lição
+      </button>
     </div>
   );
 };
@@ -512,11 +542,19 @@ const LessonPage: NextPage = () => {
   const found = findLesson(id);
   const records = useFarolStore((s) => s.lessons);
   const locked = found ? getLessonStatus(found.lesson.id, records) === "locked" : false;
+  const [attempt, setAttempt] = useState(0);
 
   return (
     <FarolShell title={found?.lesson.title ?? "Lição"}>
       {!hydrated || !router.isReady ? null : found && !locked ? (
-        <LessonPlayer key={id} lesson={found.lesson} />
+        <LessonPlayer
+          key={`${id}-${attempt}`}
+          lesson={found.lesson}
+          onRestart={() => {
+            window.scrollTo(0, 0);
+            setAttempt((n) => n + 1);
+          }}
+        />
       ) : (
         <div className="flex min-h-screen flex-col items-center justify-center gap-4">
           <p className="font-display text-xl font-extrabold tracking-tight">

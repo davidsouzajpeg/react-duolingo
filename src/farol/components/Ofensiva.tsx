@@ -34,15 +34,15 @@ export const OfensivaCard = ({ showShopLink = true }: { showShopLink?: boolean }
   const practicedToday = activeDays.includes(today.format("YYYY-MM-DD"));
 
   return (
-    <section className={`${card} p-5`} aria-label="Ofensiva">
+    <section className={`${card} p-5`} aria-label="Chama">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <Eyebrow>Ofensiva</Eyebrow>
+          <Eyebrow>Chama</Eyebrow>
           <p className="mt-1 flex items-baseline gap-1.5">
             <span className={`font-num text-3xl font-black tabular-nums leading-none ${practicedToday ? "text-farol-warn" : "text-farol-ink"}`}>
               {streak}
             </span>
-            <span className="text-sm text-farol-muted">{streak === 1 ? "dia" : "dias"} seguidos</span>
+            <span className="text-sm text-farol-muted">{streak === 1 ? "dia" : "dias"} de chama acesa</span>
           </p>
         </div>
         <FlameIcon className="h-12 w-12" off={!practicedToday} />
@@ -59,7 +59,7 @@ export const OfensivaCard = ({ showShopLink = true }: { showShopLink?: boolean }
                 d.state === "feito"
                   ? "Praticou"
                   : d.state === "bloqueio"
-                    ? "Salvo pelo bloqueio de ofensiva"
+                    ? "Salvo pelo protetor de chama"
                     : d.state === "perdido"
                       ? "Sem prática"
                       : ""
@@ -83,16 +83,16 @@ export const OfensivaCard = ({ showShopLink = true }: { showShopLink?: boolean }
 
       <p className="mt-4 text-sm text-farol-muted">
         {practicedToday
-          ? "Ofensiva de hoje garantida. Cada prática conta!"
+          ? "Chama de hoje garantida. Cada prática conta!"
           : streak > 0
-            ? "Faça uma lição hoje para manter a sua ofensiva."
-            : "Faça uma lição hoje para começar uma ofensiva."}
+            ? "Faça uma lição hoje para manter a chama acesa."
+            : "Faça uma lição hoje para acender a chama."}
       </p>
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-farol-line pt-3 text-sm">
         <span className="flex items-center gap-1.5 text-farol-muted">
           <ShieldIcon className="h-5 w-5" />
-          Bloqueios:{" "}
+          Protetores:{" "}
           <b className="font-num font-extrabold tabular-nums text-farol-ink">
             {freezes}/{MAX_STREAK_FREEZES}
           </b>

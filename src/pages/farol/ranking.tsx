@@ -69,7 +69,7 @@ const WeekResult = () => {
           <p className="text-farol-muted">
             Você terminou em{" "}
             <b className="font-num font-extrabold tabular-nums text-farol-ink">{result.position}º lugar</b> com{" "}
-            <b className="font-num font-extrabold tabular-nums text-farol-ink">{result.xp} XP</b>. {text}
+            <b className="font-num font-extrabold tabular-nums text-farol-ink">{result.xp} faíscas</b>. {text}
           </p>
           {result.coins > 0 && (
             <p className="flex items-center gap-1.5 rounded-full bg-farol-warn-soft px-4 py-1.5 font-num font-extrabold tabular-nums text-farol-warn">
@@ -139,7 +139,7 @@ const Ranking = () => {
               {myZone === "subiu" ? "subindo" : myZone === "caiu" ? "zona de descida" : "permanece"}
             </Pill>
             <Pill tone="rosa" className="text-sm">
-              <b className="font-num font-extrabold tabular-nums">{weekXp} XP</b> na semana
+              <b className="font-num font-extrabold tabular-nums">{weekXp} faíscas</b> na semana
             </Pill>
           </div>
         </div>
@@ -190,7 +190,7 @@ const Ranking = () => {
                 <span className="flex shrink-0 items-center gap-1 font-num font-extrabold tabular-nums">
                   <XpIcon className="h-5 w-5" />
                   {entry.xp}
-                  <span className="font-body text-sm font-normal text-farol-muted">XP</span>
+                  <span className="font-body text-sm font-normal text-farol-muted">faíscas</span>
                 </span>
               </div>
             </li>

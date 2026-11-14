@@ -53,14 +53,14 @@ const TestPanel = () => {
     }],
     ["Perder um dia", () => {
       const s = st.getState();
-      if (s.activeDays.length === 0) return "Faça uma lição primeiro, para ter uma ofensiva.";
+      if (s.activeDays.length === 0) return "Faça uma lição primeiro, para acender a chama.";
       const had = s.streakFreezes;
       st.setState({ activeDays: shift(s.activeDays, 2), frozenDays: shift(s.frozenDays, 2), freezeNotice: [] });
       st.getState().syncStreak();
       navigate("/farol");
       return had > 0
-        ? "Um dia sem prática foi simulado: o bloqueio de ofensiva cobriu."
-        : "Um dia sem prática foi simulado sem bloqueio: a ofensiva zerou.";
+        ? "Um dia sem prática foi simulado: o protetor de chama cobriu."
+        : "Um dia sem prática foi simulado sem protetor: a chama apagou.";
     }],
     ["Liberar lições", () => {
       const lessons = { ...st.getState().lessons };

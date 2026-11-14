@@ -55,7 +55,7 @@ const Conquistas = () => {
           <div className="mt-5">
             <ProgressBar value={level.progress} />
             <p className="mt-1.5 text-sm text-farol-muted">
-              <b className="font-num font-extrabold tabular-nums text-farol-ink">{state.xpTotal} XP</b>
+              <b className="font-num font-extrabold tabular-nums text-farol-ink">{state.xpTotal} faíscas</b>
               {level.next ? ` · faltam ${level.next.minXp - state.xpTotal} para ${level.next.name}` : " · nível máximo"}
             </p>
           </div>
@@ -63,7 +63,7 @@ const Conquistas = () => {
             {levels.map((l, i) => (
               <li
                 key={l.name}
-                title={`${l.name} (${l.minXp} XP)`}
+                title={`${l.name} (${l.minXp} faíscas)`}
                 className={`flex h-9 w-9 items-center justify-center rounded-full border text-lg ${
                   i === level.index
                     ? "border-farol-accent bg-farol-accent-soft"
@@ -83,8 +83,8 @@ const Conquistas = () => {
       <section>
         <h2 className="mb-3 font-display text-xl font-extrabold tracking-tight">Estatísticas</h2>
         <div className="grid grid-cols-2 gap-3">
-          <Stat icon="🔥" value={streak} label="dias de ofensiva" />
-          <Stat icon="⚡" value={state.xpTotal} label="XP total" />
+          <Stat icon="🔥" value={streak} label="dias de chama acesa" />
+          <Stat icon="⚡" value={state.xpTotal} label="faíscas no total" />
           <Stat icon="📚" value={`${completedLessonCount(state.lessons)}/${allLessons.length}`} label="lições concluídas" />
           <Stat icon="🎯" value={`${accuracy}%`} label="precisão geral" />
         </div>
@@ -143,7 +143,7 @@ const Conquistas = () => {
             >
               {[15, 30, 50, 80].map((g) => (
                 <option key={g} value={g}>
-                  {g} XP por dia
+                  {g} faíscas por dia
                 </option>
               ))}
             </select>

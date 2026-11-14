@@ -70,7 +70,7 @@ type Tab = "avatar" | "itens" | "ofensiva";
 const tabs: { id: Tab; label: string }[] = [
   { id: "avatar", label: "Avatar" },
   { id: "itens", label: "Itens" },
-  { id: "ofensiva", label: "Ofensiva" },
+  { id: "ofensiva", label: "Chama" },
 ];
 
 const Choice = ({
@@ -225,16 +225,16 @@ const Loja = () => {
           <div className={`${card} flex items-center gap-3 p-4 sm:gap-4`}>
             <ShieldIcon className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
             <div className="min-w-0 grow">
-              <p className="font-semibold">Bloqueio de ofensiva</p>
+              <p className="font-semibold">Protetor de chama</p>
               <p className="text-sm text-farol-muted">
-                Mantém a sua ofensiva se você ficar um dia sem praticar. É usado
+                Mantém a sua chama acesa se você ficar um dia sem praticar. É usado
                 sozinho quando precisa. Equipados: {freezes}/{MAX_STREAK_FREEZES}.
               </p>
             </div>
             <Button
               className="shrink-0 px-4 py-2 text-sm"
               disabled={freezes >= MAX_STREAK_FREEZES || coins < STREAK_FREEZE_COST}
-              onClick={() => buyStreakFreeze() && setMessage("Bloqueio de ofensiva equipado!")}
+              onClick={() => buyStreakFreeze() && setMessage("Protetor de chama equipado!")}
             >
               <Price value={STREAK_FREEZE_COST} />
             </Button>

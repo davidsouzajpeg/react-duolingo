@@ -3,6 +3,7 @@ import Link from "next/link";
 import { allLessons, linhaAtual } from "../content";
 import { completedLessonCount } from "../gamification";
 import { useStreak } from "../hooks";
+import { Confetti } from "./Celebrate";
 import { useFarolStore } from "../store";
 import {
   Eyebrow,
@@ -51,10 +52,10 @@ const Totals = () => {
     : 0;
   return (
     <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
-      <Total label="XP total" value={xpTotal} tone="text-farol-accent" />
+      <Total label="Faíscas" value={xpTotal} tone="text-farol-accent" />
       <Total label="Lições" value={`${completedLessonCount(lessons)}/${allLessons.length}`} />
       <Total label="Precisão geral" value={`${accuracy}%`} tone="text-farol-ok" />
-      <Total label={streak === 1 ? "Dia de ofensiva" : "Dias de ofensiva"} value={streak} tone="text-farol-warn" />
+      <Total label={streak === 1 ? "Dia de chama acesa" : "Dias de chama acesa"} value={streak} tone="text-farol-warn" />
     </div>
   );
 };
@@ -65,6 +66,7 @@ export const Parabens = () => {
   const sent = useFarolStore((s) => s.gestorNotice.status === "enviado");
   return (
     <div className="relative mx-auto flex min-h-screen max-w-lg flex-col overflow-hidden px-4 py-8 text-center sm:py-10">
+      <Confetti kind="rain" count={110} />
       <Feixe className="-top-48 left-1/2 -ml-[17rem] h-[34rem] w-[34rem]" />
       <div className="relative flex grow flex-col items-center justify-center gap-5">
         <div className="flex items-end gap-4">

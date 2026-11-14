@@ -90,7 +90,7 @@ export const StatsRow = () => {
     <div className="flex items-center justify-around gap-4 font-num text-lg font-extrabold tabular-nums">
       <span
         className={`flex items-center gap-1.5 ${practicedToday ? "text-farol-warn" : "text-farol-muted"}`}
-        title="Ofensiva: dias seguidos praticando"
+        title="Chama: dias seguidos praticando"
       >
         <FlameIcon className="h-7 w-7" off={!practicedToday} />
         {streak}
@@ -119,7 +119,7 @@ const DailyGoalCard = () => {
               <span className="font-semibold text-farol-ok">Meta batida! 🎉</span>
             ) : (
               <>
-                <b className="font-num font-extrabold tabular-nums text-farol-ink">{xpToday}</b> / {dailyGoal} XP hoje
+                <b className="font-num font-extrabold tabular-nums text-farol-ink">{xpToday}</b> / {dailyGoal} faíscas hoje
               </>
             )}
           </p>
@@ -144,7 +144,7 @@ const LevelCard = () => {
           <ProgressBar value={progress} className="mt-1 h-2.5" />
           <p className="mt-1.5 text-sm text-farol-muted">
             {next
-              ? `${next.minXp - xpTotal} XP para ${next.name}`
+              ? `${next.minXp - xpTotal} faíscas para ${next.name}`
               : "Nível máximo alcançado!"}
           </p>
         </div>
@@ -166,7 +166,7 @@ const LeagueTeaser = () => {
       </div>
       <p className="text-sm text-farol-muted">
         Você fez{" "}
-        <strong className="font-num font-extrabold tabular-nums text-farol-ink">{weekXp} XP</strong>{" "}
+        <strong className="font-num font-extrabold tabular-nums text-farol-ink">{weekXp} faíscas</strong>{" "}
         esta semana. No domingo, os 3 primeiros sobem e os 3 últimos descem.
       </p>
     </section>
@@ -255,7 +255,7 @@ const Onboarding = () => {
                 >
                   <span className="block font-semibold">
                     {g.label} ·{" "}
-                    <span className="font-num font-extrabold tabular-nums">{g.xp} XP</span>
+                    <span className="font-num font-extrabold tabular-nums">{g.xp} faíscas</span>
                   </span>
                   <span className="text-sm text-farol-muted">{g.desc}</span>
                 </button>
