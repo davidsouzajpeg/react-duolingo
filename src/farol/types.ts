@@ -69,6 +69,8 @@ export type Unit = {
   number: number;
   title: string;
   description: string;
+  /** assunto da unidade: técnica de venda ou conhecimento de produto */
+  tema?: "vendas" | "produto";
   /** cor principal (hex) */
   color: string;
   /** cor da borda/sombra (hex) */

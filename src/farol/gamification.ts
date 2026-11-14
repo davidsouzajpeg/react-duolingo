@@ -85,19 +85,20 @@ export type Badge = {
   progress: (ctx: BadgeContext) => { value: number; goal: number };
 };
 
-const unitBadge = (unitNumber: number, icon: string, title: string): Badge => ({
-  id: `unit-${unitNumber}`,
-  icon,
-  title,
-  description: `Conclua a unidade ${unitNumber}: ${units[unitNumber - 1]?.title ?? ""}`,
-  progress: ({ lessons }) => {
-    const unit = units[unitNumber - 1]!;
-    return {
+/** conquista por unidade concluída, pelo id da unidade (a ordem da trilha pode mudar) */
+const unitBadge = (unitId: string, icon: string, title: string): Badge => {
+  const unit = units.find((u) => u.id === unitId)!;
+  return {
+    id: `unit-${unitId.replace(/^u/, "")}`,
+    icon,
+    title,
+    description: `Conclua a unidade “${unit.title}”`,
+    progress: ({ lessons }) => ({
       value: unit.lessons.filter((l) => lessons[l.id]?.completions).length,
       goal: unit.lessons.length,
-    };
-  },
-});
+    }),
+  };
+};
 
 export const badges: Badge[] = [
   {
@@ -165,14 +166,24 @@ export const badges: Badge[] = [
       goal: 3,
     }),
   },
-  unitBadge(1, "💡", "Cultura Open"),
-  unitBadge(2, "🔎", "Lição de casa feita"),
-  unitBadge(3, "🎤", "Venda inteligente"),
-  unitBadge(4, "🧩", "Diagnóstico certeiro"),
-  unitBadge(5, "📈", "Solução ampliada"),
-  unitBadge(6, "🛡️", "Quebrador de objeções"),
-  unitBadge(7, "✍️", "Aceite formal"),
-  unitBadge(8, "🤝", "Embaixador da Open"),
+  unitBadge("u1", "💡", "Cultura Open"),
+  unitBadge("u2", "🔎", "Lição de casa feita"),
+  unitBadge("u3", "🎤", "Venda inteligente"),
+  unitBadge("u4", "🧩", "Diagnóstico certeiro"),
+  unitBadge("u5", "📈", "Solução ampliada"),
+  unitBadge("u6", "🛡️", "Quebrador de objeções"),
+  unitBadge("u7", "✍️", "Aceite formal"),
+  unitBadge("u8", "🤝", "Embaixador da Open"),
+  {
+    id: "produto",
+    icon: "🧰",
+    title: "Conhece o produto",
+    description: "Conclua todas as unidades de produto",
+    progress: ({ lessons }) => {
+      const all = units.filter((u) => u.tema === "produto").flatMap((u) => u.lessons);
+      return { value: all.filter((l) => lessons[l.id]?.completions).length, goal: all.length };
+    },
+  },
 ];
 
 export const isBadgeUnlocked = (badge: Badge, ctx: BadgeContext) => {

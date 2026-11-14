@@ -2,8 +2,7 @@
 
 **Vender se aprende.** Experiência de aprendizagem gamificada em vendas, uma experiência Meu Farol, feita para o time comercial da Open.
 
-- Linha **Venda Consultiva**, baseada no Playbook Vendas Open 2025: 8 unidades, 24 lições e 8 desafios.
-- Linha **Materiais e Produtos**: 4 unidades sobre ACM e chapas, impressão e tintas, mídias, acabamento e iluminação.
+- Trilha única com 12 unidades: 8 de **venda consultiva** (baseadas no Playbook Vendas Open 2025) intercaladas com 4 de **produto** (ACM e chapas, impressão e tintas, mídias, acabamento e iluminação).
 - **Simulador de vendas** em modo guiado: 5 conversas com clientes fictícios e avaliação por competência.
 - Cinco tipos de questão (situação real, múltipla escolha, verdadeiro ou falso, ordenar e completar), sempre com explicação.
 - **Faíscas** (os pontos do Vendê), meta diária, moedas, níveis e conquistas.

@@ -199,7 +199,9 @@ const UnitHeader = ({ unit }: { unit: Unit }) => {
   return (
     <header className={`${card} flex items-center gap-4 border-l-4 p-5 ${complete ? "border-l-farol-ok" : "border-l-farol-accent"}`}>
       <div className="min-w-0 grow">
-        <Eyebrow>Unidade {unit.number}</Eyebrow>
+        <Eyebrow className={unit.tema === "produto" ? "text-farol-warn" : "text-farol-muted"}>
+          Unidade {unit.number} · {unit.tema === "produto" ? "Produto" : "Vendas"}
+        </Eyebrow>
         <h2 className="mt-1 font-display text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
           {unit.title}
         </h2>
@@ -245,6 +247,8 @@ const LinhaTabs = () => {
   const { linha } = useLinha();
   const setLinha = useFarolStore((s) => s.setLinhaAtiva);
   const records = useFarolStore((s) => s.lessons);
+  // com uma linha só, não há o que trocar
+  if (linhas.length < 2) return null;
   return (
     <div className="mb-4 flex gap-2" role="tablist" aria-label="Linhas de treino">
       {linhas.map((l) => {

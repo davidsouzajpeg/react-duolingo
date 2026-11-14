@@ -44,14 +44,20 @@ Para a fase de servidor é preciso definir **onde ele vive**:
 - **Dentro do Meu Farol** (mesmo login, mesmo banco): exige acesso ao código e ao banco do Meu Farol.
 - **Servidor próprio do Vendê** (por exemplo, rotas de API neste app com um banco Postgres), recebendo do Meu Farol apenas a identidade do vendedor.
 
-## Linhas de treino
+## Trilha única: vendas e produto intercalados
 
-O Vendê tem duas linhas, cada uma com a sua trilha e o seu desbloqueio:
+A trilha tem 12 unidades em sequência. As de produto ficam entre as de venda, na ordem definida em `ORDEM`, em `src/farol/content.ts`:
 
-- **Venda Consultiva** (`src/farol/content.ts`): 8 unidades, baseada no Playbook Vendas Open 2025. É a conclusão dela que avisa o gestor.
-- **Materiais e Produtos** (`src/farol/content-materiais.ts`): 4 unidades sobre ACM e chapas, impressão e tintas, mídias, acabamento, iluminação e como indicar a solução certa. Foi escrita com conhecimento técnico geral do setor e **precisa da revisão da produção da Open** antes de ir para o time: marcas, garantias e prazos reais não estão no texto.
+`u1 u2 m1 u3 u4 m2 u5 u6 m3 u7 u8 m4`
 
-Para criar outra linha, adicione um arquivo de conteúdo no mesmo formato e inclua-o em `linhas`, em `content.ts`.
+- **Vendas** (`u1` a `u8`, em `src/farol/content.ts`): baseadas no Playbook Vendas Open 2025.
+- **Produto** (`m1` a `m4`, em `src/farol/content-materiais.ts`): ACM e chapas, impressão e tintas, mídias, acabamento, iluminação e como indicar a solução certa. Escritas com conhecimento técnico geral do setor; **precisam da revisão da produção da Open** antes de ir para o time (marcas, garantias e prazos reais não estão no texto).
+
+Para incluir uma unidade nova, escreva-a em um dos arquivos de conteúdo e acrescente o id em `ORDEM`. Suba também `TRAIL_VERSION`, para o gestor ser avisado quando o vendedor concluir a nova última unidade.
+
+## Ajuda nas repetições
+
+Quando o vendedor erra a mesma questão pela segunda vez, a próxima tentativa já vem com o que ele acertou (`HELP_AFTER_ERRORS`, em `src/pages/farol/licao/[id].tsx`): posições certas ao ordenar, lacunas certas ao completar e, nas questões de escolha, as opções erradas já tentadas ficam riscadas.
 
 ## Como entram novas lições (inclusive a partir de livros)
 

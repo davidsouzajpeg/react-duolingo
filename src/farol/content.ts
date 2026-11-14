@@ -1452,7 +1452,7 @@ const seeds: UnitSeed[] = [
  * (ex.: "consultiva-2025.2"): quando o vendedor concluir a nova última
  * unidade, um novo aviso de conclusão é enviado ao gestor para essa versão.
  */
-export const TRAIL_VERSION = "consultiva-2025.1";
+export const TRAIL_VERSION = "vendas-produtos-2026.1";
 
 /* ------------------------------ Montagem ---------------------------------- */
 
@@ -1482,32 +1482,40 @@ const buildUnits = (list: UnitSeed[]): Unit[] =>
     ],
   }));
 
-/** Unidades da linha Venda Consultiva (a trilha principal) */
-export const units: Unit[] = buildUnits(seeds);
+/**
+ * Ordem da trilha: as unidades de produto (m…) ficam intercaladas com as de
+ * venda (u…), para o vendedor aprender a técnica e o produto juntos.
+ * Para mudar a ordem ou incluir uma unidade nova, edite esta lista.
+ */
+const ORDEM = ["u1", "u2", "m1", "u3", "u4", "m2", "u5", "u6", "m3", "u7", "u8", "m4"];
 
-/** Linhas de treino disponíveis */
+const todas: UnitSeed[] = [
+  ...seeds.map((u) => ({ ...u, tema: "vendas" as const })),
+  ...materiaisSeeds.map((u) => ({ ...u, tema: "produto" as const })),
+];
+
+const emOrdem: UnitSeed[] = [
+  ...ORDEM.flatMap((id) => todas.filter((u) => u.id === id)),
+  // unidade nova que ainda não entrou em ORDEM vai para o fim, em vez de sumir
+  ...todas.filter((u) => !ORDEM.includes(u.id)),
+].map((u, i) => ({ ...u, number: i + 1 }));
+
+/** Unidades da trilha, já na ordem e numeradas */
+export const units: Unit[] = buildUnits(emOrdem);
+
+/** Linhas de treino disponíveis (hoje, uma só, com vendas e produto intercalados) */
 export const linhas: Linha[] = [
   {
     id: "consultiva",
-    title: "Venda Consultiva",
+    title: "Vendas e Produtos",
     description:
-      "Aprenda a vender praticando: situações reais de comunicação visual, da prospecção ao fechamento, em lições de 3 minutos.",
+      "Aprenda a vender praticando: técnica de venda e conhecimento de produto lado a lado, com situações reais de comunicação visual, em lições de 3 minutos.",
     fontes: [
       "Playbook Vendas Open 2025",
       "venda consultiva e SPIN Selling (onde o playbook é silencioso)",
+      "conhecimento técnico geral de comunicação visual, com revisão da produção pendente",
     ],
     units,
-  },
-  {
-    id: "materiais",
-    title: "Materiais e Produtos",
-    description:
-      "Conheça o que você vende: ACM e chapas, tipos de impressão e tintas, mídias, acabamento e durabilidade, sempre ligando a técnica ao que o cliente ganha.",
-    fontes: [
-      "conhecimento técnico geral de comunicação visual",
-      "revisão da produção da Open (pendente)",
-    ],
-    units: buildUnits(materiaisSeeds),
   },
 ];
 

@@ -12,6 +12,7 @@ import {
 } from "~/farol/components/Icons";
 import {
   type AnswerValue,
+  type Help,
   type QuestionInstance,
   QuestionView,
   canCheck,
@@ -19,6 +20,7 @@ import {
   initialAnswer,
   isCorrect,
   makeInstance,
+  mergeHelp,
   shuffle,
 } from "~/farol/components/QuestionViews";
 import {
@@ -56,6 +58,9 @@ import {
   useFarolStore,
 } from "~/farol/store";
 import type { Lesson } from "~/farol/types";
+
+/** a partir de quantos erros na mesma questão o que já foi acertado fica marcado */
+const HELP_AFTER_ERRORS = 2;
 
 const praise = [
   "Boa!",
@@ -100,7 +105,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
   const isChallenge = lesson.kind === "desafio";
 
   const [queue, setQueue] = useState<QuestionInstance[]>(() =>
-    shuffle(lesson.questions).map(makeInstance),
+    shuffle(lesson.questions).map((q) => makeInstance(q)),
   );
   const [pos, setPos] = useState(0);
   const [answer, setAnswer] = useState<AnswerValue>(() =>
@@ -126,6 +131,9 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
   const [summary, setSummary] = useState<Summary | null>(null);
   const [celebrating, setCelebrating] = useState(false);
   const startedAt = useRef(Date.now());
+  // erros e acertos parciais por questão (para a ajuda nas repetições)
+  const errorCount = useRef<Record<string, number>>({});
+  const helps = useRef<Record<string, Help>>({});
 
   const current = queue[pos]!;
   const questionId = (inst: QuestionInstance) =>
@@ -151,9 +159,18 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
       sounds.wrong();
       setStatus("wrong");
       setCombo(0);
-      setMissed((m) => new Set(m).add(questionId(current)));
-      // a questão volta no fim da fila para fixar o aprendizado
-      setQueue((q) => [...q, makeInstance(current.question)]);
+      const qid = questionId(current);
+      setMissed((m) => new Set(m).add(qid));
+      // a questão volta no fim da fila. A partir do segundo erro na mesma
+      // questão, o que já foi acertado volta marcado (ver Help)
+      const errors = (errorCount.current[qid] ?? 0) + 1;
+      errorCount.current[qid] = errors;
+      const help = mergeHelp(current.question, answer, helps.current[qid]);
+      helps.current[qid] = help;
+      setQueue((q) => [
+        ...q,
+        makeInstance(current.question, errors >= HELP_AFTER_ERRORS ? help : undefined),
+      ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, current, answer, combo]);
@@ -216,7 +233,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     // a próxima questão começa do topo, mesmo que a anterior tenha sido rolada
     window.scrollTo(0, 0);
     setPos(nextPos);
-    setAnswer(initialAnswer(queue[nextPos]!.question));
+    setAnswer(initialAnswer(queue[nextPos]!.question, queue[nextPos]!.help));
     setStatus("answering");
   }, [status, solved, total, finish, pos, queue]);
 
@@ -242,9 +259,10 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
       const n = Number(e.key);
       const q = current.question;
       if ((q.kind === "multipla" || q.kind === "cenario") && current.order[n - 1] !== undefined) {
-        setAnswer(current.order[n - 1]!);
+        const option = current.order[n - 1]!;
+        if (!current.help?.eliminated?.includes(option)) setAnswer(option);
       } else if (q.kind === "vf" && (n === 1 || n === 2)) {
-        setAnswer(n === 1);
+        if (current.help?.eliminatedVf !== (n === 1)) setAnswer(n === 1);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -330,7 +348,9 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
         )}
         {missed.has(questionId(current)) && status === "answering" && pos >= total && (
           <p className="mb-3 text-xs font-semibold uppercase tracking-[.09em] text-farol-warn">
-            ↻ Mais uma chance nesta situação
+            {current.help
+              ? "↻ Deixei marcado o que você já acertou. Complete só o que falta"
+              : "↻ Mais uma chance nesta situação"}
           </p>
         )}
         <div key={current.key} className={`vd-in ${status === "wrong" ? "vd-shake" : ""}`}>
@@ -340,6 +360,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
             value={answer}
             onChange={setAnswer}
             revealed={status !== "answering"}
+            help={current.help}
           />
         </div>
       </main>

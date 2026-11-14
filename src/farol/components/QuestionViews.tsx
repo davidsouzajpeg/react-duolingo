@@ -12,11 +12,52 @@ import type {
 
 export type AnswerValue = number | boolean | number[] | (number | null)[] | null;
 
+/**
+ * Ajuda nas repetições: depois de errar a mesma questão mais de uma vez, o que
+ * o vendedor já acertou fica marcado e ele completa só o que falta.
+ */
+export type Help = {
+  /** ordenar: posições já acertadas (o passo certo fica fixo nelas) */
+  lockedSteps?: number[];
+  /** completar: lacunas já acertadas */
+  lockedBlanks?: number[];
+  /** múltipla escolha e situação: opções já tentadas, que estavam erradas */
+  eliminated?: number[];
+  /** verdadeiro ou falso: resposta já tentada, que estava errada */
+  eliminatedVf?: boolean;
+};
+
 export type QuestionInstance = {
   key: number;
   question: Question;
   /** ordem embaralhada de exibição (opções, passos ou banco de palavras) */
   order: number[];
+  help?: Help;
+};
+
+/** junta a ajuda anterior com o que a última resposta (errada) acertou */
+export const mergeHelp = (q: Question, a: AnswerValue, prev: Help = {}): Help => {
+  const union = (x: number[] = [], y: number[]) => [...new Set([...x, ...y])];
+  switch (q.kind) {
+    case "multipla":
+    case "cenario":
+      return typeof a === "number" ? { eliminated: union(prev.eliminated, [a]) } : prev;
+    case "vf":
+      return typeof a === "boolean" ? { eliminatedVf: a } : prev;
+    case "ordenar": {
+      const slots = Array.isArray(a) ? a : [];
+      const right = slots.flatMap((v, i) => (v === i ? [i] : []));
+      return { lockedSteps: union(prev.lockedSteps, right) };
+    }
+    case "completar": {
+      const bank = completarBank(q);
+      const slots = Array.isArray(a) ? a : [];
+      const right = slots.flatMap((v, i) =>
+        v !== null && v !== undefined && bank[v] === q.answer[i] ? [i] : [],
+      );
+      return { lockedBlanks: union(prev.lockedBlanks, right) };
+    }
+  }
 };
 
 export const shuffle = <T,>(items: T[]): T[] => {
@@ -38,7 +79,7 @@ export const completarBank = (q: CompletarQuestion) => [
 const blankCount = (q: CompletarQuestion) => q.sentence.split("___").length - 1;
 
 let instanceKey = 0;
-export const makeInstance = (question: Question): QuestionInstance => {
+export const makeInstance = (question: Question, help?: Help): QuestionInstance => {
   let order: number[] = [];
   switch (question.kind) {
     case "multipla":
@@ -58,12 +99,20 @@ export const makeInstance = (question: Question): QuestionInstance => {
     case "vf":
       break;
   }
-  return { key: instanceKey++, question, order };
+  return { key: instanceKey++, question, order, help };
 };
 
-export const initialAnswer = (q: Question): AnswerValue => {
-  if (q.kind === "ordenar") return [];
-  if (q.kind === "completar") return Array<null>(blankCount(q)).fill(null);
+export const initialAnswer = (q: Question, help?: Help): AnswerValue => {
+  if (q.kind === "ordenar") {
+    // uma casa por posição; as já acertadas voltam preenchidas
+    return q.steps.map((_, i) => (help?.lockedSteps?.includes(i) ? i : null));
+  }
+  if (q.kind === "completar") {
+    // as respostas certas ocupam os primeiros índices do banco de palavras
+    return Array.from({ length: blankCount(q) }, (_, i) =>
+      help?.lockedBlanks?.includes(i) ? i : null,
+    );
+  }
   return null;
 };
 
@@ -75,7 +124,7 @@ export const canCheck = (q: Question, a: AnswerValue) => {
     case "vf":
       return typeof a === "boolean";
     case "ordenar":
-      return Array.isArray(a) && a.length === q.steps.length;
+      return Array.isArray(a) && a.length === q.steps.length && a.every((v) => v !== null);
     case "completar":
       return Array.isArray(a) && a.every((v) => v !== null);
   }
@@ -124,6 +173,7 @@ type ViewProps<Q extends Question> = {
   onChange: (value: AnswerValue) => void;
   /** depois de verificar: trava a interação e mostra o resultado */
   revealed: boolean;
+  help?: Help;
 };
 
 const Title = ({ children }: { children: ReactNode }) => (
@@ -147,6 +197,7 @@ const OptionList = ({
   answer,
   onChange,
   revealed,
+  help,
 }: {
   options: string[];
   order: number[];
@@ -154,10 +205,13 @@ const OptionList = ({
   answer: number;
   onChange: (v: AnswerValue) => void;
   revealed: boolean;
+  help?: Help;
 }) => (
   <div className="flex flex-col gap-3" role="radiogroup">
     {order.map((optionIndex, position) => {
       const selected = value === optionIndex;
+      // opção que o vendedor já tentou e estava errada: sai do caminho
+      const out = !revealed && !!help?.eliminated?.includes(optionIndex);
       const state = revealed
         ? optionIndex === answer
           ? "right"
@@ -172,9 +226,10 @@ const OptionList = ({
           key={optionIndex}
           role="radio"
           aria-checked={selected}
-          disabled={revealed}
+          disabled={revealed || out}
+          aria-label={out ? `${options[optionIndex]} (já tentada)` : undefined}
           onClick={() => onChange(optionIndex)}
-          className={`flex items-center gap-3 rounded-2xl border border-b-4 p-4 text-left transition active:translate-y-0.5 disabled:active:translate-y-0 ${optionStyle(state)}`}
+          className={`flex items-center gap-3 rounded-2xl border border-b-4 p-4 text-left transition active:translate-y-0.5 disabled:active:translate-y-0 ${optionStyle(state)} ${out ? "opacity-35 line-through" : ""}`}
         >
           <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border font-num text-sm font-extrabold ${state === "selected" ? "border-farol-accent bg-farol-accent text-white" : "border-current opacity-60"}`}>
             {position + 1}
@@ -219,7 +274,7 @@ const CenarioView = (props: ViewProps<CenarioQuestion>) => {
   );
 };
 
-const VfView = ({ question, value, onChange, revealed }: ViewProps<VerdadeiroFalsoQuestion>) => (
+const VfView = ({ question, value, onChange, revealed, help }: ViewProps<VerdadeiroFalsoQuestion>) => (
   <>
     <Title>Verdadeiro ou falso?</Title>
     <blockquote className="mb-6 rounded-2xl border border-l-4 border-farol-line border-l-farol-accent bg-farol-surface p-5 text-lg sm:text-xl">
@@ -228,6 +283,7 @@ const VfView = ({ question, value, onChange, revealed }: ViewProps<VerdadeiroFal
     <div className="grid grid-cols-2 gap-3">
       {[true, false].map((option, i) => {
         const selected = value === option;
+        const out = !revealed && help?.eliminatedVf === option;
         const state = revealed
           ? option === question.answer
             ? "right"
@@ -240,9 +296,9 @@ const VfView = ({ question, value, onChange, revealed }: ViewProps<VerdadeiroFal
         return (
           <button
             key={String(option)}
-            disabled={revealed}
+            disabled={revealed || out}
             onClick={() => onChange(option)}
-            className={`flex flex-col items-center gap-1 rounded-2xl border border-b-4 p-5 text-lg font-semibold transition active:translate-y-0.5 ${optionStyle(state)}`}
+            className={`flex flex-col items-center gap-1 rounded-2xl border border-b-4 p-5 text-lg font-semibold transition active:translate-y-0.5 ${optionStyle(state)} ${out ? "opacity-35 line-through" : ""}`}
           >
             <span className="text-3xl" aria-hidden>
               {option ? "👍" : "👎"}
@@ -286,36 +342,67 @@ const Chip = ({
   </button>
 );
 
-const OrdenarView = ({ question, order, value, onChange, revealed }: ViewProps<OrdenarQuestion>) => {
-  const picked = (value as number[]) ?? [];
+const OrdenarView = ({ question, order, value, onChange, revealed, help }: ViewProps<OrdenarQuestion>) => {
+  // uma casa por posição; null = ainda vazia
+  const slots = Array.isArray(value)
+    ? (value as (number | null)[])
+    : question.steps.map(() => null);
+  const locked = help?.lockedSteps ?? [];
+  const place = (stepIndex: number) => {
+    const slot = slots.indexOf(null);
+    if (slot === -1) return;
+    const next = [...slots];
+    next[slot] = stepIndex;
+    onChange(next);
+  };
+  const clear = (position: number) => {
+    const next = [...slots];
+    next[position] = null;
+    onChange(next);
+  };
   return (
     <>
       <Title>{question.prompt}</Title>
-      <p className="-mt-4 mb-4 text-farol-muted">Toque nos itens na ordem certa.</p>
-      <ol className="mb-6 flex min-h-[120px] flex-col gap-2 rounded-2xl border border-dashed border-farol-line bg-farol-lamp/40 p-3">
-        {picked.length === 0 && (
-          <li className="m-auto text-farol-muted">Sua sequência aparece aqui</li>
-        )}
-        {picked.map((stepIndex, position) => (
-          <li key={stepIndex} className="flex items-center gap-2">
-            <span className="w-6 shrink-0 text-right font-num font-extrabold text-farol-muted">{position + 1}.</span>
-            <Chip
-              disabled={revealed}
-              tone={revealed ? (stepIndex === position ? "right" : "wrong") : "idle"}
-              onClick={() => onChange(picked.filter((p) => p !== stepIndex))}
-            >
-              {question.steps[stepIndex]}
-            </Chip>
-          </li>
-        ))}
+      <p className="-mt-4 mb-4 text-farol-muted">
+        {locked.length > 0
+          ? "O que você já acertou ficou no lugar. Complete as posições vazias."
+          : "Toque nos itens na ordem certa."}
+      </p>
+      <ol className="mb-6 flex flex-col gap-2 rounded-2xl border border-dashed border-farol-line bg-farol-lamp/40 p-3">
+        {slots.map((stepIndex, position) => {
+          const isLocked = locked.includes(position);
+          return (
+            <li key={position} className="flex min-h-[46px] items-center gap-2">
+              <span className="w-6 shrink-0 text-right font-num font-extrabold text-farol-muted">{position + 1}.</span>
+              {stepIndex === null ? (
+                <span className="h-10 grow rounded-xl border border-dashed border-farol-line" aria-label="posição vazia" />
+              ) : (
+                <Chip
+                  disabled={revealed || isLocked}
+                  tone={
+                    isLocked || (revealed && stepIndex === position)
+                      ? "right"
+                      : revealed
+                        ? "wrong"
+                        : "idle"
+                  }
+                  onClick={() => clear(position)}
+                >
+                  {isLocked && <span aria-hidden>✓ </span>}
+                  {question.steps[stepIndex]}
+                </Chip>
+              )}
+            </li>
+          );
+        })}
       </ol>
       <div className="flex flex-wrap gap-2">
         {order.map((stepIndex) => (
           <Chip
             key={stepIndex}
-            hidden={picked.includes(stepIndex)}
+            hidden={slots.includes(stepIndex)}
             disabled={revealed}
-            onClick={() => onChange([...picked, stepIndex])}
+            onClick={() => place(stepIndex)}
           >
             {question.steps[stepIndex]}
           </Chip>
@@ -325,8 +412,9 @@ const OrdenarView = ({ question, order, value, onChange, revealed }: ViewProps<O
   );
 };
 
-const CompletarView = ({ question, order, value, onChange, revealed }: ViewProps<CompletarQuestion>) => {
+const CompletarView = ({ question, order, value, onChange, revealed, help }: ViewProps<CompletarQuestion>) => {
   const filled = (value as (number | null)[]) ?? [];
+  const lockedBlanks = help?.lockedBlanks ?? [];
   const bank = completarBank(question);
   const parts = question.sentence.split("___");
 
@@ -353,10 +441,10 @@ const CompletarView = ({ question, order, value, onChange, revealed }: ViewProps
             {i < parts.length - 1 &&
               (filled[i] !== null && filled[i] !== undefined ? (
                 <button
-                  disabled={revealed}
+                  disabled={revealed || lockedBlanks.includes(i)}
                   onClick={() => remove(i)}
                   className={`mx-1 rounded-lg border border-b-4 px-2 py-0.5 font-semibold ${
-                    revealed
+                    revealed || lockedBlanks.includes(i)
                       ? bank[filled[i]] === question.answer[i]
                         ? "border-farol-ok bg-farol-ok-soft text-farol-ok"
                         : "border-farol-bad bg-farol-bad-soft text-farol-bad"
