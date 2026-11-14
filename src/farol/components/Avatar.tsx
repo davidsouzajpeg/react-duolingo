@@ -66,21 +66,33 @@ const Background = ({ id, gid }: { id?: string; gid: string }) => {
 
 /** cabelo que fica atrás da cabeça e dos ombros */
 const HairBack = ({ style, color }: { style: string; color: string }) => {
-  if (style === "longo")
-    return (
-      <path
-        d="M38 96C30 22 170 22 162 96l6 78c-14 10-32 4-34-10V96H66v68c-2 14-20 20-34 10Z"
-        fill={color}
-      />
-    );
-  if (style === "chanel")
-    return (
-      <path
-        d="M40 92C34 24 166 24 160 92l4 40c-10 8-24 4-26-8V92H62v32c-2 12-16 16-26 8Z"
-        fill={color}
-      />
-    );
-  return null;
+  switch (style) {
+    case "longo":
+      return (
+        <path
+          d="M38 96C30 22 170 22 162 96l6 78c-14 10-32 4-34-10V96H66v68c-2 14-20 20-34 10Z"
+          fill={color}
+        />
+      );
+    case "chanel":
+      return (
+        <path
+          d="M40 92C34 24 166 24 160 92l4 40c-10 8-24 4-26-8V92H62v32c-2 12-16 16-26 8Z"
+          fill={color}
+        />
+      );
+    case "afro":
+      return <ellipse cx="100" cy="72" rx="74" ry="64" fill={color} />;
+    case "rabo":
+      return (
+        <>
+          <path d="M140 52c34 0 44 52 26 96-8-22-16-44-30-62Z" fill={color} />
+          <rect x="140" y="56" width="14" height="10" rx="5" fill="#ff0084" transform="rotate(35 147 61)" />
+        </>
+      );
+    default:
+      return null;
+  }
 };
 
 const HairFront = ({ style, color }: { style: string; color: string }) => {
@@ -91,11 +103,34 @@ const HairFront = ({ style, color }: { style: string; color: string }) => {
       <path d="M70 42c10-7 24-9 38-7" stroke={light} strokeWidth="5" strokeLinecap="round" fill="none" />
     </>
   );
+  const buzz = (
+    <path d="M50 86C46 46 70 33 100 33s54 13 50 53c-6-20-22-30-50-30S56 66 50 86Z" fill={color} opacity=".55" />
+  );
   switch (style) {
     case "curto":
     case "longo":
     case "chanel":
+    case "afro":
+    case "rabo":
       return cap;
+    case "raspado":
+      return buzz;
+    case "moicano":
+      return (
+        <>
+          {buzz}
+          <path d="M86 62C80 14 120 14 114 62c-4-6-24-6-28 0Z" fill={color} />
+          <path d="M94 30c3-5 8-6 12-3" stroke={light} strokeWidth="4" strokeLinecap="round" fill="none" />
+        </>
+      );
+    case "franja":
+      return (
+        <>
+          {cap}
+          <path d="M50 88c0-26 22-36 50-36s50 10 50 36c-12-10-24-14-36-14-6 6-16 6-22 0-14 0-28 4-42 14Z" fill={color} />
+          <path d="M72 58c8-3 18-4 28-4" stroke={light} strokeWidth="4" strokeLinecap="round" fill="none" />
+        </>
+      );
     case "topete":
       return (
         <>
@@ -137,16 +172,20 @@ const HairFront = ({ style, color }: { style: string; color: string }) => {
 };
 
 const FacialHair = ({ style, color }: { style?: string; color: string }) => {
-  if (style === "barba")
-    return (
-      <path
-        d="M50 100c0 34 20 44 50 44s50-10 50-44c-4 16-12 22-24 22-8-12-44-12-52 0-12 0-20-6-24-22Z"
-        fill={color}
-      />
-    );
-  if (style === "bigode")
-    return <path d="M76 116c6-10 18-10 24-4 6-6 18-6 24 4-8 4-18 4-24-1-6 5-16 5-24 1Z" fill={color} />;
-  return null;
+  const full =
+    "M50 100c0 34 20 44 50 44s50-10 50-44c-4 16-12 22-24 22-8-12-44-12-52 0-12 0-20-6-24-22Z";
+  switch (style) {
+    case "barba":
+      return <path d={full} fill={color} />;
+    case "porfazer":
+      return <path d={full} fill={color} opacity=".32" />;
+    case "cavanhaque":
+      return <path d="M80 118c0-12 40-12 40 0l-3 18c-8 10-26 10-34 0Z" fill={color} />;
+    case "bigode":
+      return <path d="M76 116c6-10 18-10 24-4 6-6 18-6 24 4-8 4-18 4-24-1-6 5-16 5-24 1Z" fill={color} />;
+    default:
+      return null;
+  }
 };
 
 const Hat = ({ id }: { id?: string }) => {
@@ -245,6 +284,119 @@ const Accessory = ({ id }: { id?: string }) => {
   }
 };
 
+const bodies = {
+  magro: { w: 62, hw: 46, neck: 13 },
+  medio: { w: 74, hw: 50, neck: 16 },
+  forte: { w: 88, hw: 51, neck: 21 },
+  gordo: { w: 90, hw: 57, neck: 21 },
+} as const;
+
+/** Roupa desenhada sobre o tronco. `w` é a meia largura dos ombros. */
+const Outfit = ({
+  type,
+  w,
+  color,
+  dark,
+  skin,
+  skinDark,
+}: {
+  type: string;
+  w: number;
+  color: string;
+  dark: string;
+  skin: string;
+  skinDark: string;
+}) => {
+  const L = 100 - w;
+  const R = 100 + w;
+  const torso = `M${L} 204c0-40 ${w * 0.4}-58 ${w}-58s${w} 18 ${w} 58Z`;
+  const sides = (fill: string) => (
+    <path
+      d={`M${L} 204c0-22 8-36 22-45-6 12-8 28-8 45ZM${R} 204c0-22-8-36-22-45 6 12 8 28 8 45Z`}
+      fill={fill}
+    />
+  );
+  const roundCollar = (
+    <>
+      <path d="M78 147c4 14 12 20 22 20s18-6 22-20c-14-2-30-2-44 0Z" fill={skinDark} />
+      <path d="M78 147c4 14 12 20 22 20s18-6 22-20" stroke={dark} strokeWidth="5" fill="none" strokeLinecap="round" />
+    </>
+  );
+  const vNeck = <path d="M80 146 100 172l20-26c-12-2-28-2-40 0Z" fill={skinDark} />;
+  const buttons = (
+    <>
+      <path d="M100 172v32" stroke={dark} strokeWidth="3" />
+      <circle cx="100" cy="182" r="2.6" fill={dark} />
+      <circle cx="100" cy="194" r="2.6" fill={dark} />
+    </>
+  );
+
+  switch (type) {
+    case "regata":
+      return (
+        <>
+          <path d={torso} fill={skin} />
+          {sides(skinDark)}
+          <path
+            d={`M${100 - w * 0.62} 204 ${100 - w * 0.42} 150c8 22 ${w * 0.84 - 16} 22 ${w * 0.84} 0l${w * 0.2} 54Z`}
+            fill={color}
+          />
+        </>
+      );
+    case "polo":
+      return (
+        <>
+          <path d={torso} fill={color} />
+          {sides(dark)}
+          {vNeck}
+          {buttons}
+          <path d="M78 145 100 172 86 180 70 152ZM122 145 100 172l14 8 16-28Z" fill={shade(color, 0.22)} stroke={dark} strokeWidth="2" strokeLinejoin="round" />
+        </>
+      );
+    case "social":
+      return (
+        <>
+          <path d={torso} fill={color} />
+          {sides(dark)}
+          {vNeck}
+          {buttons}
+          <path d="M80 144 100 170 90 184 72 154ZM120 144 100 170l10 14 18-30Z" fill={shade(color, 0.3)} stroke={dark} strokeWidth="2" strokeLinejoin="round" />
+        </>
+      );
+    case "blazer": {
+      const jacket = "#2b2d36";
+      return (
+        <>
+          <path d={torso} fill={jacket} />
+          {sides("#1d1e25")}
+          <path d="M80 146 100 204l20-58c-12-2-28-2-40 0Z" fill={color} />
+          <path d="M82 146 100 170l18-24c-12-2-24-2-36 0Z" fill={skinDark} />
+          <path d="M80 144 66 162l22 42h12ZM120 144l14 18-22 42h-12Z" fill="#3a3c47" stroke="#1d1e25" strokeWidth="2" strokeLinejoin="round" />
+        </>
+      );
+    }
+    case "moletom":
+      return (
+        <>
+          <path d={torso} fill={color} />
+          {sides(dark)}
+          {roundCollar}
+          <path d="M90 168v22M110 168v22" stroke={shade(color, 0.4)} strokeWidth="4" strokeLinecap="round" />
+          <circle cx="90" cy="192" r="3" fill={shade(color, 0.4)} />
+          <circle cx="110" cy="192" r="3" fill={shade(color, 0.4)} />
+        </>
+      );
+    default:
+      return (
+        <>
+          <path d={torso} fill={color} />
+          {sides(dark)}
+          {roundCollar}
+        </>
+      );
+  }
+};
+
 /** Avatar do vendedor: desenho original do Vendê, em camadas, montado a partir da configuração */
 export const Avatar = ({
   config,
@@ -268,6 +420,13 @@ export const Avatar = ({
   const hair = config.hairColor;
   const shirt = config.shirt;
   const shirtDark = shade(shirt, -0.2);
+  const bodyType = config.body ?? "medio";
+  const body = bodies[bodyType];
+  const outfit = config.outfit ?? "camiseta";
+  const iris = config.eyes ?? "#5a3a22";
+  const hw = body.hw;
+  // cabelo, barba, chapéu e headset acompanham a largura da cabeça
+  const fit = `translate(100 0) scale(${hw / 50} 1) translate(-100 0)`;
 
   return (
     <svg viewBox="0 0 200 200" className={`shrink-0 ${className}`} role="img" aria-label={label}>
@@ -278,33 +437,41 @@ export const Avatar = ({
       </defs>
       <g clipPath={`url(#${clip})`}>
         <Background id={equipped.fundo} gid={`av-g-${uid}`} />
-        <HairBack style={config.hair} color={shade(hair, -0.12)} />
+        <g transform={fit}>
+          <HairBack style={config.hair} color={shade(hair, -0.12)} />
+        </g>
+        {outfit === "moletom" && (
+          <path d="M62 160c-6-34 14-46 38-46s44 12 38 46Z" fill={shirtDark} />
+        )}
 
-        {/* corpo */}
-        <path d="M26 204c0-40 30-58 74-58s74 18 74 58Z" fill={shirt} />
-        <path d="M26 204c0-22 8-36 22-45-6 12-8 28-8 45ZM174 204c0-22-8-36-22-45 6 12 8 28 8 45Z" fill={shirtDark} />
-        <path d="M78 147c4 14 12 20 22 20s18-6 22-20c-14-2-30-2-44 0Z" fill={skinDark} />
-        <path d="M78 147c4 14 12 20 22 20s18-6 22-20" stroke={shirtDark} strokeWidth="5" fill="none" strokeLinecap="round" />
+        <Outfit type={outfit} w={body.w} color={shirt} dark={shirtDark} skin={skin} skinDark={skinDark} />
         {/* pescoço */}
-        <path d="M84 120h32v26c0 12-32 12-32 0Z" fill={skinDark} />
+        <path d={`M${100 - body.neck} 120h${body.neck * 2}v26c0 12-${body.neck * 2} 12-${body.neck * 2} 0Z`} fill={skinDark} />
 
         {/* cabeça */}
-        <ellipse cx="46" cy="98" rx="11" ry="14" fill={skin} />
-        <ellipse cx="154" cy="98" rx="11" ry="14" fill={skin} />
-        <ellipse cx="46" cy="99" rx="5" ry="7" fill={skinDark} />
-        <ellipse cx="154" cy="99" rx="5" ry="7" fill={skinDark} />
-        <rect x="50" y="36" width="100" height="108" rx="47" fill={skin} />
+        <ellipse cx={100 - hw - 4} cy="98" rx="11" ry="14" fill={skin} />
+        <ellipse cx={100 + hw + 4} cy="98" rx="11" ry="14" fill={skin} />
+        <ellipse cx={100 - hw - 4} cy="99" rx="5" ry="7" fill={skinDark} />
+        <ellipse cx={100 + hw + 4} cy="99" rx="5" ry="7" fill={skinDark} />
+        <rect x={100 - hw} y="36" width={hw * 2} height={bodyType === "gordo" ? 112 : 108} rx={Math.min(47, hw - 3)} fill={skin} />
         <path d="M60 60c8-10 22-16 40-16" stroke={skinLight} strokeWidth="7" strokeLinecap="round" fill="none" opacity=".7" />
-        <circle cx="68" cy="114" r="10" fill="#ff5a7a" opacity=".22" />
-        <circle cx="132" cy="114" r="10" fill="#ff5a7a" opacity=".22" />
+        <circle cx={bodyType === "gordo" ? 64 : 68} cy="114" r={bodyType === "gordo" ? 12 : 10} fill="#ff5a7a" opacity=".22" />
+        <circle cx={bodyType === "gordo" ? 136 : 132} cy="114" r={bodyType === "gordo" ? 12 : 10} fill="#ff5a7a" opacity=".22" />
+        {bodyType === "gordo" && (
+          <path d="M82 138c10 6 26 6 36 0" stroke={skinDark} strokeWidth="3.5" strokeLinecap="round" fill="none" />
+        )}
 
-        <FacialHair style={config.beard} color={hair} />
+        <g transform={fit}>
+          <FacialHair style={config.beard} color={hair} />
+        </g>
 
         {/* olhos */}
         <ellipse cx="79" cy="92" rx="12.5" ry="14.5" fill="#fff" />
         <ellipse cx="121" cy="92" rx="12.5" ry="14.5" fill="#fff" />
-        <circle cx="81" cy="94" r="7" fill={INK} />
-        <circle cx="123" cy="94" r="7" fill={INK} />
+        <circle cx="81" cy="94" r="7.5" fill={iris} />
+        <circle cx="123" cy="94" r="7.5" fill={iris} />
+        <circle cx="81" cy="94" r="4" fill={INK} />
+        <circle cx="123" cy="94" r="4" fill={INK} />
         <circle cx="83.5" cy="91" r="2.4" fill="#fff" />
         <circle cx="125.5" cy="91" r="2.4" fill="#fff" />
         {/* sobrancelhas */}
@@ -315,14 +482,24 @@ export const Avatar = ({
         <path d="M90 126c6 4 14 4 20 0-4 5-16 5-20 0Z" fill="#ff7b93" />
         <path d="M84 119c6 12 26 12 32 0" stroke={INK} strokeWidth="3.5" strokeLinecap="round" fill="none" />
 
-        {!hat && <HairFront style={config.hair} color={hair} />}
-        {hat && config.hair !== "careca" && (
-          <path d="M48 94c-2-12 0-22 4-30h96c4 8 6 18 4 30-2-10-6-17-12-22H60c-6 5-10 12-12 22Z" fill={hair} />
-        )}
+        <g transform={fit}>
+          {!hat && <HairFront style={config.hair} color={hair} />}
+          {hat && config.hair !== "careca" && (
+            <path d="M48 94c-2-12 0-22 4-30h96c4 8 6 18 4 30-2-10-6-17-12-22H60c-6 5-10 12-12 22Z" fill={hair} opacity={config.hair === "raspado" || config.hair === "moicano" ? 0.55 : 1} />
+          )}
+        </g>
 
         <Glasses id={equipped.oculos} />
-        <Hat id={hat} />
-        <Accessory id={equipped.acessorio} />
+        <g transform={fit}>
+          <Hat id={hat} />
+        </g>
+        {equipped.acessorio === "headset" ? (
+          <g transform={fit}>
+            <Accessory id="headset" />
+          </g>
+        ) : (
+          <Accessory id={equipped.acessorio} />
+        )}
       </g>
     </svg>
   );

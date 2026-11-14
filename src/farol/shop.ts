@@ -10,20 +10,47 @@ export const shirtColors = ["#ff0084", "#3fcf86", "#f5b331", "#4f8cff", "#ffffff
 
 export const hairStyles = [
   { id: "curto", label: "Curto" },
+  { id: "raspado", label: "Raspado" },
   { id: "topete", label: "Topete" },
+  { id: "moicano", label: "Moicano" },
   { id: "cacheado", label: "Cacheado" },
+  { id: "afro", label: "Afro" },
+  { id: "franja", label: "Franja" },
   { id: "chanel", label: "Chanel" },
   { id: "longo", label: "Longo" },
+  { id: "rabo", label: "Rabo de cavalo" },
   { id: "coque", label: "Coque" },
   { id: "careca", label: "Careca" },
 ] as const;
 
 export const beardStyles = [
   { id: "nenhuma", label: "Sem barba" },
+  { id: "porfazer", label: "Por fazer" },
   { id: "bigode", label: "Bigode" },
-  { id: "barba", label: "Barba" },
+  { id: "cavanhaque", label: "Cavanhaque" },
+  { id: "barba", label: "Barba cheia" },
 ] as const;
 
+export const bodyTypes = [
+  { id: "magro", label: "Magro" },
+  { id: "medio", label: "Médio" },
+  { id: "forte", label: "Forte" },
+  { id: "gordo", label: "Gordo" },
+] as const;
+
+export const outfitTypes = [
+  { id: "camiseta", label: "Camiseta" },
+  { id: "polo", label: "Polo" },
+  { id: "social", label: "Camisa social" },
+  { id: "blazer", label: "Blazer" },
+  { id: "moletom", label: "Moletom" },
+  { id: "regata", label: "Regata" },
+] as const;
+
+export const eyeColors = ["#5a3a22", "#22232a", "#b07a2a", "#3f9a5f", "#3f7fd9"] as const;
+
+export type BodyType = (typeof bodyTypes)[number]["id"];
+export type OutfitType = (typeof outfitTypes)[number]["id"];
 export type BeardStyle = (typeof beardStyles)[number]["id"];
 
 export type HairStyle = (typeof hairStyles)[number]["id"];
@@ -67,6 +94,11 @@ export type AvatarConfig = {
   hairColor: string;
   /** barba ou bigode (opcional: avatares antigos não têm) */
   beard?: BeardStyle;
+  body?: BodyType;
+  outfit?: OutfitType;
+  /** cor dos olhos */
+  eyes?: string;
+  /** cor da roupa */
   shirt: string;
   equipped: Partial<Record<ItemSlot, string>>;
 };
@@ -86,6 +118,9 @@ export const randomAvatar = (): AvatarConfig => ({
   hair: pick(hairStyles).id,
   hairColor: pick(hairColors),
   beard: Math.random() < 0.3 ? pick(beardStyles).id : "nenhuma",
+  body: pick(bodyTypes).id,
+  outfit: pick(outfitTypes).id,
+  eyes: pick(eyeColors),
   shirt: pick(shirtColors),
   equipped: {},
 });

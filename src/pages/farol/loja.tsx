@@ -8,8 +8,11 @@ import { Button, Eyebrow, card } from "~/farol/components/ui";
 import {
   type ItemSlot,
   beardStyles,
+  bodyTypes,
+  eyeColors,
   hairColors,
   hairStyles,
+  outfitTypes,
   randomAvatar,
   shirtColors,
   shopItems,
@@ -154,7 +157,18 @@ const Loja = () => {
 
       {tab === "avatar" && (
         <section className={`${card} flex flex-col gap-5 p-5`}>
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Corpo</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {bodyTypes.map((b) => (
+                <Choice key={b.id} active={(avatar.body ?? "medio") === b.id} onClick={() => setAvatar({ body: b.id })}>
+                  {b.label}
+                </Choice>
+              ))}
+            </div>
+          </fieldset>
           <Swatches label="Pele" colors={skinTones} value={avatar.skin} onPick={(skin) => setAvatar({ skin })} />
+          <Swatches label="Olhos" colors={eyeColors} value={avatar.eyes ?? eyeColors[0]} onPick={(eyes) => setAvatar({ eyes })} />
           <fieldset>
             <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Cabelo</legend>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -180,7 +194,17 @@ const Loja = () => {
               ))}
             </div>
           </fieldset>
-          <Swatches label="Camisa" colors={shirtColors} value={avatar.shirt} onPick={(shirt) => setAvatar({ shirt })} />
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Roupa</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {outfitTypes.map((o) => (
+                <Choice key={o.id} active={(avatar.outfit ?? "camiseta") === o.id} onClick={() => setAvatar({ outfit: o.id })}>
+                  {o.label}
+                </Choice>
+              ))}
+            </div>
+          </fieldset>
+          <Swatches label="Cor da roupa" colors={shirtColors} value={avatar.shirt} onPick={(shirt) => setAvatar({ shirt })} />
         </section>
       )}
 
