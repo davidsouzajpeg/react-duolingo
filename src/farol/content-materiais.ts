@@ -9,6 +9,12 @@ import { cenario, completar, multipla, ordenar, vf, type UnitSeed } from "./auto
  * - Foi escrito com conhecimento técnico geral do setor. As durabilidades
  *   variam por fabricante, tinta, acabamento e exposição: por isso o texto
  *   fala em curto, médio e longo prazo, sem prometer anos.
+ * - Números usados como referência (confirmar antes de divulgar ao time):
+ *   lâminas de 0,21 / 0,30 / 0,50 mm; pintura PVDF no padrão 70/30; garantia
+ *   de fabricante na casa de 15 anos para PVDF e 5 para poliéster (valores
+ *   citados em catálogos de fabricantes no portal AECweb, inclusive a linha
+ *   NanoMaxx da Alucomaxx com 15 anos); tinta látex com até ~3 anos na rua
+ *   sem laminação e ~5 com laminação (estimativa da HP, não é garantia).
  * - PENDENTE: revisão da produção da Open, para trocar o genérico pelos
  *   materiais, marcas, garantias e prazos que a Open realmente pratica.
  */
@@ -17,8 +23,8 @@ export const materiaisSeeds: UnitSeed[] = [
   {
     id: "m1",
     number: 1,
-    title: "ACM e chapas",
-    description: "O que é ACM, quando ele vale a pena e as outras chapas do dia a dia",
+    title: "ACM a fundo e outras chapas",
+    description: "Construção, espessuras, pintura, garantia e as outras chapas do dia a dia",
     lessons: [
       {
         id: "m1-l1",
@@ -60,6 +66,48 @@ export const materiaisSeeds: UnitSeed[] = [
             ["leve", "rígido"],
             ["pesado", "mole"],
             "Leveza e rigidez juntas: é isso que faz do ACM o material mais usado em fachadas.",
+          ),
+        ],
+      },
+      {
+        id: "m1-l4",
+        title: "Espessura da chapa e das lâminas",
+        tip:
+          "Um ACM tem duas medidas: a espessura total da chapa (3 ou 4 mm são as mais comuns) e a espessura de cada lâmina de alumínio (como 0,21, 0,30 ou 0,50 mm). É a lâmina que dá resistência.",
+        questions: [
+          multipla(
+            "Quando alguém fala “ACM 3 mm com lâmina 0,30”, o que significa o 0,30?",
+            [
+              "A espessura total da chapa",
+              "A espessura de cada lâmina de alumínio, em milímetros",
+              "O peso da chapa por metro quadrado",
+              "A espessura da pintura",
+            ],
+            1,
+            "São duas medidas: 3 mm é a chapa inteira; 0,30 mm é cada uma das duas lâminas de alumínio.",
+          ),
+          vf(
+            "Dois ACM com a mesma espessura total podem ter lâminas de alumínio diferentes, e isso muda a rigidez e a resistência a amassados.",
+            true,
+            "Por fora parecem iguais. Uma lâmina mais fina amassa e ondula com mais facilidade, principalmente em painéis grandes.",
+          ),
+          cenario(
+            "Cliente comparando dois orçamentos de fachada em ACM 3 mm.",
+            "Os dois são ACM 3 mm. Por que o seu é mais caro?",
+            "Qual pergunta ajuda a comparar de verdade?",
+            [
+              "Porque o nosso é melhor.",
+              "O outro orçamento informa a espessura da lâmina de alumínio? Chapas de 3 mm podem ter lâminas bem diferentes, e é a lâmina que segura a fachada plana e sem amassados.",
+              "Deve ser erro do outro orçamento.",
+              "Então faço pelo mesmo preço.",
+            ],
+            1,
+            "A espessura da lâmina é uma das maiores diferenças escondidas entre dois orçamentos de ACM.",
+          ),
+          ordenar(
+            "Ordene as lâminas da mais fina para a mais resistente",
+            ["0,21 mm", "0,30 mm", "0,50 mm"],
+            "Quanto mais espessa a lâmina, mais rígido o painel. Em geral, a mais fina fica em peças internas ou simples e as mais espessas em fachadas e painéis grandes. Confirme com a produção qual a Open usa em cada caso.",
           ),
         ],
       },
@@ -108,6 +156,97 @@ export const materiaisSeeds: UnitSeed[] = [
             ],
             1,
             "Existem chapas com núcleo resistente ao fogo. Em obras com essa exigência, confirme com o projeto e com a produção antes de orçar.",
+          ),
+        ],
+      },
+      {
+        id: "m1-l5",
+        title: "Do que é feita a pintura",
+        tip:
+          "PVDF é uma resina de alta resistência ao sol: no padrão de mercado, a tinta leva cerca de 70% dessa resina. A pintura de poliéster é mais simples e mais barata, por isso dura menos na rua.",
+        questions: [
+          multipla(
+            "Por que a pintura PVDF segura a cor por mais tempo na área externa?",
+            [
+              "Porque a camada é mais brilhante",
+              "Porque a resina PVDF resiste muito mais aos raios do sol e ao tempo do que a de poliéster",
+              "Porque ela é aplicada dos dois lados",
+              "Porque deixa a chapa mais grossa",
+            ],
+            1,
+            "É a química da resina: o PVDF degrada muito menos com o sol, então a cor e o brilho duram mais.",
+          ),
+          vf(
+            "Em um ACM com pintura PVDF de padrão de mercado, a maior parte da resina da tinta é PVDF (cerca de 70%).",
+            true,
+            "É o chamado padrão 70/30. Vale confirmar na ficha técnica do fabricante, porque existem tintas com menos PVDF vendidas com o mesmo nome.",
+          ),
+          cenario(
+            "Arquiteta especificando a fachada de uma clínica.",
+            "Esse ACM é PVDF mesmo? Qual a composição da pintura?",
+            "Como responder com segurança?",
+            [
+              "É PVDF sim, pode confiar.",
+              "É PVDF. Te envio a ficha técnica do fabricante, com a composição da pintura e a garantia, para anexar ao projeto.",
+              "Não sei, mas é o que todo mundo usa.",
+              "Composição é segredo do fabricante.",
+            ],
+            1,
+            "Para quem especifica, documento vale mais do que palavra. Ficha técnica e certificado de garantia fecham a dúvida.",
+          ),
+          completar(
+            "Pintura ___ é a indicada para fachada externa; pintura de ___ fica para área interna ou uso de menor duração.",
+            ["PVDF", "poliéster"],
+            ["acrílica", "látex"],
+            "Mesmo material, pinturas diferentes, durabilidades bem diferentes.",
+          ),
+        ],
+      },
+      {
+        id: "m1-l6",
+        title: "Garantia e procedência",
+        tip:
+          "A garantia do ACM é do fabricante e depende da pintura: no mercado, PVDF costuma ter garantia na casa de 15 anos e poliéster na casa de 5. Vale o que está no certificado, não o que se fala.",
+        questions: [
+          multipla(
+            "De modo geral, como a garantia de fabricante varia entre as pinturas de ACM?",
+            [
+              "É igual para todas",
+              "PVDF costuma ter garantia bem mais longa do que poliéster",
+              "Poliéster tem garantia mais longa",
+              "ACM não tem garantia",
+            ],
+            1,
+            "Como referência de mercado, PVDF fica na casa de 15 anos e poliéster na casa de 5. Confirme sempre no certificado da linha vendida.",
+          ),
+          cenario(
+            "Cliente decidindo entre uma fachada com ACM de marca conhecida e outra com ACM sem marca, mais barata.",
+            "ACM é tudo igual. Vou no mais barato.",
+            "Que ponto vale levantar?",
+            [
+              "O mais barato é sempre ruim.",
+              "Vale conferir quem dá a garantia e por quanto tempo. Com fabricante ou representante no Brasil, como a Alucomaxx, existe certificado e a quem recorrer se a cor desbotar. No ACM sem procedência, isso costuma faltar.",
+              "Então fecha com eles.",
+              "Importado não presta.",
+            ],
+            1,
+            "Não é nacional contra importado: é procedência. O que importa é ter ficha técnica, certificado e alguém que responda pela garantia.",
+          ),
+          vf(
+            "Antes de prometer um prazo de garantia ao cliente, é preciso confirmar o certificado da linha e do lote de ACM que será usado.",
+            true,
+            "A garantia muda por linha e por fabricante. Prometer de cabeça é o caminho mais curto para uma crise lá na frente.",
+          ),
+          multipla(
+            "O que o cliente deve receber para a garantia do ACM valer na prática?",
+            [
+              "Só a nota fiscal da fachada",
+              "A garantia por escrito, com a marca e a linha do material usado",
+              "Uma amostra da chapa",
+              "Nada, a garantia é automática",
+            ],
+            1,
+            "Garantia sem documento vira discussão. Informe marca, linha e prazo por escrito na proposta ou na entrega.",
           ),
         ],
       },
@@ -242,6 +381,44 @@ export const materiaisSeeds: UnitSeed[] = [
             ["Sublimação", "Impressão UV", "Serigrafia em tecido", "Impressão solvente em lona"],
             1,
             "Impressão UV direto na chapa, com branco por trás da cor para ela aparecer no transparente.",
+          ),
+        ],
+      },
+      {
+        id: "m2-l4",
+        title: "Látex a fundo",
+        tip:
+          "A tinta látex é à base de água e seca com calor: a impressão sai seca, sem cheiro forte e pronta para laminar. Na rua, o fabricante estima alguns anos de durabilidade, e mais ainda com laminação.",
+        questions: [
+          multipla(
+            "Qual é a base da tinta látex?",
+            ["Solvente forte", "Água", "Óleo", "Resina curada por luz UV"],
+            1,
+            "Por ser à base de água, tem pouco cheiro e pode ser usada em ambientes como clínicas, escolas e lojas.",
+          ),
+          vf(
+            "A impressão látex sai da máquina seca, o que permite laminar e entregar sem o tempo de espera das tintas à base de solvente.",
+            true,
+            "É uma vantagem prática de prazo: imprimiu, pode acabar e instalar.",
+          ),
+          cenario(
+            "Cliente quer adesivos para a fachada de vidro, do lado de fora.",
+            "Quanto tempo dura esse adesivo no sol?",
+            "Como responder sem prometer demais?",
+            [
+              "Dura dez anos, garantido.",
+              "Depende do material e da exposição. Como referência, a HP estima para a tinta látex até cerca de 3 anos na rua sem laminação e cerca de 5 com laminação. Para o seu caso, indico laminar e te confirmo a garantia por escrito.",
+              "Ninguém sabe.",
+              "Adesivo não dura nada no sol.",
+            ],
+            1,
+            "São estimativas de laboratório do fabricante, não garantia. Sol forte e o tipo de mídia mudam o resultado, então confirme com a produção.",
+          ),
+          completar(
+            "A ___ protege a impressão do sol e de riscos e aumenta a ___ da peça na área externa.",
+            ["laminação", "durabilidade"],
+            ["secagem", "transparência"],
+            "Na conta do fabricante, a laminação é o que leva a peça de cerca de 3 para cerca de 5 anos na rua.",
           ),
         ],
       },

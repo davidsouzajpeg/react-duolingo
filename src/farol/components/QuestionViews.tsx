@@ -10,7 +10,12 @@ import type {
 
 /* ------------------------------ Tipos/lógica ------------------------------ */
 
-export type AnswerValue = number | boolean | number[] | (number | null)[] | null;
+export type AnswerValue =
+  | number
+  | boolean
+  | number[]
+  | (number | null)[]
+  | null;
 
 /**
  * Ajuda nas repetições: depois de errar a mesma questão mais de uma vez, o que
@@ -36,12 +41,18 @@ export type QuestionInstance = {
 };
 
 /** junta a ajuda anterior com o que a última resposta (errada) acertou */
-export const mergeHelp = (q: Question, a: AnswerValue, prev: Help = {}): Help => {
+export const mergeHelp = (
+  q: Question,
+  a: AnswerValue,
+  prev: Help = {},
+): Help => {
   const union = (x: number[] = [], y: number[]) => [...new Set([...x, ...y])];
   switch (q.kind) {
     case "multipla":
     case "cenario":
-      return typeof a === "number" ? { eliminated: union(prev.eliminated, [a]) } : prev;
+      return typeof a === "number"
+        ? { eliminated: union(prev.eliminated, [a]) }
+        : prev;
     case "vf":
       return typeof a === "boolean" ? { eliminatedVf: a } : prev;
     case "ordenar": {
@@ -79,7 +90,10 @@ export const completarBank = (q: CompletarQuestion) => [
 const blankCount = (q: CompletarQuestion) => q.sentence.split("___").length - 1;
 
 let instanceKey = 0;
-export const makeInstance = (question: Question, help?: Help): QuestionInstance => {
+export const makeInstance = (
+  question: Question,
+  help?: Help,
+): QuestionInstance => {
   let order: number[] = [];
   switch (question.kind) {
     case "multipla":
@@ -124,7 +138,11 @@ export const canCheck = (q: Question, a: AnswerValue) => {
     case "vf":
       return typeof a === "boolean";
     case "ordenar":
-      return Array.isArray(a) && a.length === q.steps.length && a.every((v) => v !== null);
+      return (
+        Array.isArray(a) &&
+        a.length === q.steps.length &&
+        a.every((v) => v !== null)
+      );
     case "completar":
       return Array.isArray(a) && a.every((v) => v !== null);
   }
@@ -229,9 +247,11 @@ const OptionList = ({
           disabled={revealed || out}
           aria-label={out ? `${options[optionIndex]} (já tentada)` : undefined}
           onClick={() => onChange(optionIndex)}
-          className={`flex items-center gap-3 rounded-2xl border border-b-4 p-4 text-left transition active:translate-y-0.5 disabled:active:translate-y-0 ${optionStyle(state)} ${out ? "opacity-35 line-through" : ""}`}
+          className={`flex items-center gap-3 rounded-2xl border border-b-4 p-4 text-left transition active:translate-y-0.5 disabled:active:translate-y-0 ${optionStyle(state)} ${out ? "line-through opacity-35" : ""}`}
         >
-          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border font-num text-sm font-extrabold ${state === "selected" ? "border-farol-accent bg-farol-accent text-white" : "border-current opacity-60"}`}>
+          <span
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border font-num text-sm font-extrabold ${state === "selected" ? "border-farol-accent bg-farol-accent text-white" : "border-current opacity-60"}`}
+          >
             {position + 1}
           </span>
           <span className="text-base sm:text-lg">{options[optionIndex]}</span>
@@ -244,7 +264,11 @@ const OptionList = ({
 const MultiplaView = (props: ViewProps<MultiplaQuestion>) => (
   <>
     <Title>{props.question.prompt}</Title>
-    <OptionList {...props} options={props.question.options} answer={props.question.answer} />
+    <OptionList
+      {...props}
+      options={props.question.options}
+      answer={props.question.answer}
+    />
   </>
 );
 
@@ -255,7 +279,9 @@ const CenarioView = (props: ViewProps<CenarioQuestion>) => {
       <p className="mb-2 text-xs font-semibold uppercase tracking-[.09em] text-farol-accent">
         Situação real
       </p>
-      {question.context && <p className="mb-4 text-farol-muted">{question.context}</p>}
+      {question.context && (
+        <p className="mb-4 text-farol-muted">{question.context}</p>
+      )}
       <div className="mb-6 flex items-end gap-3">
         <div
           className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-farol-line bg-farol-lamp text-2xl sm:h-16 sm:w-16 sm:text-3xl"
@@ -268,13 +294,25 @@ const CenarioView = (props: ViewProps<CenarioQuestion>) => {
           <div className="absolute -left-[6px] bottom-4 h-4 w-4 rotate-45 bg-farol-papel" />
         </div>
       </div>
-      <h1 className="mb-4 font-display text-xl font-extrabold tracking-tight">{question.prompt}</h1>
-      <OptionList {...props} options={question.options} answer={question.answer} />
+      <h1 className="mb-4 font-display text-xl font-extrabold tracking-tight">
+        {question.prompt}
+      </h1>
+      <OptionList
+        {...props}
+        options={question.options}
+        answer={question.answer}
+      />
     </>
   );
 };
 
-const VfView = ({ question, value, onChange, revealed, help }: ViewProps<VerdadeiroFalsoQuestion>) => (
+const VfView = ({
+  question,
+  value,
+  onChange,
+  revealed,
+  help,
+}: ViewProps<VerdadeiroFalsoQuestion>) => (
   <>
     <Title>Verdadeiro ou falso?</Title>
     <blockquote className="mb-6 rounded-2xl border border-l-4 border-farol-line border-l-farol-accent bg-farol-surface p-5 text-lg sm:text-xl">
@@ -298,7 +336,7 @@ const VfView = ({ question, value, onChange, revealed, help }: ViewProps<Verdade
             key={String(option)}
             disabled={revealed || out}
             onClick={() => onChange(option)}
-            className={`flex flex-col items-center gap-1 rounded-2xl border border-b-4 p-5 text-lg font-semibold transition active:translate-y-0.5 ${optionStyle(state)} ${out ? "opacity-35 line-through" : ""}`}
+            className={`flex flex-col items-center gap-1 rounded-2xl border border-b-4 p-5 text-lg font-semibold transition active:translate-y-0.5 ${optionStyle(state)} ${out ? "line-through opacity-35" : ""}`}
           >
             <span className="text-3xl" aria-hidden>
               {option ? "👍" : "👎"}
@@ -342,7 +380,14 @@ const Chip = ({
   </button>
 );
 
-const OrdenarView = ({ question, order, value, onChange, revealed, help }: ViewProps<OrdenarQuestion>) => {
+const OrdenarView = ({
+  question,
+  order,
+  value,
+  onChange,
+  revealed,
+  help,
+}: ViewProps<OrdenarQuestion>) => {
   // uma casa por posição; null = ainda vazia
   const slots = Array.isArray(value)
     ? (value as (number | null)[])
@@ -373,9 +418,14 @@ const OrdenarView = ({ question, order, value, onChange, revealed, help }: ViewP
           const isLocked = locked.includes(position);
           return (
             <li key={position} className="flex min-h-[46px] items-center gap-2">
-              <span className="w-6 shrink-0 text-right font-num font-extrabold text-farol-muted">{position + 1}.</span>
+              <span className="w-6 shrink-0 text-right font-num font-extrabold text-farol-muted">
+                {position + 1}.
+              </span>
               {stepIndex === null ? (
-                <span className="h-10 grow rounded-xl border border-dashed border-farol-line" aria-label="posição vazia" />
+                <span
+                  className="h-10 grow rounded-xl border border-dashed border-farol-line"
+                  aria-label="posição vazia"
+                />
               ) : (
                 <Chip
                   disabled={revealed || isLocked}
@@ -397,22 +447,32 @@ const OrdenarView = ({ question, order, value, onChange, revealed, help }: ViewP
         })}
       </ol>
       <div className="flex flex-wrap gap-2">
-        {order.map((stepIndex) => (
-          <Chip
-            key={stepIndex}
-            hidden={slots.includes(stepIndex)}
-            disabled={revealed}
-            onClick={() => place(stepIndex)}
-          >
-            {question.steps[stepIndex]}
-          </Chip>
-        ))}
+        {order
+          // passos já acertados estão fixos lá em cima: não aparecem de novo aqui
+          .filter((stepIndex) => !locked.includes(stepIndex))
+          .map((stepIndex) => (
+            <Chip
+              key={stepIndex}
+              hidden={slots.includes(stepIndex)}
+              disabled={revealed}
+              onClick={() => place(stepIndex)}
+            >
+              {question.steps[stepIndex]}
+            </Chip>
+          ))}
       </div>
     </>
   );
 };
 
-const CompletarView = ({ question, order, value, onChange, revealed, help }: ViewProps<CompletarQuestion>) => {
+const CompletarView = ({
+  question,
+  order,
+  value,
+  onChange,
+  revealed,
+  help,
+}: ViewProps<CompletarQuestion>) => {
   const filled = (value as (number | null)[]) ?? [];
   const lockedBlanks = help?.lockedBlanks ?? [];
   const bank = completarBank(question);
@@ -454,7 +514,10 @@ const CompletarView = ({ question, order, value, onChange, revealed, help }: Vie
                   {bank[filled[i]]}
                 </button>
               ) : (
-                <span className="mx-1 inline-block w-24 border-b-2 border-farol-muted align-baseline" aria-label="lacuna" />
+                <span
+                  className="mx-1 inline-block w-24 border-b-2 border-farol-muted align-baseline"
+                  aria-label="lacuna"
+                />
               ))}
           </span>
         ))}

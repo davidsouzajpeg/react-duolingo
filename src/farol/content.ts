@@ -1452,14 +1452,16 @@ const seeds: UnitSeed[] = [
  * (ex.: "consultiva-2025.2"): quando o vendedor concluir a nova última
  * unidade, um novo aviso de conclusão é enviado ao gestor para essa versão.
  */
-export const TRAIL_VERSION = "vendas-produtos-2026.1";
+export const TRAIL_VERSION = "vendas-produtos-2026.2";
 
 /* ------------------------------ Montagem ---------------------------------- */
 
 /** Desafio da unidade: 2 questões de cada lição, alternando as posições */
 const buildChallenge = (unit: UnitSeed): Lesson => {
+  // unidades longas contribuem com 1 questão por lição, para o desafio não ficar extenso
+  const perLesson = unit.lessons.length > 4 ? 1 : 2;
   const questions: Question[] = unit.lessons.flatMap((lesson, i) =>
-    lesson.questions.filter((_, qi) => qi % 2 === i % 2).slice(0, 2),
+    lesson.questions.filter((_, qi) => qi % 2 === i % 2).slice(0, perLesson),
   );
   return {
     id: `${unit.id}-desafio`,

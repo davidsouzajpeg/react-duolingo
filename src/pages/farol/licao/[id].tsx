@@ -59,8 +59,8 @@ import {
 } from "~/farol/store";
 import type { Lesson } from "~/farol/types";
 
-/** a partir de quantos erros na mesma questão o que já foi acertado fica marcado */
-const HELP_AFTER_ERRORS = 2;
+/** a partir de quantos erros na mesma questão o que já foi acertado fica marcado (1 = já na primeira correção) */
+const HELP_AFTER_ERRORS = 1;
 
 const praise = [
   "Boa!",
@@ -161,8 +161,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
       setCombo(0);
       const qid = questionId(current);
       setMissed((m) => new Set(m).add(qid));
-      // a questão volta no fim da fila. A partir do segundo erro na mesma
-      // questão, o que já foi acertado volta marcado (ver Help)
+      // a questão volta no fim da fila, já com o que foi acertado marcado (ver Help)
       const errors = (errorCount.current[qid] ?? 0) + 1;
       errorCount.current[qid] = errors;
       const help = mergeHelp(current.question, answer, helps.current[qid]);

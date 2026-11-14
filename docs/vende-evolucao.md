@@ -55,9 +55,27 @@ A trilha tem 12 unidades em sequência. As de produto ficam entre as de venda, n
 
 Para incluir uma unidade nova, escreva-a em um dos arquivos de conteúdo e acrescente o id em `ORDEM`. Suba também `TRAIL_VERSION`, para o gestor ser avisado quando o vendedor concluir a nova última unidade.
 
-## Ajuda nas repetições
+## Ajuda nas correções
 
-Quando o vendedor erra a mesma questão pela segunda vez, a próxima tentativa já vem com o que ele acertou (`HELP_AFTER_ERRORS`, em `src/pages/farol/licao/[id].tsx`): posições certas ao ordenar, lacunas certas ao completar e, nas questões de escolha, as opções erradas já tentadas ficam riscadas.
+Quando o vendedor erra, a questão volta no fim da lição já com o que ele acertou (`HELP_AFTER_ERRORS = 1`, em `src/pages/farol/licao/[id].tsx`): posições certas ao ordenar, lacunas certas ao completar e, nas questões de escolha, as opções erradas já tentadas ficam riscadas.
+
+## Aprofundamento de produto
+
+As unidades de produto crescem por camadas: primeiro o que é o material, depois as especificações. Já aprofundado:
+
+- **ACM:** o que é → espessura da chapa e das lâminas → pintura para fora e para dentro → composição da pintura → garantia e procedência → outras chapas.
+- **Látex:** base, secagem, durabilidade estimada e efeito da laminação.
+
+Números usados como referência, **a confirmar com a produção e com os fornecedores** antes de divulgar ao time:
+
+| Dado | Valor usado | Origem |
+|---|---|---|
+| Lâminas de alumínio | 0,21 / 0,30 / 0,50 mm | catálogos de fabricantes (AECweb) |
+| Pintura PVDF | padrão 70/30 | padrão de mercado |
+| Garantia de fabricante | PVDF na casa de 15 anos; poliéster na casa de 5 | catálogos de fabricantes (AECweb), inclusive a linha NanoMaxx da Alucomaxx |
+| Tinta látex na rua | até ~3 anos sem laminação; ~5 com laminação | estimativa da HP, não é garantia |
+
+Próximas camadas sugeridas: solvente e ecossolvente, UV, vinis (marcas e garantias), lonas (gramatura), acrílico (espessuras) e LED (potência e garantia).
 
 ## Como entram novas lições (inclusive a partir de livros)
 
