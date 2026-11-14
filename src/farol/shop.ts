@@ -106,6 +106,8 @@ export type ShopItem = {
   slot: ItemSlot;
   name: string;
   price: number;
+  /** não se compra: só vem como presente na trilha */
+  exclusive?: boolean;
 };
 
 export const shopItems: ShopItem[] = [
@@ -121,6 +123,7 @@ export const shopItems: ShopItem[] = [
   { id: "fundo-rosa", slot: "fundo", name: "Fundo rosa", price: 50 },
   { id: "fundo-feixe", slot: "fundo", name: "Fundo feixe do farol", price: 200 },
   { id: "fundo-ouro", slot: "fundo", name: "Fundo dourado", price: 300 },
+  { id: "fundo-gala", slot: "fundo", name: "Fundo noite de gala", price: 0, exclusive: true },
 ];
 
 export const findItem = (id: string) => shopItems.find((i) => i.id === id);

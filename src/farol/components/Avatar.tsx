@@ -41,6 +41,22 @@ const Background = ({ id, gid }: { id?: string; gid: string }) => {
           <path d="M100 96 20 200h40Z" fill="#ff0084" opacity=".14" />
         </>
       );
+    case "fundo-gala":
+      return (
+        <>
+          <rect width="200" height="200" fill="#191338" />
+          <circle cx="100" cy="92" r="84" fill="#8f5bff" opacity=".28" />
+          <g fill="#ffe08a">
+            <path d="m30 34 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" />
+            <path d="m166 26 2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5Z" />
+            <path d="m176 96 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" />
+            <path d="m22 104 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" />
+            <circle cx="60" cy="18" r="2" />
+            <circle cx="138" cy="58" r="1.8" />
+            <circle cx="44" cy="68" r="1.6" />
+          </g>
+        </>
+      );
     case "fundo-ouro":
       return (
         <>

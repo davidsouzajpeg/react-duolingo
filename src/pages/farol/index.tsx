@@ -1,12 +1,17 @@
 import type { NextPage } from "next";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { lessonsByLinha, linhaAtual, linhas } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { Avatar } from "~/farol/components/Avatar";
+import { Confetti } from "~/farol/components/Celebrate";
+import { useSounds } from "~/farol/hooks";
+import { GIFT_AFTER_LESSON, type Gift, giftOfUnit } from "~/farol/presentes";
+import { findItem } from "~/farol/shop";
 import { TrailEndCard } from "~/farol/components/TrailEnd";
 import { CheckIcon, LockIcon, ShieldIcon, StarIcon } from "~/farol/components/Icons";
 import {
+  Button,
   Eyebrow,
   Feixe,
   Pill,
@@ -24,7 +29,7 @@ import {
   getLessonStatus,
   type LessonStatus,
 } from "~/farol/gamification";
-import { useFarolStore } from "~/farol/store";
+import { type GiftResult, useFarolStore } from "~/farol/store";
 import type { Lesson, Unit } from "~/farol/types";
 
 /** deslocamento horizontal em zigue-zague dos nós da trilha */
@@ -214,6 +219,172 @@ const UnitHeader = ({ unit }: { unit: Unit }) => {
   );
 };
 
+/* -------------------------------- Presentes ------------------------------- */
+
+/** Nó de presente na trilha: um e-mail de cliente, liberado ao concluir a lição anterior */
+const GiftNode = ({
+  gift,
+  unlocked,
+  index,
+  onOpen,
+}: {
+  gift: Gift;
+  unlocked: boolean;
+  index: number;
+  onOpen: () => void;
+}) => {
+  const claimed = useFarolStore((s) => s.gifts.includes(gift.unitId));
+  const offset = offsets[index % offsets.length]!;
+  const waiting = unlocked && !claimed;
+  return (
+    <div className="relative flex flex-col items-center" style={{ transform: `translateX(${offset}px)` }}>
+      {waiting && (
+        <span className="absolute -right-1 -top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-farol-accent font-num text-xs font-extrabold text-white">
+          1
+        </span>
+      )}
+      <button
+        onClick={onOpen}
+        disabled={!unlocked}
+        aria-label={
+          claimed
+            ? `E-mail de ${gift.from.nome} (presente já recebido)`
+            : unlocked
+              ? `Novo e-mail de ${gift.from.nome}: abrir presente`
+              : "Presente bloqueado: conclua a lição anterior"
+        }
+        className={`flex h-[62px] w-[74px] items-center justify-center rounded-2xl border transition active:translate-y-1 ${
+          waiting
+            ? "vd-gift border-farol-warn bg-farol-warn-soft"
+            : claimed
+              ? "border-farol-line bg-farol-surface"
+              : "border-farol-line bg-farol-surface2 opacity-60"
+        }`}
+        style={{ boxShadow: `0 6px 0 ${waiting ? "#b9841c" : "#17181c"}` }}
+      >
+        <svg viewBox="0 0 48 36" className="h-9 w-12" aria-hidden>
+          <rect x="2" y="4" width="44" height="30" rx="5" fill={waiting ? "#f5b331" : claimed ? "#454752" : "#383a43"} />
+          {claimed ? (
+            <path d="M4 8 24 2l20 6-20 12Z" fill="#5a5c68" />
+          ) : (
+            <path d="m4 7 20 15L44 7" stroke={waiting ? "#fff" : "#6b6d78"} strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          )}
+          {waiting && <circle cx="24" cy="24" r="5" fill="#ff0084" />}
+        </svg>
+      </button>
+      <span className={`mt-3 text-[11px] font-semibold uppercase tracking-[.09em] ${waiting ? "text-farol-warn" : "text-farol-muted"}`}>
+        {claimed ? "Presente recebido" : unlocked ? "Você tem um presente" : "Presente"}
+      </span>
+    </div>
+  );
+};
+
+const rewardLabel = (r: GiftResult) =>
+  r.kind === "moedas"
+    ? `+${r.amount} moedas`
+    : r.kind === "faiscas"
+      ? `+${r.amount} faíscas`
+      : r.name;
+
+/** O e-mail do cliente, com o presente para receber */
+const GiftEmail = ({ gift, onClose }: { gift: Gift; onClose: () => void }) => {
+  const already = useFarolStore((s) => s.gifts.includes(gift.unitId));
+  const claimGift = useFarolStore((s) => s.claimGift);
+  const avatar = useFarolStore((s) => s.avatar);
+  const sounds = useSounds();
+  const [result, setResult] = useState<GiftResult | null>(null);
+  const item = gift.reward.kind === "item" ? findItem(gift.reward.itemId) : undefined;
+  const promised =
+    gift.reward.kind === "moedas"
+      ? `${gift.reward.amount} moedas`
+      : gift.reward.kind === "faiscas"
+        ? `${gift.reward.amount} faíscas`
+        : (item?.name ?? "um item para o seu avatar");
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-farol-lamp/85 backdrop-blur-sm sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`E-mail de ${gift.from.nome}`}
+      onClick={onClose}
+    >
+      <div
+        className="vd-slide-up relative w-full max-w-md overflow-hidden rounded-t-3xl border border-farol-line bg-farol-surface sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {result && (
+          <div className="pointer-events-none absolute left-1/2 top-1/2">
+            <Confetti kind="burst" count={40} />
+          </div>
+        )}
+        <header className="flex items-center gap-3 border-b border-farol-line bg-farol-lamp px-5 py-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-farol-surface2 text-2xl" aria-hidden>
+            {gift.from.emoji}
+          </span>
+          <div className="min-w-0 grow">
+            <p className="truncate font-semibold leading-tight">{gift.from.nome}</p>
+            <p className="truncate text-xs text-farol-muted">{gift.from.empresa} · para você</p>
+          </div>
+          <Pill tone="neutro">Cliente fictício</Pill>
+        </header>
+        <div className="p-5">
+          <h2 className="font-display text-xl font-extrabold leading-tight tracking-tight">{gift.subject}</h2>
+          <p className="mt-3 leading-relaxed text-farol-ink/90">{gift.body}</p>
+
+          <div className={`mt-5 flex items-center gap-4 rounded-2xl border p-4 ${result || already ? "border-farol-ok/60 bg-farol-ok-soft" : "border-farol-warn/60 bg-farol-warn-soft"}`}>
+            {(result?.kind === "item" || (!result && item)) && item ? (
+              <Avatar
+                config={{ ...avatar, equipped: { ...avatar.equipped, [item.slot]: item.id } }}
+                round={false}
+                className="h-16 w-16"
+                label=""
+              />
+            ) : (
+              <span className="text-4xl" aria-hidden>🎁</span>
+            )}
+            <div className="min-w-0">
+              <Eyebrow className={result || already ? "text-farol-ok" : "text-farol-warn"}>
+                {result ? "Você recebeu" : already ? "Presente já recebido" : "Presente anexado"}
+              </Eyebrow>
+              <p className="font-display text-lg font-extrabold leading-tight tracking-tight">
+                {result ? rewardLabel(result) : promised}
+              </p>
+              {result?.kind === "moedas" && result.insteadOf && (
+                <p className="text-sm text-farol-muted">
+                  Você já tinha “{result.insteadOf}”, então virou moedas.
+                </p>
+              )}
+              {result?.kind === "item" && (
+                <p className="text-sm text-farol-muted">Já está equipado no seu avatar.</p>
+              )}
+            </div>
+          </div>
+
+          {result || already ? (
+            <Button variant="ghost" className="mt-5 w-full" onClick={onClose}>
+              Fechar
+            </Button>
+          ) : (
+            <Button
+              className="mt-5 w-full"
+              autoFocus
+              onClick={() => {
+                const r = claimGift(gift.unitId);
+                if (!r) return onClose();
+                sounds.levelUp();
+                setResult(r);
+              }}
+            >
+              Receber presente
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /** Aviso de que o bloqueio de ofensiva salvou dias sem prática */
 const FreezeNotice = () => {
   const saved = useFarolStore((s) => s.freezeNotice);
@@ -328,6 +499,7 @@ const LinhaHero = () => {
 const Trail = () => {
   const records = useFarolStore((s) => s.lessons);
   const [selected, setSelected] = useState<string | null>(null);
+  const [openGift, setOpenGift] = useState<string | null>(null);
   const currentRef = useRef<HTMLDivElement>(null);
   const { linha, list } = useLinha();
   const current = getCurrentLesson(records, list);
@@ -356,27 +528,40 @@ const Trail = () => {
             <UnitHeader unit={unit} />
             <div className="flex flex-col items-center gap-12 pb-4">
               {unit.lessons.map((lesson, i) => (
-                <div
-                  key={lesson.id}
-                  ref={current?.lesson.id === lesson.id ? currentRef : undefined}
-                  onClick={(e) => e.stopPropagation()}
-                  className={`relative ${selected === lesson.id ? "z-30" : "z-0"}`}
-                >
-                  <LessonNode
-                    lesson={lesson}
-                    index={i}
-                    selected={selected === lesson.id}
-                    onSelect={() =>
-                      setSelected((s) => (s === lesson.id ? null : lesson.id))
-                    }
-                  />
-                </div>
+                <Fragment key={lesson.id}>
+                  <div
+                    ref={current?.lesson.id === lesson.id ? currentRef : undefined}
+                    onClick={(e) => e.stopPropagation()}
+                    className={`relative ${selected === lesson.id ? "z-30" : "z-0"}`}
+                  >
+                    <LessonNode
+                      lesson={lesson}
+                      // depois do presente, os nós descem uma casa no zigue-zague
+                      index={giftOfUnit(unit.id) && i > GIFT_AFTER_LESSON ? i + 1 : i}
+                      selected={selected === lesson.id}
+                      onSelect={() =>
+                        setSelected((s) => (s === lesson.id ? null : lesson.id))
+                      }
+                    />
+                  </div>
+                  {i === GIFT_AFTER_LESSON && giftOfUnit(unit.id) && (
+                    <GiftNode
+                      gift={giftOfUnit(unit.id)!}
+                      unlocked={!!records[lesson.id]?.completions}
+                      index={i + 1}
+                      onOpen={() => setOpenGift(unit.id)}
+                    />
+                  )}
+                </Fragment>
               ))}
             </div>
           </section>
         ))}
       </div>
       {/* fim da trilha: parabéns + aviso ao gestor; senão, espaço para o balão da última lição */}
+      {openGift && giftOfUnit(openGift) && (
+        <GiftEmail gift={giftOfUnit(openGift)!} onClose={() => setOpenGift(null)} />
+      )}
       {!linhaDone ? (
         <div className="h-40" />
       ) : linha.id === linhaAtual.id ? (

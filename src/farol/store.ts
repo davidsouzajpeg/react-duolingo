@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { TRAIL_VERSION, allLessons } from "./content";
+import { TRAIL_VERSION, allLessons, units } from "./content";
+import { GIFT_AFTER_LESSON, giftOfUnit } from "./presentes";
 import {
   PROMOTION_COINS,
   TOP_DIVISION,
@@ -83,6 +84,12 @@ export type LeagueState = {
   lastResult: LeagueResult | null;
 };
 
+/** O que o vendedor recebeu ao abrir um presente */
+export type GiftResult =
+  | { kind: "moedas"; amount: number; insteadOf?: string }
+  | { kind: "faiscas"; amount: number }
+  | { kind: "item"; itemId: string; name: string };
+
 /** Melhor resultado e tentativas em cada cenário do simulador */
 export type SimRecord = { attempts: number; best: number };
 
@@ -117,6 +124,10 @@ type FarolState = {
   lessons: Record<string, LessonRecord>;
   sims: Record<string, SimRecord>;
   simHistory: SimHistoryEntry[];
+  /** presentes da trilha já recebidos (id da unidade) */
+  gifts: string[];
+  /** recebe o presente de uma unidade; devolve o que entrou de fato */
+  claimGift: (unitId: string) => GiftResult | null;
   /** linha de treino aberta na trilha */
   linhaAtiva: string;
   setLinhaAtiva: (id: string) => void;
@@ -165,6 +176,7 @@ const initialData = {
   league: { tier: 0, week: "", lastResult: null } as LeagueState,
   lessons: {} as Record<string, LessonRecord>,
   linhaAtiva: "consultiva",
+  gifts: [] as string[],
   sims: {} as Record<string, SimRecord>,
   simHistory: [] as SimHistoryEntry[],
   stats: {
@@ -226,6 +238,52 @@ export const useFarolStore = create<FarolState>()(
       setDailyGoal: (dailyGoal) => set({ dailyGoal }),
 
       setLinhaAtiva: (linhaAtiva) => set({ linhaAtiva }),
+
+      claimGift: (unitId) => {
+        const gift = giftOfUnit(unitId);
+        const state = get();
+        if (!gift || state.gifts.includes(unitId)) return null;
+        // só libera depois de concluir a lição que vem antes do presente
+        const unit = units.find((u) => u.id === unitId);
+        const gate = unit?.lessons[GIFT_AFTER_LESSON];
+        if (!gate || !state.lessons[gate.id]?.completions) return null;
+
+        const claimed = [...state.gifts, unitId];
+        const { reward } = gift;
+        if (reward.kind === "moedas") {
+          set({ gifts: claimed, coins: state.coins + reward.amount });
+          return { kind: "moedas", amount: reward.amount };
+        }
+        if (reward.kind === "faiscas") {
+          const todayStr = today();
+          set({
+            gifts: claimed,
+            xpTotal: state.xpTotal + reward.amount,
+            xpByDate: {
+              ...state.xpByDate,
+              [todayStr]: (state.xpByDate[todayStr] ?? 0) + reward.amount,
+            },
+          });
+          return { kind: "faiscas", amount: reward.amount };
+        }
+        const item = findItem(reward.itemId);
+        if (!item) return null;
+        if (state.ownedItems.includes(item.id)) {
+          // já tinha o item: vira moedas no valor dele
+          const amount = Math.max(item.price, 40);
+          set({ gifts: claimed, coins: state.coins + amount });
+          return { kind: "moedas", amount, insteadOf: item.name };
+        }
+        set({
+          gifts: claimed,
+          ownedItems: [...state.ownedItems, item.id],
+          avatar: {
+            ...state.avatar,
+            equipped: { ...state.avatar.equipped, [item.slot]: item.id },
+          },
+        });
+        return { kind: "item", itemId: item.id, name: item.name };
+      },
 
       toggleSound: () => set({ soundOn: !get().soundOn }),
 
@@ -348,7 +406,7 @@ export const useFarolStore = create<FarolState>()(
       buyItem: (id) => {
         const item = findItem(id);
         const { coins, ownedItems, avatar } = get();
-        if (!item || ownedItems.includes(id) || coins < item.price) return false;
+        if (!item || item.exclusive || ownedItems.includes(id) || coins < item.price) return false;
         set({
           coins: coins - item.price,
           ownedItems: [...ownedItems, id],
@@ -448,7 +506,8 @@ export const useFarolStore = create<FarolState>()(
       // v3: conclusão da trilha + aviso ao gestor.
       // v4: ofensiva com bloqueio, avatar, itens e divisões.
       // v5: simulador de vendas.
-      version: 5,
+      // v6: presentes da trilha.
+      version: 6,
       migrate: (persisted, version) => {
         let state = (persisted ?? {}) as Partial<FarolState>;
         if (version < 2) state = { ...state, lessons: {} };
@@ -481,6 +540,9 @@ export const useFarolStore = create<FarolState>()(
             simHistory: state.simHistory ?? [],
             linhaAtiva: state.linhaAtiva ?? "consultiva",
           };
+        }
+        if (version < 6) {
+          state = { ...state, gifts: state.gifts ?? [] };
         }
         return state as FarolState;
       },

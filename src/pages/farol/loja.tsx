@@ -301,6 +301,10 @@ const Loja = () => {
                         >
                           {isEquipped ? "Tirar" : "Equipar"}
                         </Button>
+                      ) : item.exclusive ? (
+                        <span className="w-full rounded-2xl border border-farol-line px-2 py-1.5 text-xs font-semibold text-farol-muted">
+                          Presente da trilha
+                        </span>
                       ) : (
                         <Button
                           className="flex w-full justify-center px-2 py-1.5 text-xs"

@@ -136,3 +136,13 @@
   .vd-cheer .vd-jump, .vd-cheer .vd-arm, .vd-rays, .vd-twinkle { animation: none; }
   .vd-twinkle { opacity: 1; }
 }
+
+/* ------------------------- Vendê: presente na trilha ------------------------- */
+@keyframes vd-gift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  20% { transform: translateY(-6px) rotate(-5deg); }
+  40% { transform: translateY(0) rotate(4deg); }
+  60% { transform: translateY(-3px) rotate(0deg); }
+}
+.vd-gift { animation: vd-gift 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .vd-gift { animation: none; } }
