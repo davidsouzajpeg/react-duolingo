@@ -5,16 +5,14 @@ import { useState } from "react";
 import { getLevel } from "../gamification";
 import {
   useGestorNoticeRetry,
-  useHeartRegen,
   useHydrated,
   useStreak,
 } from "../hooks";
-import { MAX_HEARTS, useFarolStore, xpOn, xpThisWeek } from "../store";
+import { useFarolStore, xpOn, xpThisWeek } from "../store";
 import dayjs from "dayjs";
 import {
   CoinIcon,
   FlameIcon,
-  HeartIcon,
   MapIcon,
   MedalIcon,
   PodiumIcon,
@@ -41,12 +39,11 @@ const navItems = [
 export const StatsRow = () => {
   const streak = useStreak();
   const coins = useFarolStore((s) => s.coins);
-  const hearts = useFarolStore((s) => s.hearts);
   const practicedToday = useFarolStore((s) =>
     s.activeDays.includes(dayjs().format("YYYY-MM-DD")),
   );
   return (
-    <div className="flex items-center justify-between gap-4 font-num text-lg font-extrabold tabular-nums">
+    <div className="flex items-center justify-around gap-4 font-num text-lg font-extrabold tabular-nums">
       <span
         className={`flex items-center gap-1.5 ${practicedToday ? "text-farol-warn" : "text-farol-muted"}`}
         title="Sequência de dias praticando"
@@ -57,11 +54,6 @@ export const StatsRow = () => {
       <span className="flex items-center gap-1.5 text-farol-warn" title="Moedas">
         <CoinIcon className="h-7 w-7" />
         {coins}
-      </span>
-      <span className="flex items-center gap-1.5 text-farol-bad" title="Vidas">
-        <HeartIcon className="h-7 w-7" empty={hearts === 0} />
-        {hearts}
-        <span className="sr-only">de {MAX_HEARTS}</span>
       </span>
     </div>
   );
@@ -163,14 +155,14 @@ const Onboarding = () => {
             <div>
               <Eyebrow className="text-farol-accent">Faroldo diz</Eyebrow>
               <h1 className="mt-1 font-display text-2xl font-extrabold leading-tight tracking-tight">
-                Bora treinar venda consultiva?
+                Bora vendê?
               </h1>
             </div>
           </div>
           <p className="mt-3 text-farol-muted">
-            Lições de 3 minutos com situações reais de fachadas, letreiros e
-            sinalização. Ganhe XP, mantenha a sequência e suba no ranking do
-            time.
+            Vender se aprende. Um pouco por dia, em lições de 3 minutos com
+            situações reais de fachadas, letreiros e sinalização. Acompanhe a
+            sua evolução e comemore cada conquista.
           </p>
           <label className="mt-5 block text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">
             Como você quer ser chamado?
@@ -213,7 +205,7 @@ const Onboarding = () => {
             type="submit"
             className={`mt-6 w-full ${buttonBase} ${buttonVariants.primary}`}
           >
-            Começar a treinar
+            Bora vendê!
           </button>
         </div>
       </form>
@@ -231,19 +223,19 @@ export const FarolLayout = ({
   const router = useRouter();
   const hydrated = useHydrated();
   const onboarded = useFarolStore((s) => s.onboarded);
-  useHeartRegen();
   useGestorNoticeRetry();
 
   return (
     <FarolShell title={title}>
       {/* Barra lateral (desktop) */}
       <nav className="fixed bottom-0 left-0 top-0 z-20 hidden w-20 flex-col gap-1 border-r border-farol-line bg-farol-surface p-3 md:flex lg:w-60 lg:p-5">
-        <Link href="/farol" className="mb-8 mt-2 px-1" aria-label="Meu Farol Treino">
+        <Link href="/farol" className="mb-8 mt-2 px-1" aria-label="Vendê">
           <span className="hidden lg:block">
             <Brand />
           </span>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/farol/logo-open.png" alt="" className="h-[18px] w-auto lg:hidden" />
+          <b className="block text-center font-display text-2xl font-extrabold lowercase lg:hidden">
+            v<span className="text-farol-accent">.</span>
+          </b>
         </Link>
         {navItems.map(({ href, label, Icon }) => {
           const active = router.pathname === href;
@@ -263,20 +255,22 @@ export const FarolLayout = ({
             </Link>
           );
         })}
-        <p className="mt-auto hidden px-2 text-xs text-farol-muted lg:block">
-          Linha de treino
-          <b className="block font-display text-sm font-extrabold tracking-tight text-farol-ink">
-            Venda Consultiva
-          </b>
-        </p>
+        <div className="mt-auto hidden px-2 lg:block">
+          <p className="font-display text-sm font-extrabold tracking-tight">
+            Vender se aprende.
+          </p>
+          <p className="mt-0.5 text-xs text-farol-muted">Linha Venda Consultiva</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/farol/logo-open.png" alt="Open" className="mt-4 h-5 w-auto opacity-80" />
+        </div>
       </nav>
 
       {/* Topo (mobile) */}
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-farol-line bg-farol-surface/95 px-4 py-3 backdrop-blur md:hidden">
-        <Link href="/farol" aria-label="Meu Farol Treino">
+        <Link href="/farol" aria-label="Vendê">
           <Brand compact />
         </Link>
-        <div className="w-44 shrink-0 min-[400px]:w-48">{hydrated && <StatsRow />}</div>
+        <div className="w-32 shrink-0">{hydrated && <StatsRow />}</div>
       </header>
 
       <div className="flex justify-center gap-10 pb-28 pt-6 md:ml-20 md:px-6 md:pb-10 lg:ml-60">

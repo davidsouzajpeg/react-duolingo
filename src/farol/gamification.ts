@@ -211,4 +211,3 @@ export const buildLeague = (myName: string, myWeekXp: number): LeagueEntry[] => 
 };
 
 export const PROMOTION_SPOTS = 3;
-export const DEMOTION_SPOTS = 3;

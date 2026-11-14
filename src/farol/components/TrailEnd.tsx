@@ -79,7 +79,7 @@ export const Parabens = () => {
             Parabéns{name ? `, ${name}` : ""}!
           </h1>
           <p className="mt-3 text-farol-muted">
-            Você concluiu todas as unidades da trilha. O farol está verde.
+            Você evoluiu! Concluiu todas as unidades da trilha. Hora de colocar esse aprendizado em prática.
           </p>
         </div>
 

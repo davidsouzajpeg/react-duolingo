@@ -4,7 +4,6 @@ import { FarolLayout } from "~/farol/components/FarolLayout";
 import { XpIcon } from "~/farol/components/Icons";
 import { Eyebrow, Feixe, Pill, card } from "~/farol/components/ui";
 import {
-  DEMOTION_SPOTS,
   PROMOTION_SPOTS,
   buildLeague,
 } from "~/farol/gamification";
@@ -18,12 +17,7 @@ const Ranking = () => {
   const league = buildLeague(name, weekXp);
   const myPosition = league.findIndex((e) => e.isMe) + 1;
   const daysLeft = 7 - ((dayjs().day() + 6) % 7);
-  const myZone =
-    myPosition <= PROMOTION_SPOTS
-      ? "verde"
-      : myPosition > league.length - DEMOTION_SPOTS
-        ? "vermelho"
-        : "amarelo";
+  const myZone = myPosition <= PROMOTION_SPOTS ? "verde" : "neutro";
 
   return (
     <>
@@ -35,7 +29,7 @@ const Ranking = () => {
             Liga Farol · Bronze
           </h1>
           <p className="mt-2 text-sm text-farol-muted">
-            Os {PROMOTION_SPOTS} primeiros sobem para a Liga Prata.{" "}
+            Cada prática conta. Os {PROMOTION_SPOTS} primeiros da semana sobem para a Liga Prata.{" "}
             <strong className="text-farol-ink">
               {daysLeft === 1 ? "Termina hoje." : `Faltam ${daysLeft} dias.`}
             </strong>
@@ -56,17 +50,11 @@ const Ranking = () => {
         {league.map((entry, i) => {
           const position = i + 1;
           const promoted = position <= PROMOTION_SPOTS;
-          const demoted = position > league.length - DEMOTION_SPOTS;
           return (
             <li key={entry.name + i} className="border-b border-farol-line last:border-b-0">
               {position === PROMOTION_SPOTS + 1 && (
                 <p className="border-b border-farol-line bg-farol-ok-soft py-1.5 text-center text-xs font-semibold uppercase tracking-[.09em] text-farol-ok">
                   ▲ Zona de promoção ▲
-                </p>
-              )}
-              {position === league.length - DEMOTION_SPOTS + 1 && (
-                <p className="border-b border-farol-line bg-farol-bad-soft py-1.5 text-center text-xs font-semibold uppercase tracking-[.09em] text-farol-bad">
-                  ▼ Zona de rebaixamento ▼
                 </p>
               )}
               <div
@@ -76,7 +64,7 @@ const Ranking = () => {
               >
                 <span
                   className={`w-7 shrink-0 text-center font-num text-lg font-black tabular-nums ${
-                    promoted ? "text-farol-ok" : demoted ? "text-farol-bad" : "text-farol-muted"
+                    promoted ? "text-farol-ok" : "text-farol-muted"
                   }`}
                 >
                   {medal[i] ?? position}

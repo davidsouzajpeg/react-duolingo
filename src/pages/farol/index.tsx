@@ -123,7 +123,6 @@ const LessonPopover = ({
   /** deslocamento do nó: o balão volta para o centro da coluna */
   offset: number;
 }) => {
-  const hearts = useFarolStore((s) => s.hearts);
   const record = useFarolStore((s) => s.lessons[lesson.id]);
   const locked = status === "locked";
   const isChallenge = lesson.kind === "desafio";
@@ -161,13 +160,6 @@ const LessonPopover = ({
         <span className="block w-full rounded-2xl border border-farol-line bg-farol-surface py-3 text-center font-display font-extrabold uppercase tracking-wide text-farol-muted">
           Bloqueada
         </span>
-      ) : hearts === 0 ? (
-        <Link
-          href="/farol/conquistas#loja"
-          className={`block w-full ${buttonBase} ${buttonVariants.danger}`}
-        >
-          Sem vidas · recarregar
-        </Link>
       ) : (
         <Link
           href={`/farol/licao/${lesson.id}`}
@@ -226,12 +218,12 @@ const LinhaHero = () => {
         <p className="mt-3 text-sm text-farol-muted">
           {name ? (
             <>
-              Olá, <strong className="text-farol-ink">{name}</strong>!{" "}
+              <strong className="text-farol-ink">Bora vendê, {name}?</strong>{" "}
             </>
           ) : null}
           {current ? (
             <>
-              Próxima parada:{" "}
+              Sua missão de hoje leva só alguns minutos:{" "}
               <strong className="text-farol-ink">{current.lesson.title}</strong>.
             </>
           ) : (

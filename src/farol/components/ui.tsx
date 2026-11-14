@@ -32,7 +32,7 @@ export const FarolShell = ({
   return (
     <>
       <Head>
-        <title>{`${title} · Meu Farol Treino`}</title>
+        <title>{`${title} · Vendê`}</title>
         <meta name="theme-color" content={BG} key="theme-color" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -45,24 +45,22 @@ export const FarolShell = ({
   );
 };
 
-/** Logo Open + nome do produto */
+/** Marca Vendê: assinatura visual "vendê." + vínculo com o Meu Farol */
 export const Brand = ({ compact = false }: { compact?: boolean }) => (
-  <span className="flex items-center gap-2.5">
-    {/* eslint-disable-next-line @next/next/no-img-element */}
-    <img
-      src="/farol/logo-open.png"
-      alt="Open"
-      width={360}
-      height={118}
-      className={`w-auto shrink-0 ${compact ? "h-7" : "h-8"}`}
-    />
-    <span className={`flex-col leading-none ${compact ? "hidden min-[360px]:flex" : "flex"}`}>
-      <b className="whitespace-nowrap font-display text-[17px] font-extrabold tracking-tight">
-        Meu Farol
-      </b>
-      <span className="mt-1 text-[11px] font-semibold uppercase tracking-[.14em] text-farol-accent">
-        Treino
-      </span>
+  <span className="flex flex-col leading-none" aria-label="Vendê, uma experiência Meu Farol">
+    <b
+      className={`font-display font-extrabold lowercase tracking-tight ${
+        compact ? "text-2xl" : "text-[32px]"
+      }`}
+    >
+      vendê<span className="text-farol-accent">.</span>
+    </b>
+    <span
+      className={`mt-1 whitespace-nowrap text-[10px] font-semibold uppercase tracking-[.14em] text-farol-muted ${
+        compact ? "hidden min-[360px]:block" : ""
+      }`}
+    >
+      uma experiência Meu Farol
     </span>
   </span>
 );

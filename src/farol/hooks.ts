@@ -15,16 +15,6 @@ export const useHydrated = () => {
 
 export const useStreak = () => computeStreak(useFarolStore((s) => s.activeDays));
 
-/** Mantém as vidas regenerando enquanto a página está aberta */
-export const useHeartRegen = () => {
-  const syncHearts = useFarolStore((s) => s.syncHearts);
-  useEffect(() => {
-    syncHearts();
-    const id = setInterval(syncHearts, 30_000);
-    return () => clearInterval(id);
-  }, [syncHearts]);
-};
-
 /**
  * Confere se a trilha foi concluída e tenta (re)enviar o aviso pendente ao
  * gestor: uma vez ao montar a página e quando a conexão volta.

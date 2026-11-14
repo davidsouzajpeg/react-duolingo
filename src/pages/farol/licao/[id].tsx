@@ -8,7 +8,6 @@ import {
   CloseIcon,
   CoinIcon,
   FlameIcon,
-  HeartIcon,
   XpIcon,
 } from "~/farol/components/Icons";
 import {
@@ -46,13 +45,10 @@ import {
   type Badge,
   type BadgeContext,
 } from "~/farol/gamification";
-import { useHeartRegen, useHydrated, useSounds } from "~/farol/hooks";
+import { useHydrated, useSounds } from "~/farol/hooks";
 import { notifyGestorTrailCompleted } from "~/farol/notify";
 import { Parabens } from "~/farol/components/TrailEnd";
 import {
-  HEART_REGEN_MINUTES,
-  MAX_HEARTS,
-  REFILL_HEARTS_COST,
   computeStreak,
   isTrailComplete,
   useFarolStore,
@@ -60,12 +56,12 @@ import {
 import type { Lesson } from "~/farol/types";
 
 const praise = [
+  "Boa!",
   "Mandou bem!",
-  "Isso aí, consultor!",
-  "Farol verde!",
-  "Excelente leitura!",
-  "É assim que se vende valor!",
+  "Isso aí!",
+  "Boa escolha!",
   "Na medida!",
+  "É assim que se valoriza a solução!",
 ];
 
 const badgeContext = (): BadgeContext => {
@@ -95,12 +91,8 @@ type Summary = {
 /* ------------------------------ Player ------------------------------------ */
 
 const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
-  const router = useRouter();
-  const hearts = useFarolStore((s) => s.hearts);
-  const loseHeart = useFarolStore((s) => s.loseHeart);
   const finishLesson = useFarolStore((s) => s.finishLesson);
   const sounds = useSounds();
-  useHeartRegen();
 
   const total = lesson.questions.length;
   const isChallenge = lesson.kind === "desafio";
@@ -125,7 +117,6 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
   const [quitOpen, setQuitOpen] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [celebrating, setCelebrating] = useState(false);
-  const [outOfHearts, setOutOfHearts] = useState(false);
   const startedAt = useRef(Date.now());
 
   const current = queue[pos]!;
@@ -152,7 +143,6 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
       sounds.wrong();
       setStatus("wrong");
       setCombo(0);
-      loseHeart();
       setMissed((m) => new Set(m).add(questionId(current)));
       // a questão volta no fim da fila para fixar o aprendizado
       setQueue((q) => [...q, makeInstance(current.question)]);
@@ -212,10 +202,6 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
   const next = useCallback(() => {
     if (status === "answering") return;
     if (solved >= total) return finish();
-    if (status === "wrong" && useFarolStore.getState().hearts <= 0) {
-      setOutOfHearts(true);
-      return;
-    }
     const nextPos = pos + 1;
     setPos(nextPos);
     setAnswer(initialAnswer(queue[nextPos]!.question));
@@ -225,7 +211,7 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
   // Atalhos de teclado: Enter verifica/continua; 1–4 escolhem opções
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (summary || quitOpen || outOfHearts) return;
+      if (summary || quitOpen) return;
       if (e.key === "Enter") {
         e.preventDefault();
         if (status === "answering") check();
@@ -243,7 +229,7 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [status, check, next, current, summary, quitOpen, outOfHearts]);
+  }, [status, check, next, current, summary, quitOpen]);
 
   if (summary && celebrating) return <Parabens />;
 
@@ -257,13 +243,6 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
         }
       />
     );
-  }
-
-  if (outOfHearts || (hearts <= 0 && status === "answering" && answered === 0)) {
-    return <OutOfHearts onQuit={() => void router.push("/farol")} onRefilled={() => {
-      setOutOfHearts(false);
-      if (status === "wrong") next();
-    }} />;
   }
 
   return (
@@ -284,10 +263,6 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
             </span>
           )}
         </div>
-        <span className="flex items-center gap-1 font-num text-lg font-extrabold tabular-nums text-farol-bad" aria-label={`${hearts} vidas`}>
-          <HeartIcon className="h-7 w-7" empty={hearts === 0} />
-          {hearts}
-        </span>
       </header>
 
       <main className="mx-auto w-full max-w-2xl grow px-4 pb-64 pt-8 sm:pt-14">
@@ -347,7 +322,7 @@ const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
                     Faroldo diz
                   </Eyebrow>
                   <p className={`font-display text-xl font-extrabold leading-tight tracking-tight ${status === "right" ? "text-farol-ok" : "text-farol-bad"}`}>
-                    {status === "right" ? praiseText : "Quase! A resposta certa é:"}
+                    {status === "right" ? praiseText : "Essa não foi a melhor escolha. Veja o porquê:"}
                   </p>
                   {status === "wrong" && (
                     <p className="mt-1 font-semibold text-farol-ink">
@@ -517,38 +492,6 @@ const LessonSummary = ({
   );
 };
 
-const OutOfHearts = ({ onQuit, onRefilled }: { onQuit: () => void; onRefilled: () => void }) => {
-  const coins = useFarolStore((s) => s.coins);
-  const refillHearts = useFarolStore((s) => s.refillHearts);
-  const canRefill = coins >= REFILL_HEARTS_COST;
-  return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
-      <div className="flex gap-1" aria-hidden>
-        {Array.from({ length: MAX_HEARTS }, (_, i) => (
-          <HeartIcon key={i} className="h-10 w-10" empty />
-        ))}
-      </div>
-      <h1 className="font-display text-2xl font-extrabold tracking-tight">Suas vidas acabaram</h1>
-      <p className="text-farol-muted">
-        Você ganha 1 vida a cada {HEART_REGEN_MINUTES} minutos, ou pode
-        recarregar agora com moedas.
-      </p>
-      <Button
-        className="mt-2 flex w-full items-center justify-center gap-2"
-        disabled={!canRefill}
-        onClick={() => refillHearts() && onRefilled()}
-      >
-        Recarregar vidas · <CoinIcon className="h-5 w-5" /> {REFILL_HEARTS_COST}
-      </Button>
-      {!canRefill && (
-        <p className="text-sm text-farol-muted">Você tem {coins} moedas.</p>
-      )}
-      <button onClick={onQuit} className="py-2 font-display font-extrabold uppercase tracking-wide text-farol-muted hover:text-farol-ink">
-        Voltar para a trilha
-      </button>
-    </div>
-  );
-};
 
 /* -------------------------------- Página ---------------------------------- */
 

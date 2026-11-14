@@ -2,7 +2,7 @@ import type { NextPage } from "next";
 import { useState } from "react";
 import { allLessons, linhaAtual } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
-import { CoinIcon, HeartIcon, ShieldIcon } from "~/farol/components/Icons";
+import { CoinIcon, ShieldIcon } from "~/farol/components/Icons";
 import { Button, Eyebrow, Faroldo, Feixe, Pill, ProgressBar, card } from "~/farol/components/ui";
 import {
   badges,
@@ -12,9 +12,7 @@ import {
 } from "~/farol/gamification";
 import { useStreak } from "~/farol/hooks";
 import {
-  MAX_HEARTS,
   MAX_STREAK_FREEZES,
-  REFILL_HEARTS_COST,
   STREAK_FREEZE_COST,
   useFarolStore,
 } from "~/farol/store";
@@ -149,22 +147,6 @@ const Conquistas = () => {
         )}
         <div className="flex flex-col gap-3">
           <div className={`${card} flex items-center gap-3 p-4 sm:gap-4`}>
-            <HeartIcon className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
-            <div className="min-w-0 grow">
-              <p className="font-semibold">Recarregar vidas</p>
-              <p className="text-sm text-farol-muted">
-                Volte a {MAX_HEARTS} vidas agora. Você tem {state.hearts}.
-              </p>
-            </div>
-            <Button
-              className="flex shrink-0 items-center gap-1 px-4 py-2 font-num text-sm tabular-nums"
-              disabled={state.hearts >= MAX_HEARTS || state.coins < REFILL_HEARTS_COST}
-              onClick={() => state.refillHearts() && setMessage("Vidas recarregadas! ❤️")}
-            >
-              <CoinIcon className="h-4 w-4" /> {REFILL_HEARTS_COST}
-            </Button>
-          </div>
-          <div className={`${card} flex items-center gap-3 p-4 sm:gap-4`}>
             <ShieldIcon className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
             <div className="min-w-0 grow">
               <p className="font-semibold">Protetor de sequência</p>
@@ -208,7 +190,7 @@ const Conquistas = () => {
           <button
             className="self-start text-sm font-semibold text-farol-bad hover:underline"
             onClick={() => {
-              if (window.confirm("Apagar todo o seu progresso no treino?")) state.reset();
+              if (window.confirm("Apagar todo o seu progresso no Vendê?")) state.reset();
             }}
           >
             Reiniciar progresso
