@@ -42,7 +42,7 @@ const HairBack = ({ style, color }: { style: string; color: string }) =>
 
 const HairFront = ({ style, color }: { style: string; color: string }) => {
   const cap = (
-    <path d="M37 52C34 24 86 24 83 52c-4-11-12-15-23-15S41 41 37 52Z" fill={color} />
+    <path d="M37 52C34 24 86 24 83 52c-4-8-12-11-23-11S41 44 37 52Z" fill={color} />
   );
   switch (style) {
     case "curto":

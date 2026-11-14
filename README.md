@@ -4,7 +4,10 @@
 
 - Trilha **Venda Consultiva** baseada no Playbook Vendas Open 2025: 8 unidades, 24 lições e 8 desafios.
 - Cinco tipos de questão (situação real, múltipla escolha, verdadeiro ou falso, ordenar e completar), sempre com explicação.
-- XP, meta diária, sequência de dias, moedas, níveis, conquistas e ranking semanal.
+- XP, meta diária, moedas, níveis e conquistas.
+- **Ofensiva** (dias seguidos de prática) com **bloqueio de ofensiva**, usado sozinho quando o vendedor perde um dia.
+- **Avatar** criado pelo vendedor e **loja** com itens para equipar (chapéus, óculos, acessórios e fundos).
+- **Divisões semanais** (Bronze, Prata, Ouro, Platina, Diamante e Farol): no fim da semana os 3 primeiros sobem, os 3 últimos descem e os demais permanecem.
 - Ao concluir a última unidade, o vendedor vê os parabéns e o gestor é avisado para liberar novos módulos.
 
 ## Rodar
@@ -21,7 +24,8 @@ pnpm build && pnpm start
 |---|---|
 | Conteúdo das lições e versão da trilha | `src/farol/content.ts` |
 | Progresso do vendedor (salvo no navegador) | `src/farol/store.ts` |
-| Níveis, conquistas e ranking | `src/farol/gamification.ts` |
+| Níveis, conquistas e divisões | `src/farol/gamification.ts` |
+| Avatar e itens da loja | `src/farol/shop.ts` e `src/farol/components/Avatar.tsx` |
 | Aviso ao gestor | `src/farol/notify.ts` e `docs/farol-integracao-gestor.md` |
 | Telas | `src/pages/farol/` e `src/farol/components/` |
 | Cores e fontes | `tailwind.config.ts` (`colors.farol`) |
@@ -33,7 +37,7 @@ pnpm build && pnpm start
 ## Limitações conhecidas
 
 - O progresso fica salvo no navegador de cada vendedor; ainda não há login nem sincronização entre aparelhos.
-- O ranking usa colegas simulados até existir um servidor com os dados do time.
+- As divisões usam colegas simulados até existir um servidor com os dados do time.
 - As páginas do projeto-base (abaixo) continuam no repositório, mas redirecionam para `/farol`.
 
 ---

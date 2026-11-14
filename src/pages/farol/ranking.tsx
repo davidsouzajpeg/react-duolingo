@@ -55,7 +55,9 @@ const WeekResult = () => {
       ? "Semana excelente. A concorrência fica mais forte daqui para cima."
       : result.outcome === "caiu"
         ? "Semana nova, chance nova: algumas lições já colocam você de volta na disputa."
-        : "Faltou pouco para subir. Bora vendê nesta semana?";
+        : result.position <= 6
+          ? "Faltou pouco para subir. Bora vendê nesta semana?"
+          : "Você manteve o seu lugar. Bora vendê nesta semana?";
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-farol-lamp/85 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Resultado da semana">
       <div className="relative w-full max-w-md overflow-hidden rounded-t-3xl border border-farol-line bg-farol-surface p-6 text-center sm:rounded-3xl">
