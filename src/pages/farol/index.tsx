@@ -155,7 +155,7 @@ const LessonPopover = ({
           ? "Conclua as lições anteriores para desbloquear."
           : sinal && record
             ? `${sinalInfo[sinal].label} · melhor precisão ${Math.round(record.bestAccuracy * 100)}%`
-            : `${lesson.questions.length} questões · cerca de 3 minutos`}
+            : `${lesson.questions.length} situações · cerca de 3 minutos`}
       </p>
       {locked ? (
         <span className="block w-full rounded-2xl border border-farol-line bg-farol-surface py-3 text-center font-display font-extrabold uppercase tracking-wide text-farol-muted">

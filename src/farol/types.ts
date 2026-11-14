@@ -58,6 +58,8 @@ export type LessonKind = "licao" | "desafio";
 export type Lesson = {
   id: string;
   title: string;
+  /** dica curta do Faroldo, mostrada antes de praticar (ensina a ideia da lição) */
+  tip?: string;
   kind: LessonKind;
   questions: Question[];
 };

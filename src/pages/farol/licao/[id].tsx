@@ -117,6 +117,12 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
   const [comboXp, setComboXp] = useState(0);
   const [praiseText, setPraiseText] = useState(praise[0]!);
   const [quitOpen, setQuitOpen] = useState(false);
+  // a lição abre com a dica do Faroldo: primeiro aprende, depois pratica
+  const [started, setStarted] = useState(!lesson.tip);
+  const start = () => {
+    startedAt.current = Date.now();
+    setStarted(true);
+  };
   const [summary, setSummary] = useState<Summary | null>(null);
   const [celebrating, setCelebrating] = useState(false);
   const startedAt = useRef(Date.now());
@@ -218,6 +224,14 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (summary || quitOpen) return;
+      if (!started) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          startedAt.current = Date.now();
+          setStarted(true);
+        }
+        return;
+      }
       if (e.key === "Enter") {
         e.preventDefault();
         if (status === "answering") check();
@@ -235,9 +249,43 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [status, check, next, current, summary, quitOpen]);
+  }, [status, check, next, current, summary, quitOpen, started]);
 
   if (summary && celebrating) return <Parabens />;
+
+  if (!started) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8 sm:py-10">
+        <Link href="/farol" aria-label="Voltar à trilha" className="self-start text-farol-muted hover:text-farol-ink">
+          <CloseIcon className="h-7 w-7" />
+        </Link>
+        <div className="vd-stagger flex grow flex-col justify-center gap-5">
+          <div>
+            <Eyebrow className="text-farol-accent">
+              {isChallenge ? "Desafio da unidade" : "Antes de praticar"}
+            </Eyebrow>
+            <h1 className="mt-2 font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
+              {lesson.title}
+            </h1>
+          </div>
+          <div className={`${card} flex items-start gap-3 p-5`}>
+            <Faroldo className="vd-hop h-14 w-14" mood="feliz" />
+            <div className="min-w-0">
+              <Eyebrow className="text-farol-accent">Dica do Faroldo</Eyebrow>
+              <p className="mt-1 text-lg leading-snug">{lesson.tip}</p>
+            </div>
+          </div>
+          <p className="text-sm text-farol-muted">
+            Agora é praticar em {total} situações. Errou? Sem problema: a explicação
+            mostra o caminho e a situação volta para você tentar de novo.
+          </p>
+        </div>
+        <Button className="mt-8 w-full" onClick={start} autoFocus>
+          Bora praticar
+        </Button>
+      </div>
+    );
+  }
 
   if (summary) {
     return (
@@ -282,7 +330,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
         )}
         {missed.has(questionId(current)) && status === "answering" && pos >= total && (
           <p className="mb-3 text-xs font-semibold uppercase tracking-[.09em] text-farol-warn">
-            ↻ Revisando um erro
+            ↻ Mais uma chance nesta situação
           </p>
         )}
         <div key={current.key} className={`vd-in ${status === "wrong" ? "vd-shake" : ""}`}>

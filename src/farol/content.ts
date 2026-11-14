@@ -14,20 +14,17 @@ import type {
  * LINHA DE TREINO "VENDA CONSULTIVA" — Open (comunicação visual)
  *
  * SOBRE O CONTEÚDO
- * - Fonte principal: Playbook Vendas Open 2025 (O que é vender, Cultura
- *   Comercial, Vendas 360º, Glossário, Etapas do Processo Comercial,
- *   Diagnóstico e Canvas do Cliente, Cross-selling, Up-selling, Quebra de
- *   Objeções, Proposta Comercial, Follow-up, Geração de Urgência, Gestão de
- *   Crise, Fechamento e Indicação). As respostas certas seguem o que o
- *   playbook ensina; as explicações (voz do Faroldo) parafraseiam o texto e
- *   citam a seção quando ajuda: "Playbook · Quebra de Objeções".
- * - Onde o playbook é genérico ou silencioso (ex.: "manda só a tabela",
- *   várias versões de layout, orçamento que depende de medição, orçamento
- *   parado), usamos boas práticas de venda consultiva / SPIN Selling
- *   aplicadas ao dia a dia da Open. Essas questões estão marcadas nas
- *   explicações como "Venda consultiva".
- * - É material de treino: descontos, prazos e condições citados são os
- *   exemplos do próprio playbook. O gestor comercial deve revisar e ajustar.
+ * - A ideia é aprender praticando, não fazer prova: cada lição abre com uma
+ *   dica curta do Faroldo (`tip`), as perguntas são situações do dia a dia e
+ *   a explicação de cada resposta ensina o porquê. Por isso o texto não cita
+ *   documentos ("segundo o playbook…").
+ * - O conteúdo segue o Playbook Vendas Open 2025 (cultura comercial, etapas
+ *   do processo, diagnóstico, cross e up-selling, objeções, proposta,
+ *   follow-up, urgência, gestão de crise, fechamento e indicação). Onde ele
+ *   é silencioso (ex.: "manda só a tabela", várias versões de layout,
+ *   orçamento parado), usamos boas práticas de venda consultiva.
+ * - Descontos, prazos e condições citados são os exemplos do playbook. O
+ *   gestor comercial deve revisar e ajustar.
  *
  * COMO EDITAR
  * - Cada unidade tem 3 lições (ids `u{n}-l{m}`) com 4–5 questões. O desafio
@@ -102,14 +99,16 @@ const seeds: UnitSeed[] = [
     id: "u1",
     number: 1,
     title: "Cultura comercial Open",
-    description: "O que é vender, Vendas 360º e o vocabulário do playbook",
+    description: "O que é vender, o ciclo completo da venda e as palavras do dia a dia",
     lessons: [
       {
         id: "u1-l1",
+        tip:
+          "Vender é descobrir o que o cliente precisa. Quase sempre ele sabe a dor, não o produto. Por isso a gente pergunta antes de oferecer.",
         title: "O que é vender?",
         questions: [
           multipla(
-            "Segundo o Playbook da Open, toda venda é, antes de tudo…",
+            "Uma venda bem-feita é, antes de tudo…",
             [
               "Uma negociação de preço",
               "Um diagnóstico",
@@ -117,7 +116,7 @@ const seeds: UnitSeed[] = [
               "Uma disputa com o concorrente",
             ],
             1,
-            "“Toda venda é um diagnóstico. Quanto melhor o diagnóstico, mais certeira será a solução.” (Playbook · O que é vender?)",
+            "“Toda venda é um diagnóstico. Quanto melhor o diagnóstico, mais certeira será a solução.”",
           ),
           cenario(
             "Lead novo no WhatsApp: dona de uma loja de roupas que vai inaugurar.",
@@ -130,18 +129,18 @@ const seeds: UnitSeed[] = [
               "Vou te mandar a tabela completa em PDF e você escolhe.",
             ],
             1,
-            "O cliente sabe a dor, nem sempre o produto. Ouvir antes de falar e entender antes de propor: é isso que torna a venda consultiva. (Playbook · O que é vender?)",
+            "O cliente sabe a dor, nem sempre o produto. Ouvir antes de falar e entender antes de propor: é isso que torna a venda consultiva.",
           ),
           vf(
             "Muitas vezes o cliente não sabe qual produto precisa, mas sabe qual é a sua dor.",
             true,
-            "Isso mesmo: nosso papel é descobrir essa dor e traduzi-la na solução certa. (Playbook · O que é vender?)",
+            "Isso mesmo: nosso papel é descobrir essa dor e traduzi-la na solução certa.",
           ),
           completar(
             "Vender é oferecer o que o cliente ___; muitas vezes ele não sabe o produto, mas sabe a ___.",
             ["precisa", "dor"],
             ["rejeita", "tabela"],
-            "Vendemos o que o cliente precisa — e o caminho para descobrir é explorar a dor dele. (Playbook · O que é vender?)",
+            "Vendemos o que o cliente precisa — e o caminho para descobrir é explorar a dor dele.",
           ),
           multipla(
             "Como a cultura comercial da Open quer que o vendedor se posicione?",
@@ -152,12 +151,14 @@ const seeds: UnitSeed[] = [
               "Como especialista que decide pelo cliente",
             ],
             2,
-            "Posicionamento de solucionador estratégico, atendimento com empatia e escuta ativa, e entregas de alto valor percebido. (Playbook · Cultura Comercial Open)",
+            "Posicionamento de solucionador estratégico, atendimento com empatia e escuta ativa, e entregas de alto valor percebido.",
           ),
         ],
       },
       {
         id: "u1-l2",
+        tip:
+          "A venda não termina no pedido. Do primeiro contato ao pós-venda, cada etapa constrói valor, e o CRM guarda tudo o que foi combinado.",
         title: "Vendas 360º",
         questions: [
           multipla(
@@ -169,12 +170,12 @@ const seeds: UnitSeed[] = [
               "Uma tabela de descontos por volume de compra",
             ],
             1,
-            "Vendas 360º enxerga o comercial como um ciclo integrado, com o cliente no centro — do primeiro contato à fidelização. (Playbook · Vendas 360º)",
+            "Vendas 360º enxerga o comercial como um ciclo integrado, com o cliente no centro — do primeiro contato à fidelização.",
           ),
           vf(
             "No modelo Vendas 360º, o uso do CRM é opcional para vendedores experientes.",
             false,
-            "Uso obrigatório do CRM, sem exceções, e sempre atualizado: ele é uma ferramenta viva de informação. (Playbook · Vendas 360º)",
+            "Uso obrigatório do CRM, sem exceções, e sempre atualizado: ele é uma ferramenta viva de informação.",
           ),
           ordenar(
             "Ordene o resumo do modelo Vendas 360º, do início ao fim do ciclo",
@@ -185,7 +186,7 @@ const seeds: UnitSeed[] = [
               "Entregar junto com toda a equipe",
               "Acompanhar com foco em relacionamento duradouro",
             ],
-            "Ouvir, diagnosticar, criar valor, entregar em equipe e acompanhar. Esse é o ciclo completo. (Playbook · Vendas 360º)",
+            "Ouvir, diagnosticar, criar valor, entregar em equipe e acompanhar. Esse é o ciclo completo.",
           ),
           cenario(
             "Fim de uma ligação com o gerente de uma clínica que pediu orçamento de sinalização interna.",
@@ -198,19 +199,21 @@ const seeds: UnitSeed[] = [
               "Registrar no CRM só se o cliente fechar",
             ],
             2,
-            "Rotina e disciplina: registrar todas as interações e agendar a próxima ação antes de encerrar cada atendimento. (Playbook · Vendas 360º)",
+            "Rotina e disciplina: registrar todas as interações e agendar a próxima ação antes de encerrar cada atendimento.",
           ),
           completar(
             "“Cliente satisfeito compra de novo e indica. Cliente encantado vira ___.”",
             ["embaixador"],
             ["concorrente", "devedor", "orçamento"],
-            "A venda não termina no contrato: pós-venda ativo transforma cliente em embaixador da Open. (Playbook · Vendas 360º)",
+            "A venda não termina no contrato: pós-venda ativo transforma cliente em embaixador da Open.",
           ),
         ],
       },
       {
         id: "u1-l3",
-        title: "Vocabulário do playbook",
+        tip:
+          "Algumas palavras aparecem todo dia. Cross-selling é oferecer um complemento. Up-selling é oferecer uma versão melhor do que o cliente já quer.",
+        title: "Palavras do dia a dia",
         questions: [
           multipla(
             "O que é cross-selling (venda cruzada)?",
@@ -221,10 +224,10 @@ const seeds: UnitSeed[] = [
               "Dividir o pedido entre dois vendedores",
             ],
             2,
-            "Cross-selling amplia a solução com itens complementares. Versão superior do mesmo item é up-selling. (Playbook · Glossário)",
+            "Cross-selling amplia a solução com itens complementares. Versão superior do mesmo item é up-selling.",
           ),
           multipla(
-            "No glossário da Open, “valor percebido” é…",
+            "Quando falamos em “valor percebido”, estamos falando de…",
             [
               "O preço final já com desconto",
               "Como o cliente enxerga o benefício da solução em relação ao investimento",
@@ -232,18 +235,18 @@ const seeds: UnitSeed[] = [
               "O preço do metro quadrado do material",
             ],
             1,
-            "Valor percebido é a relação entre benefício e investimento na cabeça do cliente — é ele que a gente constrói na venda. (Playbook · Glossário)",
+            "Valor percebido é a relação entre benefício e investimento na cabeça do cliente — é ele que a gente constrói na venda.",
           ),
           vf(
             "No-show é quando o cliente não comparece à reunião marcada, sem justificativa — e pede reagendamento com nova abordagem.",
             true,
-            "Exato. E o playbook manda reagendar prontamente, reforçando a importância da reunião. (Playbook · Glossário)",
+            "Exato. Quando isso acontece, reagende logo e reforce por que a reunião vale a pena.",
           ),
           completar(
             "Gatilho de ___ cria um motivo real para decidir agora; prova ___ mostra que outras empresas confiaram na Open.",
             ["urgência", "social"],
             ["culpa", "técnica"],
-            "Urgência = motivo real para decisão imediata (prazo, bônus, condição). Prova social = depoimentos, cases, antes e depois. (Playbook · Glossário)",
+            "Urgência = motivo real para decisão imediata (prazo, bônus, condição). Prova social = depoimentos, cases, antes e depois.",
           ),
           cenario(
             "Cliente pediu uma placa em ACM comum para área externa.",
@@ -256,7 +259,7 @@ const seeds: UnitSeed[] = [
               "Quer ver uma opção em ACM Superbold? A diferença de valor é pequena, e a durabilidade externa e a garantia são maiores.",
             ],
             3,
-            "Up-selling é a versão superior do que o cliente já quer. Adesivar a frota seria cross-selling; prioridade é urgência; a outra é indicação. (Playbook · Up-Selling)",
+            "Up-selling é a versão superior do que o cliente já quer. Adesivar a frota seria cross-selling; prioridade é urgência; a outra é indicação.",
           ),
         ],
       },
@@ -272,6 +275,8 @@ const seeds: UnitSeed[] = [
     lessons: [
       {
         id: "u2-l1",
+        tip:
+          "Antes de abordar, pesquise: o segmento, o que a empresa está fazendo, que dor ela pode ter. Contato personalizado abre portas; mensagem genérica é ignorada.",
         title: "Prospecção e qualificação",
         questions: [
           ordenar(
@@ -283,10 +288,10 @@ const seeds: UnitSeed[] = [
               "Oferecer reunião ou visita",
               "Registrar no funil de vendas",
             ],
-            "Identificar leads, pesquisar, abordar, oferecer reunião ou visita e registrar no funil. (Playbook · Etapas do processo comercial)",
+            "Identificar leads, pesquisar, abordar, oferecer reunião ou visita e registrar no funil.",
           ),
           multipla(
-            "O que a qualificação de leads analisa, segundo o glossário?",
+            "Chegou um contato novo. O que você avalia para saber se vale investir tempo nele?",
             [
               "Simpatia, cargo e tempo de empresa",
               "Perfil, orçamento, demanda e urgência",
@@ -294,12 +299,12 @@ const seeds: UnitSeed[] = [
               "O preço que o concorrente cobrou",
             ],
             1,
-            "Qualificar é entender se o contato tem potencial real: perfil, orçamento, demanda e urgência. (Playbook · Glossário)",
+            "Qualificar é entender se o contato tem potencial real: perfil, orçamento, demanda e urgência.",
           ),
           vf(
             "Leads da Open podem vir de indicações, redes sociais, eventos e prospecção ativa.",
             true,
-            "Todas essas são fontes citadas no playbook — e o mapeamento é feito por nichos: indústrias, clínicas, franquias etc. (Playbook · Glossário)",
+            "Todas valem. E fica mais fácil prospectar por nicho: indústrias, clínicas, franquias etc.",
           ),
           cenario(
             "Você mapeou clínicas do bairro. Uma delas está reformando a recepção, segundo o Instagram.",
@@ -312,12 +317,14 @@ const seeds: UnitSeed[] = [
               "Tudo bem, ligo outra hora.",
             ],
             2,
-            "Abordagem inicial com tom estratégico e personalizado, já oferecendo reunião ou visita. Pesquisa prévia faz a diferença. (Playbook · Etapas do processo comercial)",
+            "Abordagem inicial com tom estratégico e personalizado, já oferecendo reunião ou visita. Pesquisa prévia faz a diferença.",
           ),
         ],
       },
       {
         id: "u2-l2",
+        tip:
+          "Reunião boa começa antes: agenda conferida, amostras prontas e uma ideia clara da dor desse cliente. Assim você mostra só o que importa para ele.",
         title: "Antes de apresentar",
         questions: [
           multipla(
@@ -329,7 +336,7 @@ const seeds: UnitSeed[] = [
               "Chegar e improvisar conforme o cliente",
             ],
             1,
-            "Agenda conferida, materiais prontos, sala ou carro reservados e horários alinhados. (Playbook · 1. Antes de apresentar)",
+            "Agenda conferida, materiais prontos, sala ou carro reservados e horários alinhados.",
           ),
           cenario(
             "Amanhã você apresenta para uma indústria que sofre com atraso em grandes volumes de adesivos.",
@@ -342,18 +349,18 @@ const seeds: UnitSeed[] = [
               "Destacar a capacidade de produção e a mesa de corte automatizada, que reduz o tempo de produção e agiliza as entregas",
             ],
             3,
-            "É o exemplo do próprio playbook: estudou a dor (prazo em grandes volumes), destacou o que resolve essa dor. (Playbook · 1. Antes de apresentar)",
+            "Você estudou a dor (prazo em grandes volumes) e destacou exatamente o que resolve essa dor.",
           ),
           vf(
             "Para reunião online, basta entrar no horário: checar conexão e apresentação antes é exagero.",
             false,
-            "Preparação do ambiente: online, checar a conexão e a apresentação digital; presencial, organizar amostras e equipamentos. (Playbook · 1. Antes de apresentar)",
+            "Preparação do ambiente: online, checar a conexão e a apresentação digital; presencial, organizar amostras e equipamentos.",
           ),
           completar(
             "Antes de apresentar, analise o ___ do cliente e identifique suas possíveis ___.",
             ["segmento", "dores"],
             ["salário", "férias"],
-            "Estudo do cliente: segmento (indústria, comércio, serviços, alimentício, clínica) e dores específicas. (Playbook · 1. Antes de apresentar)",
+            "Estudo do cliente: segmento (indústria, comércio, serviços, alimentício, clínica) e dores específicas.",
           ),
           multipla(
             "A reunião presencial inclui apresentar o cliente à diretoria da Open. O que fazer antes?",
@@ -364,12 +371,14 @@ const seeds: UnitSeed[] = [
               "Pedir que o cliente espere enquanto você procura alguém",
             ],
             1,
-            "Planejamento do dia: confirmar sala e a agenda de quem vai receber o cliente. Pontualidade constrói confiança. (Playbook · 1. Antes de apresentar)",
+            "Planejamento do dia: confirmar sala e a agenda de quem vai receber o cliente. Pontualidade constrói confiança.",
           ),
         ],
       },
       {
         id: "u2-l3",
+        tip:
+          "O objetivo do primeiro contato não é vender: é conseguir a reunião ou a visita. Atenda o que o cliente pede, mas faça as suas perguntas.",
         title: "Abordagem e convite para a visita",
         questions: [
           cenario(
@@ -383,10 +392,10 @@ const seeds: UnitSeed[] = [
               "Nosso preço é o melhor da região, pode confiar.",
             ],
             1,
-            "Venda consultiva: comunicação visual é sob medida — sem diagnóstico, preço vira chute. Atenda o pedido sem abrir mão das perguntas, como pede o playbook (diagnóstico antes da proposta).",
+            "Comunicação visual é sob medida: sem entender o projeto, preço vira chute. Atenda o pedido sem abrir mão das suas perguntas.",
           ),
           multipla(
-            "O que é o “script de abordagem” do glossário?",
+            "O que é um bom roteiro (script) de abordagem?",
             [
               "Um texto para ler igual para todos os clientes",
               "A lista de descontos autorizados",
@@ -394,17 +403,17 @@ const seeds: UnitSeed[] = [
               "O contrato padrão da Open",
             ],
             2,
-            "Roteiro planejado, não robótico: o playbook pede personalização do roteiro conforme o segmento e a dor. (Playbook · Glossário)",
+            "Roteiro planejado, não robótico: adapte ao segmento e à dor de cada cliente.",
           ),
           vf(
             "Depois da abordagem inicial, o lead deve ser registrado no funil de vendas, mesmo que ainda não tenha pedido orçamento.",
             true,
-            "Registro no funil faz parte da abordagem inicial. Sem registro, não há follow-up. (Playbook · Etapas do processo comercial)",
+            "Registro no funil faz parte da abordagem inicial. Sem registro, não há follow-up.",
           ),
           cenario(
             "O cliente marcou reunião para hoje às 14h e não apareceu. Uma hora depois, ele escreve:",
             "Nossa, esqueci completamente da reunião!",
-            "Qual é a resposta do playbook para um no-show?",
+            "Como responder para não perder esse cliente?",
             [
               "Sem problema. Quando puder, me chama.",
               "Poxa, fiquei te esperando uma hora. Da próxima vez, avisa.",
@@ -412,7 +421,7 @@ const seeds: UnitSeed[] = [
               "Tudo bem, te mando a proposta por e-mail e você vê sozinho.",
             ],
             2,
-            "No-show: reagendar prontamente, com empatia, três opções de horário e reforçando o valor da reunião. (Playbook · Follow-up)",
+            "No-show: reagendar prontamente, com empatia, três opções de horário e reforçando o valor da reunião.",
           ),
           ordenar(
             "Ordene um bom primeiro contato",
@@ -422,7 +431,7 @@ const seeds: UnitSeed[] = [
               "Oferecer reunião ou visita com dia e hora",
               "Registrar no funil e confirmar o agendamento",
             ],
-            "Abordagem estratégica, oferta de reunião ou visita e registro no funil. (Playbook · Etapas do processo comercial)",
+            "Abordagem estratégica, oferta de reunião ou visita e registro no funil.",
           ),
         ],
       },
@@ -438,6 +447,8 @@ const seeds: UnitSeed[] = [
     lessons: [
       {
         id: "u3-l1",
+        tip:
+          "Uma reunião tem ordem: você se apresenta, entende o cliente, mostra a solução e combina o próximo passo. Pular a parte de entender é chutar.",
         title: "Roteiro da reunião",
         questions: [
           ordenar(
@@ -448,10 +459,10 @@ const seeds: UnitSeed[] = [
               "Apresentação das soluções mais adequadas",
               "Fechamento e próximos passos",
             ],
-            "Apresentação, diagnóstico, solução e fechamento: a estrutura lógica da conversa. (Playbook · Glossário · Roteiro de Reunião)",
+            "Apresentação, diagnóstico, solução e fechamento: a estrutura lógica da conversa.",
           ),
           multipla(
-            "Como o playbook orienta a sua apresentação pessoal?",
+            "Como se apresentar no começo da reunião?",
             [
               "Com modéstia: fale o mínimo de você para não parecer arrogante",
               "Pulando direto para o preço, para não tomar tempo",
@@ -459,17 +470,17 @@ const seeds: UnitSeed[] = [
               "Lendo o institucional completo da empresa, slide por slide",
             ],
             2,
-            "Apresente-se com autoridade, mostre que acompanha inovações e tendências e conecte sua experiência ao propósito da empresa. (Playbook · 2. Apresentação)",
+            "Apresente-se com autoridade, mostre que acompanha inovações e tendências e conecte sua experiência ao propósito da empresa.",
           ),
           vf(
             "Um diferencial a destacar na apresentação da Open é o portfólio completo de soluções integradas, que evita múltiplos fornecedores.",
             true,
-            "Tudo em um só lugar: mais praticidade, agilidade e padronização para o cliente. (Playbook · 2. Apresentação)",
+            "Tudo em um só lugar: mais praticidade, agilidade e padronização para o cliente.",
           ),
           cenario(
             "Abertura de reunião com o gerente de marketing de uma indústria.",
             "Vocês fazem o quê, exatamente? Já tenho quem faça minhas placas.",
-            "Qual apresentação da Open segue o playbook?",
+            "Como você apresenta a Open aqui?",
             [
               "Fazemos de tudo um pouco, é só pedir.",
               "Atendemos toda a comunicação visual em um só lugar — de projetos para indústrias a fachadas em ACM, impressão digital e sinalização. Isso te dá praticidade, agilidade e padronização com um único parceiro.",
@@ -477,16 +488,18 @@ const seeds: UnitSeed[] = [
               "Nosso forte é fachada; placa a gente até faz, mas não é o foco.",
             ],
             1,
-            "Apresente a Open pelo diferencial que resolve dor: soluções integradas, sem precisar de vários fornecedores. (Playbook · 2. Apresentação)",
+            "Apresente a Open pelo diferencial que resolve dor: soluções integradas, sem precisar de vários fornecedores.",
           ),
         ],
       },
       {
         id: "u3-l2",
+        tip:
+          "Na reunião, o foco é entender, não empurrar. E, na hora de mostrar a solução, exemplo concreto e foto de serviço feito valem mais do que promessa.",
         title: "Objetivo da reunião e soluções",
         questions: [
           multipla(
-            "Qual é o foco da reunião, segundo o playbook?",
+            "Qual deve ser o seu foco na reunião com o cliente?",
             [
               "Sair com o pedido assinado, custe o que custar",
               "Não é só vender: é entender as necessidades do cliente e se posicionar como parceiro estratégico",
@@ -494,7 +507,7 @@ const seeds: UnitSeed[] = [
               "Descobrir quanto o concorrente cobra",
             ],
             1,
-            "O foco não é só vender, mas entender. Demonstre interesse genuíno pelos desafios do cliente. (Playbook · 3. Objetivo da reunião)",
+            "O foco não é só vender, mas entender. Demonstre interesse genuíno pelos desafios do cliente.",
           ),
           cenario(
             "Início da reunião com o dono de uma rede de restaurantes.",
@@ -507,18 +520,18 @@ const seeds: UnitSeed[] = [
               "Hoje quero entender seus desafios de comunicação visual e mostrar como nossa experiência pode contribuir. A ideia é construir uma parceria que gere valor para o seu negócio.",
             ],
             3,
-            "É o exemplo do playbook: entender necessidades e desafios e construir uma parceria estratégica. (Playbook · 3. Objetivo da reunião)",
+            "Assim você deixa claro que veio entender os desafios dele e construir uma parceria, não empurrar produto.",
           ),
           vf(
             "Ao apresentar soluções, vale ser genérico para não se comprometer com detalhes.",
             false,
-            "Traga exemplos concretos e evite ser genérico. Imagens e vídeos de serviços executados reforçam os benefícios. (Playbook · 4. Soluções oferecidas)",
+            "Traga exemplos concretos e evite ser genérico. Imagens e vídeos de serviços executados reforçam os benefícios.",
           ),
           completar(
             "Ao apresentar soluções, traga exemplos ___ e use ___ de serviços executados para reforçar os benefícios.",
             ["concretos", "fotos"],
             ["genéricos", "boletos"],
-            "A pasta de fotos de serviços executados existe para isso: mostrar, não só contar. (Playbook · 4. Soluções oferecidas)",
+            "A pasta de fotos de serviços executados existe para isso: mostrar, não só contar.",
           ),
           multipla(
             "O cliente busca um fornecedor de sinalização. O que apresentar?",
@@ -529,12 +542,14 @@ const seeds: UnitSeed[] = [
               "Os produtos de maior margem, mesmo que não sejam sinalização",
             ],
             2,
-            "Adapte a apresentação à necessidade específica do cliente e mostre como a solução atende à dor dele. (Playbook · 4. Soluções oferecidas)",
+            "Adapte a apresentação à necessidade específica do cliente e mostre como a solução atende à dor dele.",
           ),
         ],
       },
       {
         id: "u3-l3",
+        tip:
+          "Cliente confia mais em resultado do que em discurso. Um bom case tem o problema, o que fizemos e o antes e depois, de preferência de alguém parecido com ele.",
         title: "Cases de sucesso",
         questions: [
           multipla(
@@ -546,7 +561,7 @@ const seeds: UnitSeed[] = [
               "Ser contado bem rápido, sem imagens",
             ],
             1,
-            "Antes e depois + depoimento de cliente satisfeito: é assim que o case vira prova social. (Playbook · 5. Cases de sucesso)",
+            "Antes e depois + depoimento de cliente satisfeito: é assim que o case vira prova social.",
           ),
           cenario(
             "Diretor de uma rede com várias filiais, em reunião de apresentação.",
@@ -559,18 +574,18 @@ const seeds: UnitSeed[] = [
               "Atendemos uma empresa do setor automotivo com o mesmo problema: homologamos acrílico e ACM na cor Pantone da marca e padronizamos as filiais com materiais de alta durabilidade. Posso te mostrar o antes e depois?",
             ],
             3,
-            "Case com problema, solução e resultado — do jeito que o playbook exemplifica — vale mais do que “pode confiar”. (Playbook · 5. Cases de sucesso)",
+            "Um case com problema, solução e resultado vale muito mais do que “pode confiar”.",
           ),
           vf(
             "Case é um exemplo real de cliente atendido com excelência e funciona como prova social.",
             true,
-            "Prova social: depoimentos, cases, fotos e antes/depois mostram que outras empresas confiaram na Open. (Playbook · Glossário)",
+            "Prova social: depoimentos, cases, fotos e antes/depois mostram que outras empresas confiaram na Open.",
           ),
           completar(
             "Escolha cases ___ para o cliente: de preferência do mesmo segmento ou com a mesma ___.",
             ["relevantes", "dor"],
             ["aleatórios", "idade"],
-            "“Cases de sucesso relevantes”: adapte o exemplo à necessidade de quem está na sua frente. (Playbook · 5. Cases de sucesso)",
+            "“Cases de sucesso relevantes”: adapte o exemplo à necessidade de quem está na sua frente.",
           ),
         ],
       },
@@ -586,6 +601,8 @@ const seeds: UnitSeed[] = [
     lessons: [
       {
         id: "u4-l1",
+        tip:
+          "Coloque-se no lugar do cliente: o que ele vê, ouve e sente? O que tira o sono dele (as dores) e o que o deixaria satisfeito (os ganhos)?",
         title: "Canvas do Cliente",
         questions: [
           multipla(
@@ -597,13 +614,13 @@ const seeds: UnitSeed[] = [
               "Para registrar reclamações depois da entrega",
             ],
             1,
-            "Ferramenta de empatia usada no diagnóstico. Quanto mais empático você for, mais soluções de valor entrega. (Playbook · Canvas do Cliente)",
+            "Ferramenta de empatia usada no diagnóstico. Quanto mais empático você for, mais soluções de valor entrega.",
           ),
           multipla(
             "No Canvas, a pergunta “O que tira o sono do cliente?” pertence a qual elemento?",
             ["Vê", "Ouve", "Dores", "Ganhos"],
             2,
-            "Dores = o que tira o sono. Ganhos = o que deixaria o cliente satisfeito. (Playbook · Canvas do Cliente)",
+            "Dores = o que tira o sono. Ganhos = o que deixaria o cliente satisfeito.",
           ),
           cenario(
             "Cliente de indústria que precisa padronizar fachadas em várias filiais.",
@@ -616,27 +633,29 @@ const seeds: UnitSeed[] = [
               "Que ele não influencia a decisão",
             ],
             2,
-            "É o exemplo prático do playbook: ouve cobranças, sente pressão, diz que quer “resolver de forma definitiva”. (Playbook · Canvas do Cliente)",
+            "Repare: ele ouve cobranças, sente pressão e diz que quer “resolver de forma definitiva”. Isso mostra o que pesa na decisão.",
           ),
           completar(
             "No Canvas do Cliente, ___ é o que tira o sono dele e ___ é o que o deixaria satisfeito.",
             ["Dores", "Ganhos"],
             ["Vê", "Ouve"],
-            "Os seis elementos: Vê, Ouve, Sente, Diz e Faz, Dores e Ganhos. (Playbook · Canvas do Cliente)",
+            "Os seis elementos: Vê, Ouve, Sente, Diz e Faz, Dores e Ganhos.",
           ),
           vf(
             "O Canvas do Cliente só serve depois da venda, para medir a satisfação.",
             false,
-            "Use o mapa como guia na preparação de apresentações e propostas — antes, portanto. (Playbook · Canvas do Cliente)",
+            "Use o mapa como guia na preparação de apresentações e propostas — antes, portanto.",
           ),
         ],
       },
       {
         id: "u4-l2",
+        tip:
+          "Pergunta aberta faz o cliente falar. Comece pelo problema de hoje, passe pelo fornecedor atual e chegue ao que ele espera e aonde quer chegar.",
         title: "Perguntas de diagnóstico",
         questions: [
           multipla(
-            "Qual destas é uma pergunta do playbook para diagnosticar problemas e desafios?",
+            "Qual destas perguntas ajuda mais a descobrir o problema do cliente?",
             [
               "Qual é o seu orçamento máximo?",
               "Vocês fecham hoje se eu der desconto?",
@@ -644,12 +663,12 @@ const seeds: UnitSeed[] = [
               "Qual é o concorrente mais barato que vocês conhecem?",
             ],
             2,
-            "Pergunta aberta, focada no desafio do cliente. É a primeira da lista de diagnóstico. (Playbook · 6. Diagnóstico do Cliente)",
+            "Pergunta aberta, focada no desafio do cliente. É a primeira da lista de diagnóstico.",
           ),
           cenario(
             "Reunião de diagnóstico com a compradora de uma rede de farmácias.",
             "Já temos um fornecedor que faz nossos adesivos.",
-            "Qual pergunta do playbook cabe aqui?",
+            "O que você pergunta em seguida?",
             [
               "Ele deve ser bem mais caro do que a gente, né?",
               "Que bom! O que vocês mais gostam nele e o que gostariam de melhorar?",
@@ -657,7 +676,7 @@ const seeds: UnitSeed[] = [
               "Fornecedor pequeno sempre atrasa, cuidado.",
             ],
             1,
-            "Perguntas sobre fornecedores e processos atuais revelam onde a Open pode agregar — sem falar mal de ninguém. (Playbook · 6. Diagnóstico do Cliente)",
+            "Perguntas sobre fornecedores e processos atuais revelam onde a Open pode agregar — sem falar mal de ninguém.",
           ),
           multipla(
             "Qual pergunta ajuda a descobrir a prioridade do cliente?",
@@ -668,12 +687,12 @@ const seeds: UnitSeed[] = [
               "Vocês conhecem a Open há quanto tempo?",
             ],
             0,
-            "Saber a prioridade (qualidade, preço ou prazo) orienta toda a proposta. (Playbook · 6. Diagnóstico · Necessidades e Expectativas)",
+            "Saber a prioridade (qualidade, preço ou prazo) orienta toda a proposta.",
           ),
           vf(
             "Antes de apresentar as soluções, é importante aprofundar o diagnóstico: isso deixa a apresentação mais personalizada.",
             true,
-            "Diagnóstico primeiro. Entender dores, desafios e objetivos é o que personaliza a apresentação. (Playbook · 6. Diagnóstico do Cliente)",
+            "Diagnóstico primeiro. Entender dores, desafios e objetivos é o que personaliza a apresentação.",
           ),
           ordenar(
             "Ordene os blocos de perguntas do diagnóstico, do problema ao resultado",
@@ -684,12 +703,14 @@ const seeds: UnitSeed[] = [
               "Metas e resultados esperados",
               "Oportunidades de crescimento",
             ],
-            "É a sequência das listas de perguntas do playbook: do problema de hoje às oportunidades futuras. (Playbook · 6. Diagnóstico do Cliente)",
+            "A conversa flui melhor assim: do problema de hoje até as oportunidades futuras.",
           ),
         ],
       },
       {
         id: "u4-l3",
+        tip:
+          "Na visita, não basta medir. Pergunte como o problema afeta o negócio: quando o cliente enxerga o prejuízo, a solução ganha valor.",
         title: "Diagnóstico na visita técnica",
         questions: [
           cenario(
@@ -703,7 +724,7 @@ const seeds: UnitSeed[] = [
               "Quantos metros tem a fachada?",
             ],
             2,
-            "“Como a falta de uma solução eficiente tem impactado o seu negócio?” Quando o cliente enxerga o impacto, a solução ganha valor. (Playbook · 6. Diagnóstico; no SPIN, é a pergunta de implicação.)",
+            "“Como a falta de uma solução eficiente tem impactado o seu negócio?” Quando o cliente enxerga o impacto, a solução ganha valor.",
           ),
           multipla(
             "Qual pergunta identifica oportunidades de crescimento?",
@@ -714,7 +735,7 @@ const seeds: UnitSeed[] = [
               "Vocês têm o arquivo do logotipo?",
             ],
             1,
-            "Essas perguntas abrem a porta para novos projetos, cross-selling e soluções como LED e impressão UV. (Playbook · 6. Diagnóstico · Oportunidades de Crescimento)",
+            "Essas perguntas abrem a porta para novos projetos, cross-selling e soluções como LED e impressão UV.",
           ),
           cenario(
             "Lead de uma loja de móveis quer orçamento de fachada em ACM sem visita.",
@@ -727,18 +748,18 @@ const seeds: UnitSeed[] = [
               "Então me manda as medidas exatas por escrito e a responsabilidade é sua.",
             ],
             2,
-            "Venda consultiva: na Open a proposta depende da medição. Explique o porquê (orçamento certo, sem retrabalho) e ofereça dois horários. O playbook pede diagnóstico antes da proposta.",
+            "Na Open a proposta depende da medição. Explique o porquê (orçamento certo, sem retrabalho) e ofereça dois horários.",
           ),
           vf(
             "Perguntar se o cliente já tem um projeto definido ou precisa de apoio para criar um faz parte do diagnóstico.",
             true,
-            "Está na lista de Necessidades e Expectativas — e muda o escopo: só produção ou criação + produção. (Playbook · 6. Diagnóstico do Cliente)",
+            "Está na lista de Necessidades e Expectativas — e muda o escopo: só produção ou criação + produção.",
           ),
           completar(
             "Pergunte se o cliente tem uma ___ específica para o projeto e qual o ___ ideal para a implementação.",
             ["meta", "prazo"],
             ["mágoa", "brinde"],
-            "Metas e resultados esperados: visibilidade da marca, sinalização interna, redução de custo de manutenção — e o prazo ideal. (Playbook · 6. Diagnóstico do Cliente)",
+            "Metas e resultados esperados: visibilidade da marca, sinalização interna, redução de custo de manutenção — e o prazo ideal.",
           ),
         ],
       },
@@ -754,6 +775,8 @@ const seeds: UnitSeed[] = [
     lessons: [
       {
         id: "u5-l1",
+        tip:
+          "Proposta boa conta uma história: o que você entendeu, a solução, o benefício e só então o investimento. Preço sem contexto parece caro.",
         title: "Proposta comercial e diferenciais",
         questions: [
           ordenar(
@@ -765,7 +788,7 @@ const seeds: UnitSeed[] = [
               "Investimento e formas de pagamento",
               "Garantia e suporte",
             ],
-            "Necessidades, solução, benefícios, investimento e garantia: o preço só aparece depois do valor. (Playbook · 10. Proposta Comercial e Diferenciais)",
+            "Necessidades, solução, benefícios, investimento e garantia: o preço só aparece depois do valor.",
           ),
           multipla(
             "Por que a proposta começa com o resumo das necessidades do cliente?",
@@ -776,7 +799,7 @@ const seeds: UnitSeed[] = [
               "Para justificar um preço mais alto",
             ],
             1,
-            "O resumo reforça o entendimento do problema — e conecta cada item da solução a uma dor real. (Playbook · 10. Proposta Comercial e Diferenciais)",
+            "O resumo reforça o entendimento do problema — e conecta cada item da solução a uma dor real.",
           ),
           cenario(
             "Você entrega a proposta pessoalmente ao dono de uma academia.",
@@ -789,12 +812,12 @@ const seeds: UnitSeed[] = [
               "Se olhar ainda hoje, dou 10% de desconto.",
             ],
             2,
-            "Na entrega presencial, o playbook pede revisar os pontos principais juntos e alinhar os próximos passos. (Playbook · 10. Proposta Comercial e Diferenciais)",
+            "Entregou pessoalmente? Revise os pontos principais junto com o cliente e já alinhe os próximos passos.",
           ),
           vf(
             "A proposta deve focar na valorização da solução, evidenciando benefícios e diferenciais que justifiquem o investimento.",
             true,
-            "Clara, objetiva e persuasiva: benefícios como redução de custos, durabilidade e eficiência vêm antes do investimento. (Playbook · 10. Proposta Comercial e Diferenciais)",
+            "Clara, objetiva e persuasiva: benefícios como redução de custos, durabilidade e eficiência vêm antes do investimento.",
           ),
           cenario(
             "Você já enviou duas versões do layout da fachada de uma hamburgueria.",
@@ -807,16 +830,18 @@ const seeds: UnitSeed[] = [
               "Consigo ajustar, sim. Para acertar de primeira: o que você manteria e o que mudaria nessas duas? Com isso fecho uma versão final junto com a proposta.",
             ],
             3,
-            "Venda consultiva: versões sem critério viram retrabalho infinito. Volte ao diagnóstico — o que agradou, o que falta — e conduza para a versão final. (O playbook não trata desse caso.)",
+            "Versões sem critério viram retrabalho infinito. Volte ao diagnóstico — o que agradou, o que falta — e conduza para a versão final.",
           ),
         ],
       },
       {
         id: "u5-l2",
+        tip:
+          "Cross-selling é completar a solução: quem fez a fachada pode precisar da sinalização interna. Só ofereça o que faz sentido para aquele cliente.",
         title: "Cross-selling",
         questions: [
           multipla(
-            "Quando aplicar cross-selling, segundo o playbook?",
+            "Quais são os bons momentos para oferecer um produto complementar (cross-selling)?",
             [
               "Só quando o cliente pedir desconto",
               "Apenas no primeiro contato, antes do diagnóstico",
@@ -824,12 +849,12 @@ const seeds: UnitSeed[] = [
               "Somente depois de um ano de relacionamento",
             ],
             2,
-            "Três momentos: na proposta, depois do fechamento do pedido principal e quando o diagnóstico revela novas necessidades. (Playbook · 7. Cross-Selling)",
+            "Três momentos: na proposta, depois do fechamento do pedido principal e quando o diagnóstico revela novas necessidades.",
           ),
           cenario(
             "Uma concessionária acabou de aprovar a fachada.",
             "Fechado, pode fazer a fachada em ACM.",
-            "Qual é o cross-selling consultivo do playbook?",
+            "Como oferecer algo a mais sem empurrar produto?",
             [
               "Perfeito, já mando o contrato. Obrigado!",
               "Aproveita e leva também troféus, uniformes e brindes, está tudo em oferta.",
@@ -837,10 +862,10 @@ const seeds: UnitSeed[] = [
               "Ótimo! Muitos clientes que fizeram fachada como a sua também pediram a sinalização interna para manter o padrão visual e evitar múltiplos fornecedores. Quer que eu inclua essa sugestão para análise?",
             ],
             3,
-            "É a dica de abordagem do playbook: sugestão com sentido real para o cliente, apoiada em outros clientes. (Playbook · 7. Cross-Selling)",
+            "A sugestão faz sentido real para o cliente e vem apoiada no que outros clientes fizeram.",
           ),
           multipla(
-            "Para um cliente do segmento industrial, que cross-selling o playbook sugere?",
+            "Seu cliente é uma indústria. Qual oferta complementar faz mais sentido?",
             [
               "Neon LED decorativo para o refeitório",
               "Soluções de segurança visual: placas de orientação, sinalização de risco e etiquetas técnicas",
@@ -848,23 +873,25 @@ const seeds: UnitSeed[] = [
               "Banners promocionais de vitrine",
             ],
             1,
-            "Ofereça o que faz sentido real para o segmento: na indústria, segurança visual. (Playbook · 7. Cross-Selling)",
+            "Ofereça o que faz sentido real para o segmento: na indústria, segurança visual.",
           ),
           vf(
             "Cross-selling é empurrar o máximo de produtos enquanto o cliente está animado.",
             false,
-            "“Cross-selling não é empurrar produto. É ampliar a solução com inteligência e cuidado.” (Playbook · 7. Cross-Selling)",
+            "“Cross-selling não é empurrar produto. É ampliar a solução com inteligência e cuidado.”",
           ),
           completar(
             "Cross-selling bem feito aumenta o ___ médio e entrega uma solução mais ___ ao cliente.",
             ["ticket", "completa"],
             ["desconto", "barata"],
-            "Aumenta o ticket médio, melhora a experiência e fortalece a percepção de valor da Open. (Playbook · 7. Cross-Selling)",
+            "Aumenta o ticket médio, melhora a experiência e fortalece a percepção de valor da Open.",
           ),
         ],
       },
       {
         id: "u5-l3",
+        tip:
+          "Up-selling é mostrar uma opção melhor do que a pedida, mais durável ou mais bonita, e deixar o cliente comparar. É vender o melhor, não o mais caro.",
         title: "Up-selling",
         questions: [
           multipla(
@@ -876,12 +903,12 @@ const seeds: UnitSeed[] = [
               "Vender para a matriz depois de vender para a filial",
             ],
             1,
-            "Quando bem-feito, o cliente percebe o up-selling como melhoria da solução, não como “vender a mais”. (Playbook · 8. Up-Selling)",
+            "Quando bem-feito, o cliente percebe o up-selling como melhoria da solução, não como “vender a mais”.",
           ),
           cenario(
             "Escritório de contabilidade reformando a recepção.",
             "Quero só uma impressão simples para o painel da recepção.",
-            "Qual é o up-selling do playbook?",
+            "Como mostrar uma opção melhor sem forçar?",
             [
               "Impressão simples fica feio, não recomendo.",
               "Certo, impressão simples então.",
@@ -889,12 +916,12 @@ const seeds: UnitSeed[] = [
               "Leve o projeto completo de ambientação, é o que todo mundo faz.",
             ],
             2,
-            "Cliente pediu impressão simples? Sugira acabamento UV, corte especial ou relevo — comparando opções pelo valor agregado. (Playbook · 8. Up-Selling)",
+            "Cliente pediu impressão simples? Sugira acabamento UV, corte especial ou relevo — comparando opções pelo valor agregado.",
           ),
           vf(
             "Up-selling é vender o melhor para o cliente, não necessariamente o mais caro.",
             true,
-            "“É vender o melhor, e não o mais caro”: mais resultado com uma escolha mais inteligente. (Playbook · 8. Up-Selling)",
+            "“É vender o melhor, e não o mais caro”: mais resultado com uma escolha mais inteligente.",
           ),
           multipla(
             "Como aplicar up-selling com inteligência?",
@@ -905,12 +932,12 @@ const seeds: UnitSeed[] = [
               "Oferecer só depois que o cliente pagar",
             ],
             1,
-            "Benefício de longo prazo, comparação com foco em valor e exemplos reais. (Playbook · 8. Up-Selling)",
+            "Benefício de longo prazo, comparação com foco em valor e exemplos reais.",
           ),
           cenario(
             "Escritório de advocacia mudando para uma sede nova.",
             "Sinalização interna básica já resolve.",
-            "Qual oferta é o up-selling previsto no playbook?",
+            "Qual oferta melhora o que ele já quer (up-selling)?",
             [
               "Adesivação da frota de veículos",
               "Um desconto de 10% na sinalização básica",
@@ -918,7 +945,7 @@ const seeds: UnitSeed[] = [
               "Nenhuma: se ele pediu básico, é básico",
             ],
             2,
-            "Sinalização básica → projeto completo de ambientação visual. Frota seria cross-selling. (Playbook · 8. Up-Selling)",
+            "Sinalização básica → projeto completo de ambientação visual. Frota seria cross-selling.",
           ),
         ],
       },
@@ -930,10 +957,12 @@ const seeds: UnitSeed[] = [
     id: "u6",
     number: 6,
     title: "Quebra de objeções",
-    description: "As respostas do playbook para as resistências mais comuns",
+    description: "Como responder às resistências mais comuns do cliente",
     lessons: [
       {
         id: "u6-l1",
+        tip:
+          "“Está caro” quase nunca é sobre preço: é sobre um valor que ainda não ficou claro. Reforce o que o cliente ganha antes de falar em condição.",
         title: "“Está caro!”",
         questions: [
           cenario(
@@ -947,7 +976,7 @@ const seeds: UnitSeed[] = [
               "Então vamos trocar tudo por lona, que é mais barato.",
             ],
             1,
-            "Primeiro, valor: não é custo, é investimento que reduz manutenção e dá retorno a longo prazo. (Playbook · Quebra de Objeções)",
+            "Primeiro, valor: não é custo, é investimento que reduz manutenção e dá retorno a longo prazo.",
           ),
           cenario(
             "Gerente de uma loja de calçados comparando orçamentos.",
@@ -960,10 +989,10 @@ const seeds: UnitSeed[] = [
               "Já atendi empresas que escolheram a opção mais barata e, meses depois, precisaram refazer o projeto. Nosso diferencial está na qualidade, no acabamento e na durabilidade: vale investir um pouco mais agora para não gastar de novo depois.",
             ],
             3,
-            "Compare com alternativas de menor qualidade sem atacar o concorrente: fale de quem precisou refazer. (Playbook · Quebra de Objeções)",
+            "Compare com alternativas de menor qualidade sem atacar o concorrente: fale de quem precisou refazer.",
           ),
           multipla(
-            "Se o investimento for mesmo um ponto crítico, o que o playbook orienta?",
+            "E se o investimento for mesmo o ponto crítico para o cliente?",
             [
               "Dar o desconto máximo logo de cara",
               "Encerrar a negociação",
@@ -971,27 +1000,29 @@ const seeds: UnitSeed[] = [
               "Reduzir a qualidade do material sem avisar",
             ],
             2,
-            "Depois de reforçar valor, dá para oferecer condição especial — verificando com o gerente e mantendo a margem. (Playbook · Quebra de Objeções)",
+            "Depois de reforçar valor, dá para oferecer condição especial — verificando com o gerente e mantendo a margem.",
           ),
           vf(
             "Preço é sempre relativo ao valor entregue: por isso, diante de “está caro”, o primeiro passo é reforçar o valor agregado.",
             true,
-            "“Negociar não é brigar por preço. É alinhar valor percebido com a dor real.” (Playbook · Vendas 360º)",
+            "“Negociar não é brigar por preço. É alinhar valor percebido com a dor real.”",
           ),
           ordenar(
-            "Ordene a condução do playbook para “está caro”",
+            "O cliente disse “está caro”. Em que ordem você conduz?",
             [
               "Ouvir com atenção e entender a raiz da objeção",
               "Reforçar o valor agregado: investimento, não custo",
               "Comparar com alternativas de menor qualidade",
               "Se preciso, verificar com o gerente uma condição especial",
             ],
-            "Ouça, reforce valor, compare e só então fale de condição. Consultivo, não agressivo. (Playbook · Quebra de Objeções)",
+            "Ouça, reforce valor, compare e só então fale de condição. Consultivo, não agressivo.",
           ),
         ],
       },
       {
         id: "u6-l2",
+        tip:
+          "“Vou pensar” costuma esconder uma dúvida. E, quando há sócio na decisão, o melhor é você mesmo apresentar para ele.",
         title: "“Vou pensar” e “preciso falar com meu sócio”",
         questions: [
           cenario(
@@ -1005,10 +1036,10 @@ const seeds: UnitSeed[] = [
               "Se não fechar agora, não garanto mais nada.",
             ],
             2,
-            "“Vou pensar” costuma esconder uma dúvida. Valide e pergunte o que falta esclarecer. (Playbook · Quebra de Objeções)",
+            "“Vou pensar” costuma esconder uma dúvida. Valide e pergunte o que falta esclarecer.",
           ),
           multipla(
-            "Que outra saída o playbook prevê para “vou pensar e te retorno”?",
+            "Que outra saída você tem para “vou pensar e te retorno”?",
             [
               "Parar de responder até o cliente voltar",
               "Lembrar que a condição especial vale até uma data e que dá para garantir agora o valor e a prioridade na produção",
@@ -1016,7 +1047,7 @@ const seeds: UnitSeed[] = [
               "Reenviar a mesma proposta, sem comentário",
             ],
             1,
-            "São três saídas: criar senso de urgência com uma condição com data, descobrir a verdadeira objeção ou reforçar a experiência de outros clientes. (Playbook · Quebra de Objeções)",
+            "São três saídas: criar senso de urgência com uma condição com data, descobrir a verdadeira objeção ou reforçar a experiência de outros clientes.",
           ),
           cenario(
             "Sócia de uma rede de óticas gostou do projeto de fachadas.",
@@ -1029,7 +1060,7 @@ const seeds: UnitSeed[] = [
               "Ótimo! Como é uma decisão importante, faz sentido envolver todos. Podemos marcar uma apresentação exclusiva para o seu sócio? Assim esclareço as dúvidas e ele vê o valor da solução.",
             ],
             3,
-            "Proponha uma apresentação exclusiva para o sócio ou diretor: ninguém vende a sua solução melhor do que você. (Playbook · Quebra de Objeções)",
+            "Proponha uma apresentação exclusiva para o sócio ou diretor: ninguém vende a sua solução melhor do que você.",
           ),
           multipla(
             "Se não for possível falar direto com o sócio, o que oferecer?",
@@ -1040,23 +1071,25 @@ const seeds: UnitSeed[] = [
               "A proposta completa de novo, sem mudanças",
             ],
             0,
-            "Antecipe as dúvidas: entregue um resumo e descubra o que pesa para quem decide. (Playbook · Quebra de Objeções)",
+            "Antecipe as dúvidas: entregue um resumo e descubra o que pesa para quem decide.",
           ),
           vf(
             "Quando a decisão passa por mais uma pessoa, não dá para adiantar nada: o jeito é esperar.",
             false,
-            "Dá para adiantar os detalhes, deixar tudo alinhado e até conversar com o sócio ou diretor sobre pontos técnicos. (Playbook · Quebra de Objeções)",
+            "Dá para adiantar os detalhes, deixar tudo alinhado e até conversar com o sócio ou diretor sobre pontos técnicos.",
           ),
         ],
       },
       {
         id: "u6-l3",
+        tip:
+          "Cliente que já tem fornecedor não é porta fechada: pergunte o que poderia ser melhor. E, se não for o momento, combine quando retomar.",
         title: "“Já tenho fornecedor” e “agora não é o momento”",
         questions: [
           cenario(
             "Prospecção ativa em uma rede de supermercados.",
             "Já trabalho com outro fornecedor.",
-            "Qual resposta segue o playbook?",
+            "Como você responde?",
             [
               "Mas a gente é melhor do que ele.",
               "Que bom, isso mostra que você valoriza a comunicação visual da empresa. Posso perguntar: há algo que poderia ser melhor no serviço que você recebe hoje?",
@@ -1064,7 +1097,7 @@ const seeds: UnitSeed[] = [
               "Quanto ele cobra? Eu faço por menos.",
             ],
             1,
-            "Valorize a escolha do cliente e pergunte o que poderia ser melhor. O objetivo é agregar, não substituir à força. (Playbook · Quebra de Objeções)",
+            "Valorize a escolha do cliente e pergunte o que poderia ser melhor. O objetivo é agregar, não substituir à força.",
           ),
           multipla(
             "Qual é um bom jeito de entrar em um cliente que já tem fornecedor?",
@@ -1075,7 +1108,7 @@ const seeds: UnitSeed[] = [
               "Esperar o fornecedor atual errar",
             ],
             1,
-            "Teste ou solução complementar: começar pequeno e deixar a qualidade abrir a parceria. (Playbook · Quebra de Objeções)",
+            "Teste ou solução complementar: começar pequeno e deixar a qualidade abrir a parceria.",
           ),
           cenario(
             "Construtora adiando a sinalização de um empreendimento.",
@@ -1088,10 +1121,10 @@ const seeds: UnitSeed[] = [
               "Entendo! Posso perguntar o que faz com que este não seja o momento ideal? Talvez dê para ajustar algo para a solução fazer sentido agora.",
             ],
             3,
-            "Descubra o motivo real antes de qualquer coisa; depois dá para mostrar o custo da inação. (Playbook · Quebra de Objeções)",
+            "Descubra o motivo real antes de qualquer coisa; depois dá para mostrar o custo da inação.",
           ),
           multipla(
-            "Se realmente não for o momento, qual o próximo passo do playbook?",
+            "Se realmente não for o momento, qual é o seu próximo passo?",
             [
               "Insistir todos os dias até o cliente mudar de ideia",
               "Marcar o lead como perdido",
@@ -1099,13 +1132,13 @@ const seeds: UnitSeed[] = [
               "Baixar o preço até ele aceitar",
             ],
             2,
-            "Crie um plano futuro: “quando faria mais sentido retomar?” — e registre a data no CRM. (Playbook · Quebra de Objeções)",
+            "Crie um plano futuro: “quando faria mais sentido retomar?” — e registre a data no CRM.",
           ),
           completar(
             "Para quebrar objeções, seja ___, não agressivo: ajude o cliente a enxergar a melhor ___.",
             ["consultivo", "decisão"],
             ["insistente", "desculpa"],
-            "Ouvir antes de responder, usar perguntas estratégicas, reforçar valor e criar urgência — sempre consultivo. (Playbook · Quebra de Objeções)",
+            "Ouvir antes de responder, usar perguntas estratégicas, reforçar valor e criar urgência — sempre consultivo.",
           ),
         ],
       },
@@ -1121,6 +1154,8 @@ const seeds: UnitSeed[] = [
     lessons: [
       {
         id: "u7-l1",
+        tip:
+          "A maioria das vendas fecha no acompanhamento. Um ritmo que funciona: no dia 1, confirmar o recebimento; no dia 3, reforçar o valor; no dia 7, dar um motivo para decidir.",
         title: "Follow-up estruturado",
         questions: [
           ordenar(
@@ -1130,10 +1165,10 @@ const seeds: UnitSeed[] = [
               "Dia 3: reforçar o valor e oferecer ajustes",
               "Dia 7: senso de urgência com benefício adicional",
             ],
-            "Dia 1 confirmação, dia 3 reforço, dia 7 urgência. Consistência e personalização são a chave. (Playbook · 11. Follow Up)",
+            "Dia 1 confirmação, dia 3 reforço, dia 7 urgência. Consistência e personalização são a chave.",
           ),
           multipla(
-            "Em quais momentos o playbook pede follow-up?",
+            "Em quais momentos vale fazer follow-up?",
             [
               "Só quando o cliente pedir retorno",
               "Após envio de proposta, reunião com dúvidas em aberto, objeção apresentada ou no-show",
@@ -1141,12 +1176,12 @@ const seeds: UnitSeed[] = [
               "Somente depois da entrega do pedido",
             ],
             1,
-            "A maioria das vendas não fecha no primeiro contato: é no acompanhamento que o cliente amadurece a decisão. (Playbook · 11. Follow Up)",
+            "A maioria das vendas não fecha no primeiro contato: é no acompanhamento que o cliente amadurece a decisão.",
           ),
           cenario(
             "Dia 3 após o envio da proposta de sinalização para uma escola.",
             "Recebi, sim. Ainda não consegui olhar com calma.",
-            "Qual mensagem de follow-up segue o playbook?",
+            "Qual mensagem você manda?",
             [
               "E aí, alguma novidade?",
               "Preciso de uma resposta hoje, por favor.",
@@ -1154,12 +1189,12 @@ const seeds: UnitSeed[] = [
               "Tudo bem. Quando decidir, me avisa.",
             ],
             2,
-            "Dia 3 é reforço de valor e oferta de ajustes. Dica final do playbook: envie um case, depoimento ou vídeo que ajude a decidir. (Playbook · 11. Follow Up)",
+            "Dia 3 é reforço de valor e oferta de ajustes. Uma boa dica: envie um case, depoimento ou vídeo que ajude a decidir.",
           ),
           vf(
             "Um bom follow-up não é insistente, é útil: reforça o valor da proposta, tira dúvidas e demonstra interesse genuíno.",
             true,
-            "É uma das etapas mais negligenciadas — e uma das mais poderosas. (Playbook · 11. Follow Up)",
+            "É uma das etapas mais negligenciadas — e uma das mais poderosas.",
           ),
           cenario(
             "Orçamento de fachada enviado há 20 dias, parado no CRM (Holdprint) sem próxima tarefa. Você liga.",
@@ -1172,16 +1207,18 @@ const seeds: UnitSeed[] = [
               "Ok, vou encerrar o orçamento então.",
             ],
             1,
-            "Venda consultiva + Vendas 360º: retome gerando valor, atualize a proposta e nunca deixe um orçamento sem próxima ação agendada no CRM.",
+            "Retome gerando valor, atualize a proposta e nunca deixe um orçamento sem próxima ação agendada no CRM.",
           ),
         ],
       },
       {
         id: "u7-l2",
+        tip:
+          "Urgência boa é um benefício real por decidir agora: uma condição com data, um prazo de entrega garantido. Pressão só afasta.",
         title: "Geração de urgência",
         questions: [
           multipla(
-            "Para o playbook, gerar urgência é…",
+            "Gerar urgência do jeito certo é…",
             [
               "Pressionar: “tem que fechar agora”",
               "Mostrar um benefício real de fechar naquele momento, como condição especial ou prazo garantido",
@@ -1189,12 +1226,12 @@ const seeds: UnitSeed[] = [
               "Dizer que o material vai acabar, mesmo que não vá",
             ],
             1,
-            "Urgência não significa pressionar: é mostrar um benefício real de decidir agora. (Playbook · Geração de Urgência)",
+            "Urgência não significa pressionar: é mostrar um benefício real de decidir agora.",
           ),
           cenario(
             "A empresa ainda não atingiu o ponto de equilíbrio (P.E.) do mês.",
             "Gostei da proposta, mas não tenho pressa.",
-            "Qual é a técnica de urgência do playbook para este momento?",
+            "Como você cria urgência aqui, sem pressionar?",
             [
               "Tem que fechar agora, senão perde.",
               "Sem pressa. Quando quiser, me chama.",
@@ -1202,10 +1239,10 @@ const seeds: UnitSeed[] = [
               "Se fecharmos até sexta-feira, consigo garantir um desconto exclusivo de 10% e prioridade na produção, o que antecipa a sua entrega.",
             ],
             3,
-            "Antes do P.E., o playbook usa condição com data: desconto exclusivo e prioridade na produção para quem fecha até sexta. (Playbook · Geração de Urgência)",
+            "Antes do P.E., a Open trabalha com condição com data: desconto exclusivo e prioridade na produção para quem fecha até sexta.",
           ),
           multipla(
-            "Depois que a empresa atingiu o P.E., como o playbook trata o desconto?",
+            "Depois que a empresa atingiu o P.E., como fica o desconto?",
             [
               "Pode dar 10% livremente até sexta",
               "É proibido falar em qualquer condição",
@@ -1213,23 +1250,25 @@ const seeds: UnitSeed[] = [
               "O vendedor decide sozinho qualquer desconto abaixo da margem",
             ],
             2,
-            "Após o P.E., desconto abaixo da margem é exceção: você busca a liberação com o gerente, condicionada ao fechamento no dia. (Playbook · Geração de Urgência)",
+            "Após o P.E., desconto abaixo da margem é exceção: você busca a liberação com o gerente, condicionada ao fechamento no dia.",
           ),
           vf(
             "O gatilho de escassez se baseia na limitação de tempo ou de quantidade para incentivar uma decisão rápida.",
             true,
-            "É a definição do glossário. Só vale com limite real, em tom consultivo: urgência sem parecer forçado. (Playbook · Glossário)",
+            "Isso mesmo. Só vale com limite real, em tom consultivo: urgência sem parecer forçado.",
           ),
           completar(
             "Para reforçar a urgência sem forçar, inclua um ___ adicional, como prazo de entrega diferenciado ou ___ facilitado.",
             ["benefício", "pagamento"],
             ["susto", "silêncio"],
-            "Dica extra do playbook: prazo de entrega diferenciado ou condições de pagamento facilitadas reforçam a exclusividade. (Playbook · Geração de Urgência)",
+            "Prazo de entrega diferenciado ou pagamento facilitado reforçam a exclusividade da condição.",
           ),
         ],
       },
       {
         id: "u7-l3",
+        tip:
+          "Na hora de fechar, pergunte com naturalidade: “faz sentido avançarmos?” ou “começamos esta semana ou na próxima?”. Depois, oficialize pelo link de aprovação.",
         title: "Fechamento e aceite formal",
         questions: [
           multipla(
@@ -1241,7 +1280,7 @@ const seeds: UnitSeed[] = [
               "Quer que eu refaça o orçamento do zero?",
             ],
             1,
-            "Perguntas de fechamento guiam o cliente: “Faz sentido avançarmos?”, “Você vê algum obstáculo para o próximo passo?” (Playbook · 13. Fechamento)",
+            "Perguntas de fechamento guiam o cliente: “Faz sentido avançarmos?”, “Você vê algum obstáculo para o próximo passo?”",
           ),
           multipla(
             "O que é a Técnica da Escolha?",
@@ -1252,12 +1291,12 @@ const seeds: UnitSeed[] = [
               "Oferecer só uma opção para não confundir",
             ],
             1,
-            "“Prefere a versão A ou B?” “Iniciamos a produção esta semana ou na próxima?” Tira a pressão da decisão. (Playbook · 13. Fechamento)",
+            "“Prefere a versão A ou B?” “Iniciamos a produção esta semana ou na próxima?” Tira a pressão da decisão.",
           ),
           cenario(
             "Cliente de uma franquia de açaí, quase decidindo.",
             "Gostei, só estou na dúvida sobre o prazo de instalação.",
-            "Qual pergunta de compromisso o playbook ensina?",
+            "Que pergunta ajuda o cliente a decidir agora?",
             [
               "Fica tranquilo, prazo a gente vê depois.",
               "Então pensa mais um pouco e me fala.",
@@ -1265,7 +1304,7 @@ const seeds: UnitSeed[] = [
               "Prazo é com a produção, não comigo.",
             ],
             2,
-            "Diante da hesitação, isole o último ponto: “Se eu resolver isso, podemos fechar agora?” (Playbook · 13. Fechamento)",
+            "Diante da hesitação, isole o último ponto: “Se eu resolver isso, podemos fechar agora?”",
           ),
           cenario(
             "Cliente aprovou verbalmente o projeto de letreiro.",
@@ -1278,12 +1317,12 @@ const seeds: UnitSeed[] = [
               "Pra dar início à produção, preciso que você aprove a proposta no link que te enviei. Assim que confirmar, seu serviço já entra na programação.",
             ],
             3,
-            "Aceite formal: o cliente aprova o orçamento direto no sistema, pelo link. Só então entra na programação da produção. (Playbook · 13. Fechamento)",
+            "Aceite formal: o cliente aprova o orçamento direto no sistema, pelo link. Só então entra na programação da produção.",
           ),
           vf(
             "Em empresas grandes, o aceite formal pode exigir identificar o setor de compras e pedir a formalização por pedido oficial.",
             true,
-            "Identifique o setor de compras e solicite o pedido oficial — com modelo, quando necessário. (Playbook · Etapas do processo comercial)",
+            "Identifique o setor de compras e solicite o pedido oficial — com modelo, quando necessário.",
           ),
         ],
       },
@@ -1299,6 +1338,8 @@ const seeds: UnitSeed[] = [
     lessons: [
       {
         id: "u8-l1",
+        tip:
+          "Quando algo dá errado, o cliente quer ser ouvido e saber o que vai acontecer. Chame pelo nome e diga como, quando e quem vai resolver.",
         title: "Quando o cliente está insatisfeito",
         questions: [
           cenario(
@@ -1312,7 +1353,7 @@ const seeds: UnitSeed[] = [
               "Isso nunca aconteceu antes aqui.",
             ],
             1,
-            "Escute com atenção e use sempre o nome do cliente. As outras três são frases proibidas. (Playbook · Gestão de Crise)",
+            "Escute com atenção e use sempre o nome do cliente. As outras três são frases proibidas.",
           ),
           multipla(
             "Qual destas frases é PROIBIDA na gestão de crise?",
@@ -1323,12 +1364,12 @@ const seeds: UnitSeed[] = [
               "Sua nova peça entra em produção amanhã às 9h.",
             ],
             2,
-            "“Estamos fazendo o possível” soa genérico e vazio. O cliente quer saber como, quando e quem. (Playbook · Gestão de Crise)",
+            "“Estamos fazendo o possível” soa genérico e vazio. O cliente quer saber como, quando e quem.",
           ),
           vf(
             "Se o cliente gritar ou ultrapassar os limites do respeito, o vendedor deve sustentar a conversa sozinho até o fim.",
             false,
-            "Você não precisa manter uma conversa agressiva sozinho: acione um gestor ou a liderança, com calma, para continuar o atendimento. (Playbook · Gestão de Crise)",
+            "Você não precisa manter uma conversa agressiva sozinho: acione um gestor ou a liderança, com calma, para continuar o atendimento.",
           ),
           multipla(
             "O que é um plano de ação claro e realista?",
@@ -1339,7 +1380,7 @@ const seeds: UnitSeed[] = [
               "“Sua nova peça entra em produção amanhã às 9h e segue até quinta; assim que despachar, te envio o rastreio.”",
             ],
             3,
-            "Não diga só “vamos resolver”: diga como, quando e quem vai resolver. (Playbook · Gestão de Crise)",
+            "Não diga só “vamos resolver”: diga como, quando e quem vai resolver.",
           ),
           multipla(
             "O novo prazo prometido não vai ser cumprido. O que fazer?",
@@ -1350,16 +1391,18 @@ const seeds: UnitSeed[] = [
               "Entregar atrasado sem comentar",
             ],
             1,
-            "Nunca espere o cliente cobrar: antecipe o aviso, seja transparente e reforce o acompanhamento. (Playbook · Gestão de Crise)",
+            "Nunca espere o cliente cobrar: antecipe o aviso, seja transparente e reforce o acompanhamento.",
           ),
         ],
       },
       {
         id: "u8-l2",
+        tip:
+          "Em reclamação pública, respire: nunca responda no impulso nem peça para apagar. Avise a liderança, registre tudo e resolva de verdade.",
         title: "Boa vontade e crises públicas",
         questions: [
           multipla(
-            "O que é o “gesto de boa vontade” do playbook?",
+            "Depois de uma falha nossa, o que é um bom “gesto de boa vontade”?",
             [
               "Um desconto no próximo pedido",
               "Uma demonstração de valorização — brinde, frete grátis, item extra sem custo ou cartão de desculpas",
@@ -1367,7 +1410,7 @@ const seeds: UnitSeed[] = [
               "Um pedido formal de desculpas da diretoria",
             ],
             1,
-            "Não se trata de dar desconto: é sobre demonstrar valorização e respeito à confiança do cliente. (Playbook · Gestão de Crise)",
+            "Não se trata de dar desconto: é sobre demonstrar valorização e respeito à confiança do cliente.",
           ),
           multipla(
             "Um cliente deixou 1 estrela no Google. Qual é o primeiro passo?",
@@ -1378,17 +1421,17 @@ const seeds: UnitSeed[] = [
               "Ignorar: avaliação ruim some com o tempo",
             ],
             2,
-            "Mantenha a calma, acione um responsável e documente. A resposta pública deve ser madura e empática. (Playbook · Gestão de Crises Externas)",
+            "Mantenha a calma, acione um responsável e documente. A resposta pública deve ser madura e empática.",
           ),
           vf(
             "Depois de resolver o problema, vale pedir com jeitinho que o cliente apague o comentário negativo.",
             false,
-            "Nunca peça para apagar: soa como censura. Resolva a dor de verdade — o cliente pode atualizar a avaliação espontaneamente. (Playbook · Gestão de Crises Externas)",
+            "Nunca peça para apagar: soa como censura. Resolva a dor de verdade — o cliente pode atualizar a avaliação espontaneamente.",
           ),
           cenario(
             "Marina, cliente de uma loja de decoração, escreve no WhatsApp após um atraso.",
             "Vou processar vocês e acabar com a reputação dessa empresa!",
-            "Qual resposta segue o playbook?",
+            "Como você responde a Marina?",
             [
               "Pode até processar, mas estamos certos.",
               "Calma, não precisa disso tudo.",
@@ -1396,18 +1439,20 @@ const seeds: UnitSeed[] = [
               "Marina, entendo sua insatisfação e lamento que tenhamos chegado a esse ponto. Já estou registrando seu caso e um responsável direto da empresa vai entrar em contato para resolvermos da melhor maneira.",
             ],
             3,
-            "Tom consultivo, nunca jurídico. Registre, acione a liderança e nunca apague mensagens. (Playbook · Gestão de Crises Externas)",
+            "Tom consultivo, nunca jurídico. Registre, acione a liderança e nunca apague mensagens.",
           ),
           completar(
             "Em uma crise pública, nunca reaja no ___; documente tudo com prints e mantenha o tom ___, nunca jurídico.",
             ["impulso", "consultivo"],
             ["prazo", "irônico"],
-            "Mais importante do que estar certo é ser lembrado como alguém que resolveu com respeito e profissionalismo. (Playbook · Gestão de Crises Externas)",
+            "Mais importante do que estar certo é ser lembrado como alguém que resolveu com respeito e profissionalismo.",
           ),
         ],
       },
       {
         id: "u8-l3",
+        tip:
+          "O melhor momento para pedir indicação é quando o cliente elogia. Aproveite e peça também a avaliação no Google.",
         title: "Indicação e avaliações",
         questions: [
           multipla(
@@ -1419,7 +1464,7 @@ const seeds: UnitSeed[] = [
               "Logo depois de uma reclamação resolvida pela metade",
             ],
             2,
-            "Peça quando o cliente demonstra satisfação: clientes satisfeitos e leais indicam mais. (Playbook · Indicação)",
+            "Peça quando o cliente demonstra satisfação: clientes satisfeitos e leais indicam mais.",
           ),
           cenario(
             "Uma semana após a instalação da fachada de uma pet shop.",
@@ -1432,7 +1477,7 @@ const seeds: UnitSeed[] = [
               "Obrigado! Posta e marca a gente, senão não vale.",
             ],
             1,
-            "Elogio espontâneo é a hora certa: “Conhece mais alguém que poderia se beneficiar?” + pedido de avaliação no Google. (Playbook · Indicação e Expansão)",
+            "Elogio espontâneo é a hora certa: “Conhece mais alguém que poderia se beneficiar?” + pedido de avaliação no Google.",
           ),
           ordenar(
             "Ordene a coleta de avaliação no Google",
@@ -1442,15 +1487,15 @@ const seeds: UnitSeed[] = [
               "Enviar o link direto com uma mensagem amigável",
               "Relembrar com cordialidade após 3 dias sem avaliação",
             ],
-            "Só peça a avaliação depois de confirmar a satisfação; se não vier em 3 dias, relembre com tom cordial. (Playbook · Avaliações no Google)",
+            "Só peça a avaliação depois de confirmar a satisfação; se não vier em 3 dias, relembre com tom cordial.",
           ),
           vf(
             "Ao receber uma indicação, registre quem indicou e quem foi indicado — e agradeça e retribua.",
             true,
-            "Registro e acompanhamento fecham o ciclo da indicação. (Playbook · Indicação e Expansão)",
+            "Registro e acompanhamento fecham o ciclo da indicação.",
           ),
           multipla(
-            "Como o playbook sugere incentivar indicações?",
+            "Como incentivar o cliente a indicar a Open?",
             [
               "Cobrando a indicação como condição da garantia",
               "Com brinde, desconto ou prioridade em pedidos futuros",
@@ -1458,7 +1503,7 @@ const seeds: UnitSeed[] = [
               "Não incentivando: indicação tem que ser espontânea",
             ],
             1,
-            "Recompensas, descontos ou brindes motivam o cliente a indicar. (Playbook · Indicação)",
+            "Recompensas, descontos ou brindes motivam o cliente a indicar.",
           ),
         ],
       },
@@ -1483,6 +1528,7 @@ const buildChallenge = (unit: UnitSeed): Lesson => {
   return {
     id: `${unit.id}-desafio`,
     title: `Desafio da unidade ${unit.number}`,
+    tip: "Hora de juntar o que você praticou nesta unidade. Vale errar: cada explicação é uma dica para a próxima visita.",
     kind: "desafio",
     questions,
   };
@@ -1505,7 +1551,7 @@ export const linhas: Linha[] = [
     id: "consultiva",
     title: "Venda Consultiva",
     description:
-      "O Playbook Vendas Open 2025 em lições de 3 minutos: da prospecção ao fechamento, com situações reais de comunicação visual.",
+      "Aprenda a vender praticando: situações reais de comunicação visual, da prospecção ao fechamento, em lições de 3 minutos.",
     fontes: [
       "Playbook Vendas Open 2025",
       "venda consultiva e SPIN Selling (onde o playbook é silencioso)",
