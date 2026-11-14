@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import Link from "next/link";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { lessonsByLinha, linhaAtual, linhas } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { Avatar } from "~/farol/components/Avatar";
@@ -35,10 +35,22 @@ import type { Lesson, Unit } from "~/farol/types";
 /** deslocamento horizontal em zigue-zague dos nós da trilha */
 const offsets = [0, 44, 70, 44, 0, -44, -70, -44];
 
-const nodeColors: Record<LessonStatus, { bg: string; shade: string }> = {
-  done: { bg: "#3fcf86", shade: "#2a9c63" },
-  current: { bg: "#ff0084", shade: "#c4006a" },
-  locked: { bg: "#2d2f36", shade: "#1f2026" },
+const nodeColors: Record<LessonStatus, { bg: string; shade: string; glow: string }> = {
+  done: {
+    bg: "radial-gradient(circle at 34% 26%, #a8f5cf, #3fcf86 55%, #23a86a)",
+    shade: "#1f8a57",
+    glow: "rgba(63,207,134,.45)",
+  },
+  current: {
+    bg: "radial-gradient(circle at 34% 26%, #ff8fc9, #ff0084 55%, #c4006a)",
+    shade: "#99004f",
+    glow: "rgba(255,0,132,.6)",
+  },
+  locked: {
+    bg: "radial-gradient(circle at 34% 26%, #3a3c46, #2d2f36 60%, #24252b)",
+    shade: "#1b1c20",
+    glow: "transparent",
+  },
 };
 
 const nodeIcon = (lesson: Lesson, status: LessonStatus) => {
@@ -69,7 +81,7 @@ const LessonNode = ({
   const record = records[lesson.id];
   const offset = offsets[index % offsets.length]!;
   const isChallenge = lesson.kind === "desafio";
-  const { bg, shade } = nodeColors[status];
+  const { bg, shade, glow } = nodeColors[status];
 
   return (
     <div
@@ -98,9 +110,11 @@ const LessonNode = ({
           className={`relative flex items-center justify-center rounded-full transition active:translate-y-1 ${
             isChallenge ? "h-[76px] w-[76px]" : "h-[70px] w-[70px]"
           } ${status === "locked" ? "border border-farol-line" : ""}`}
-          style={{ backgroundColor: bg, boxShadow: `0 7px 0 ${shade}` }}
+          style={{ backgroundImage: bg, boxShadow: `0 7px 0 ${shade}, 0 14px 26px -6px ${glow}` }}
         >
-          {nodeIcon(lesson, status)}
+          {/* brilho de cima, para o botão parecer abaulado */}
+          <span aria-hidden className="pointer-events-none absolute left-[18%] top-[10%] h-[30%] w-[64%] rounded-full bg-white/25 blur-[3px]" />
+          <span className="relative">{nodeIcon(lesson, status)}</span>
         </button>
         {selected && (
           <LessonPopover
@@ -280,20 +294,43 @@ const GiftNode = ({
 };
 
 /** Caixa de presente: a tampa é um grupo separado, para voar na abertura */
-const GiftBox = ({ className = "", open = false }: { className?: string; open?: boolean }) => (
-  <svg viewBox="0 0 120 120" className={className} aria-hidden>
-    <rect x="18" y="52" width="84" height="58" rx="8" fill="#ff0084" />
-    <rect x="18" y="52" width="84" height="14" fill="#c4006a" opacity=".55" />
-    <rect x="52" y="52" width="16" height="58" fill="#f5b331" />
-    <g className={open ? "vd-lid" : ""}>
-      <rect x="10" y="34" width="100" height="22" rx="7" fill="#ff3a9d" />
-      <rect x="52" y="34" width="16" height="22" fill="#f5b331" />
-      <path d="M60 34C44 6 22 16 34 30c6 6 18 6 26 4Z" fill="#f5b331" />
-      <path d="M60 34c16-28 38-18 26-4-6 6-18 6-26 4Z" fill="#ffd778" />
-      <circle cx="60" cy="33" r="7" fill="#b9841c" />
-    </g>
-  </svg>
-);
+const GiftBox = ({ className = "", open = false }: { className?: string; open?: boolean }) => {
+  const id = useId().replace(/:/g, "");
+  return (
+    <svg viewBox="0 0 120 120" className={className} aria-hidden>
+      <defs>
+        <linearGradient id={`gb-box-${id}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ff5cb0" />
+          <stop offset="0.55" stopColor="#ff0084" />
+          <stop offset="1" stopColor="#9c0058" />
+        </linearGradient>
+        <linearGradient id={`gb-lid-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ff8fc9" />
+          <stop offset="1" stopColor="#ff2a96" />
+        </linearGradient>
+        <linearGradient id={`gb-rib-${id}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff0b8" />
+          <stop offset="0.5" stopColor="#f5b331" />
+          <stop offset="1" stopColor="#b9841c" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="60" cy="112" rx="40" ry="6" fill="#000" opacity=".35" />
+      <rect x="18" y="52" width="84" height="58" rx="8" fill={`url(#gb-box-${id})`} />
+      <rect x="18" y="52" width="84" height="12" fill="#5a0034" opacity=".35" />
+      <rect x="52" y="52" width="16" height="58" fill={`url(#gb-rib-${id})`} />
+      <rect x="24" y="70" width="6" height="30" rx="3" fill="#fff" opacity=".22" />
+      <g className={open ? "vd-lid" : ""}>
+        <rect x="10" y="34" width="100" height="22" rx="7" fill={`url(#gb-lid-${id})`} />
+        <rect x="14" y="37" width="92" height="5" rx="2.5" fill="#fff" opacity=".28" />
+        <rect x="52" y="34" width="16" height="22" fill={`url(#gb-rib-${id})`} />
+        <path d="M60 34C44 6 22 16 34 30c6 6 18 6 26 4Z" fill={`url(#gb-rib-${id})`} />
+        <path d="M60 34c16-28 38-18 26-4-6 6-18 6-26 4Z" fill={`url(#gb-rib-${id})`} />
+        <circle cx="60" cy="33" r="7" fill="#b9841c" />
+        <circle cx="58" cy="31" r="2.2" fill="#fff0b8" />
+      </g>
+    </svg>
+  );
+};
 
 /**
  * O e-mail do cliente. Tem três momentos:
@@ -525,6 +562,8 @@ const LinhaHero = () => {
   const total = list.length;
   return (
     <section className={`${card} relative mb-8 overflow-hidden p-5 sm:p-6`}>
+      <div aria-hidden className="vd-aura vd-aura-rosa -right-16 -top-20 h-56 w-56" />
+      <div aria-hidden className="vd-aura vd-aura-roxo -bottom-24 -left-16 h-56 w-56 opacity-40" />
       <Feixe />
       <div className="relative">
         <Eyebrow className="text-farol-accent">Linha de treino</Eyebrow>

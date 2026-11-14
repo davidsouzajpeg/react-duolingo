@@ -53,17 +53,17 @@
   100% { transform: translate(var(--vd-sway), 112vh) rotate(var(--vd-r)); opacity: 0; }
 }
 @keyframes vd-in {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(18px) scale(0.985); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 @keyframes vd-slide-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 @keyframes vd-pop {
-  0% { transform: scale(0.4); opacity: 0; }
-  60% { transform: scale(1.12); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(0.4); opacity: 0; filter: blur(10px); }
+  60% { transform: scale(1.12); opacity: 1; filter: blur(0); }
+  100% { transform: scale(1); opacity: 1; filter: blur(0); }
 }
 @keyframes vd-shake {
   0%, 100% { transform: translateX(0); }
@@ -84,7 +84,7 @@
 }
 .vd-burst { animation: vd-burst 1s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
 .vd-rain { animation: vd-rain linear both; }
-.vd-in { animation: vd-in 0.35s ease-out both; }
+.vd-in { animation: vd-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .vd-slide-up { animation: vd-slide-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .vd-pop { animation: vd-pop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .vd-shake { animation: vd-shake 0.4s ease-in-out; }
@@ -124,12 +124,20 @@
 .vd-jump { transform-origin: 100px 200px; }
 .vd-cheer .vd-jump { animation: vd-jump 0.72s ease-in-out infinite; }
 .vd-cheer .vd-arm { animation: vd-cheer-arm 0.36s ease-in-out infinite alternate; }
+/* raios de luz: feixes com borda suave (degradê em cada feixe) e desfoque */
 .vd-rays {
   border-radius: 9999px;
-  background: repeating-conic-gradient(from 0deg, rgba(255, 0, 132, 0.42) 0deg 11deg, transparent 11deg 30deg);
-  -webkit-mask-image: radial-gradient(circle, #000 28%, transparent 70%);
-  mask-image: radial-gradient(circle, #000 28%, transparent 70%);
-  animation: vd-spin 16s linear infinite;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 0, 132, 0) 0deg,
+    rgba(255, 60, 160, 0.5) 5deg,
+    rgba(255, 190, 90, 0.34) 8deg,
+    rgba(255, 0, 132, 0) 14deg 30deg
+  );
+  -webkit-mask-image: radial-gradient(circle, #000 12%, rgba(0, 0, 0, 0.55) 38%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 12%, rgba(0, 0, 0, 0.55) 38%, transparent 68%);
+  filter: blur(5px);
+  animation: vd-spin 18s linear infinite;
 }
 .vd-twinkle { animation: vd-twinkle 1.5s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
@@ -179,4 +187,56 @@
 @media (prefers-reduced-motion: reduce) {
   .vd-box-shake, .vd-lid, .vd-reveal { animation: none; }
   .vd-flash { display: none; }
+}
+
+/* --------------------- Vendê: luz difusa, brilho e desfoque --------------------- */
+/* aura: manchas de luz desfocadas que flutuam devagar atrás do conteúdo */
+@keyframes vd-aura {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(6%, -5%) scale(1.12); }
+  66% { transform: translate(-5%, 4%) scale(0.94); }
+}
+.vd-aura {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(46px);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: vd-aura 11s ease-in-out infinite;
+}
+.vd-aura-rosa { background: radial-gradient(circle, #ff0084, rgba(255, 0, 132, 0) 70%); }
+.vd-aura-ouro { background: radial-gradient(circle, #f5b331, rgba(245, 179, 49, 0) 70%); animation-delay: -4s; }
+.vd-aura-verde { background: radial-gradient(circle, #3fcf86, rgba(63, 207, 134, 0) 70%); animation-delay: -7s; }
+.vd-aura-roxo { background: radial-gradient(circle, #8f5bff, rgba(143, 91, 255, 0) 70%); animation-delay: -2s; }
+
+/* brilho que atravessa a barra de progresso */
+@keyframes vd-shine {
+  0% { transform: translateX(-140%) skewX(-18deg); }
+  60%, 100% { transform: translateX(900%) skewX(-18deg); }
+}
+.vd-shine {
+  left: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  filter: blur(2px);
+  animation: vd-shine 2.6s ease-in-out infinite;
+}
+
+/* painel de resposta: vidro fosco com degradê da cor do resultado */
+.vd-glass-ok {
+  background: linear-gradient(180deg, rgba(63, 207, 134, 0.22), rgba(27, 58, 43, 0.92) 45%);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.vd-glass-bad {
+  background: linear-gradient(180deg, rgba(255, 90, 79, 0.22), rgba(64, 34, 31, 0.92) 45%);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.vd-glass {
+  background: linear-gradient(180deg, rgba(45, 47, 54, 0.72), rgba(36, 37, 43, 0.94));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-aura, .vd-shine { animation: none; }
 }

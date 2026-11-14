@@ -379,10 +379,10 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
         key={status === "answering" ? "ask" : `fb-${current.key}`}
         className={`fixed bottom-0 left-0 right-0 z-10 max-h-[78vh] overflow-y-auto border-t ${status === "answering" ? "" : "vd-slide-up"} ${
           status === "right"
-            ? "border-farol-ok bg-farol-ok-soft"
+            ? "vd-glass-ok border-farol-ok"
             : status === "wrong"
-              ? "border-farol-bad bg-farol-bad-soft"
-              : "border-farol-line bg-farol-surface"
+              ? "vd-glass-bad border-farol-bad"
+              : "vd-glass border-farol-line"
         }`}
       >
         <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:py-8">
@@ -513,6 +513,9 @@ const LessonSummary = ({
     <div className="relative mx-auto flex min-h-screen max-w-lg flex-col overflow-hidden px-4 py-8 text-center sm:py-10">
       {sinal !== "vermelho" && <Confetti kind="rain" count={sinal === "verde" ? 90 : 40} />}
       <Feixe className="-top-40 left-1/2 -ml-56 h-[28rem] w-[28rem]" />
+      {/* luz difusa de fundo, na cor do resultado */}
+      <div aria-hidden className={`vd-aura left-[-20%] top-[8%] h-72 w-72 ${sinal === "verde" ? "vd-aura-verde" : sinal === "amarelo" ? "vd-aura-ouro" : "vd-aura-roxo"}`} />
+      <div aria-hidden className="vd-aura vd-aura-rosa right-[-25%] top-[32%] h-80 w-80" />
       <div className="vd-stagger relative flex grow flex-col items-center justify-center gap-4">
         <div className="vd-pop">
           <Semaforo sinal={sinal} size="lg" />

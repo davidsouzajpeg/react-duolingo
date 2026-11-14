@@ -78,7 +78,8 @@ export const Eyebrow = ({
 );
 
 /** Cartão padrão: superfície + linha de 1px */
-export const card = "rounded-2xl border border-farol-line bg-farol-surface";
+export const card =
+  "rounded-2xl border border-farol-line bg-farol-surface bg-[linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)_55%)]";
 
 /** Feixe do farol: cone rosa girando (use dentro de um pai `relative overflow-hidden`) */
 export const Feixe = ({ className = "-right-28 -top-28 h-80 w-80" }: { className?: string }) => (
@@ -252,13 +253,17 @@ export const ProgressBar = ({
     aria-valuenow={Math.round(Math.max(0, Math.min(1, value)) * 100)}
   >
     <div
-      className="relative h-full rounded-full transition-all duration-500"
+      className="relative h-full overflow-hidden rounded-full transition-all duration-500"
       style={{
         width: `${Math.max(0, Math.min(1, value)) * 100}%`,
+        // degradê no sentido do avanço, com a ponta mais clara
+        backgroundImage: `linear-gradient(90deg, ${color}cc, ${color} 60%, #ffffff66 140%)`,
         backgroundColor: color,
+        boxShadow: `0 0 12px ${color}88`,
       }}
     >
-      <div className="absolute left-2 right-2 top-[20%] h-[25%] rounded-full bg-white/25" />
+      <div className="absolute left-2 right-2 top-[18%] h-[26%] rounded-full bg-white/30 blur-[1px]" />
+      <div className="vd-shine absolute inset-y-0 w-10" />
     </div>
   </div>
 );
@@ -267,9 +272,12 @@ type ButtonVariant = "primary" | "success" | "danger" | "ghost";
 
 /** Botões "gordinhos" (borda inferior grossa) nas cores do Meu Farol */
 export const buttonVariants: Record<ButtonVariant, string> = {
-  primary: "border-b-4 border-farol-accent-dark bg-farol-accent text-white",
-  success: "border-b-4 border-farol-ok-dark bg-farol-ok text-farol-lamp",
-  danger: "border-b-4 border-farol-bad-dark bg-farol-bad text-white",
+  primary:
+    "border-b-4 border-farol-accent-dark bg-farol-accent bg-[linear-gradient(180deg,#ff4aa8,#ff0084_55%,#e00075)] text-white shadow-[0_6px_18px_-6px_rgba(255,0,132,.7)]",
+  success:
+    "border-b-4 border-farol-ok-dark bg-farol-ok bg-[linear-gradient(180deg,#7be8b0,#3fcf86_55%,#2fbd76)] text-farol-lamp shadow-[0_6px_18px_-6px_rgba(63,207,134,.6)]",
+  danger:
+    "border-b-4 border-farol-bad-dark bg-farol-bad bg-[linear-gradient(180deg,#ff8a80,#ff5a4f_55%,#ef4338)] text-white shadow-[0_6px_18px_-6px_rgba(255,90,79,.6)]",
   ghost:
     "border-2 border-b-4 border-farol-accent bg-transparent text-farol-accent hover:bg-farol-accent-soft",
 };
