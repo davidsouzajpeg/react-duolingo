@@ -43,7 +43,7 @@ const Conquistas = () => {
         <div className="relative">
           <div className="flex items-center gap-4">
             <Link href="/farol/loja" aria-label="Editar avatar na Loja" className="shrink-0">
-              <Avatar config={state.avatar} className="h-20 w-20 rounded-full border-2 border-farol-accent" />
+              <Avatar config={state.avatar} animated className="h-20 w-20 rounded-full border-2 border-farol-accent" />
             </Link>
             <div className="min-w-0 grow">
               <Eyebrow className="text-farol-accent">{level.current.icon} {level.current.name}</Eyebrow>

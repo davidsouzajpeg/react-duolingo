@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { AvatarConfig } from "../shop";
 
 const INK = "#22232a";
@@ -397,20 +397,89 @@ const Outfit = ({
   }
 };
 
-/** Avatar do vendedor: desenho original do Vendê, em camadas, montado a partir da configuração */
+export type AvatarMood = "neutro" | "feliz" | "surpreso" | "triste" | "piscadela";
+
+/** boca e sobrancelhas de cada expressão */
+const Expression = ({ mood, brow, skinDark }: { mood: AvatarMood; brow: string; skinDark: string }) => {
+  const brows = {
+    neutro: "M66 73c8-6 18-6 25-1M134 73c-8-6-18-6-25-1",
+    feliz: "M66 69c8-7 18-7 25-2M134 69c-8-7-18-7-25-2",
+    surpreso: "M66 65c8-6 18-6 25-2M134 65c-8-6-18-6-25-2",
+    triste: "M66 70c8 0 18 2 25 7M134 70c-8 0-18 2-25 7",
+    piscadela: "M66 73c8-6 18-6 25-1M134 70c-8-6-18-6-25-2",
+  }[mood];
+  return (
+    <>
+      <path d={brows} stroke={brow} strokeWidth="5" strokeLinecap="round" fill="none" />
+      <path d="M96 105c2 5 6 5 8 0" stroke={skinDark} strokeWidth="4" strokeLinecap="round" fill="none" />
+      {mood === "surpreso" ? (
+        <>
+          <ellipse cx="100" cy="125" rx="9" ry="11" fill="#7a2233" stroke={INK} strokeWidth="3.5" />
+          <ellipse cx="100" cy="130" rx="5" ry="4" fill="#ff7b93" />
+        </>
+      ) : mood === "triste" ? (
+        <path d="M86 128c6-8 22-8 28 0" stroke={INK} strokeWidth="4" strokeLinecap="round" fill="none" />
+      ) : mood === "feliz" ? (
+        <>
+          <path d="M80 116c4 22 36 22 40 0Z" fill="#7a2233" />
+          <path d="M84 117h32c0 4-2 6-4 7H88c-2-1-4-3-4-7Z" fill="#fff" />
+          <path d="M90 130c6 5 14 5 20 0-4 6-16 6-20 0Z" fill="#ff7b93" />
+          <path d="M80 116c4 22 36 22 40 0Z" stroke={INK} strokeWidth="3.5" strokeLinejoin="round" fill="none" />
+        </>
+      ) : (
+        <>
+          <path d="M84 119c6 12 26 12 32 0Z" fill="#7a2233" />
+          <path d="M90 126c6 4 14 4 20 0-4 5-16 5-20 0Z" fill="#ff7b93" />
+          <path d="M84 119c6 12 26 12 32 0" stroke={INK} strokeWidth="3.5" strokeLinecap="round" fill="none" />
+        </>
+      )}
+    </>
+  );
+};
+
+const Eye = ({ cx, iris, closed }: { cx: number; iris: string; closed?: boolean }) =>
+  closed ? (
+    <path d={`M${cx - 11} 94c6-7 16-7 22 0`} stroke={INK} strokeWidth="4.5" strokeLinecap="round" fill="none" />
+  ) : (
+    <g className="vd-eye">
+      <ellipse cx={cx} cy="92" rx="12.5" ry="14.5" fill="#fff" />
+      <g className="vd-pupil">
+        <circle cx={cx + 2} cy="94" r="7.5" fill={iris} />
+        <circle cx={cx + 2} cy="94" r="4" fill={INK} />
+        <circle cx={cx + 4.5} cy="91" r="2.4" fill="#fff" />
+      </g>
+    </g>
+  );
+
+/**
+ * Avatar do vendedor: desenho original do Vendê, em camadas.
+ * Com `animated`, ele respira, balança a cabeça, pisca e acompanha o ponteiro
+ * com os olhos; com `interactive`, dá tchau quando tocado.
+ */
 export const Avatar = ({
   config,
   className = "h-12 w-12",
   label = "Seu avatar",
   round = true,
+  animated = false,
+  interactive = false,
+  mood,
+  waveOnMount = false,
 }: {
   config: AvatarConfig;
   className?: string;
   label?: string;
   /** recorta em círculo (padrão); false mostra o quadro inteiro */
   round?: boolean;
+  animated?: boolean;
+  interactive?: boolean;
+  /** expressão; sem ela vale a escolhida pelo vendedor */
+  mood?: AvatarMood;
+  waveOnMount?: boolean;
 }) => {
   const uid = useId().replace(/:/g, "");
+  const ref = useRef<SVGSVGElement>(null);
+  const [waving, setWaving] = useState(waveOnMount);
   const clip = `av-clip-${uid}`;
   const { equipped } = config;
   const hat = equipped.chapeu;
@@ -425,11 +494,47 @@ export const Avatar = ({
   const outfit = config.outfit ?? "camiseta";
   const iris = config.eyes ?? "#5a3a22";
   const hw = body.hw;
+  const face: AvatarMood = waving ? "feliz" : (mood ?? config.mood ?? "neutro");
+  const sleeve = outfit === "regata" ? skin : outfit === "blazer" ? "#2b2d36" : shirt;
   // cabelo, barba, chapéu e headset acompanham a largura da cabeça
   const fit = `translate(100 0) scale(${hw / 50} 1) translate(-100 0)`;
 
+  // os olhos acompanham o ponteiro
+  useEffect(() => {
+    if (!animated) return;
+    const svg = ref.current;
+    if (!svg) return;
+    const onMove = (e: PointerEvent) => {
+      const r = svg.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width / 2);
+      const dy = e.clientY - (r.top + r.height * 0.46);
+      const d = Math.hypot(dx, dy) || 1;
+      const reach = Math.min(1, d / 160);
+      svg.style.setProperty("--vd-px", `${((dx / d) * 3.2 * reach).toFixed(2)}px`);
+      svg.style.setProperty("--vd-py", `${((dy / d) * 2.6 * reach).toFixed(2)}px`);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [animated]);
+
+  const wave = () => interactive && setWaving(true);
+
   return (
-    <svg viewBox="0 0 200 200" className={`shrink-0 ${className}`} role="img" aria-label={label}>
+    <svg
+      ref={ref}
+      viewBox="0 0 200 200"
+      className={`shrink-0 ${className} ${animated ? "vd-anim" : ""} ${waving ? "vd-waving" : ""} ${interactive ? "cursor-pointer select-none rounded-[14%] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-farol-accent" : ""}`}
+      role={interactive ? "button" : "img"}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? `${label}: toque para um tchau` : label}
+      onClick={wave}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          wave();
+        }
+      }}
+    >
       <defs>
         <clipPath id={clip}>
           {round ? <circle cx="100" cy="100" r="100" /> : <rect width="200" height="200" rx="28" />}
@@ -437,68 +542,72 @@ export const Avatar = ({
       </defs>
       <g clipPath={`url(#${clip})`}>
         <Background id={equipped.fundo} gid={`av-g-${uid}`} />
-        <g transform={fit}>
-          <HairBack style={config.hair} color={shade(hair, -0.12)} />
-        </g>
-        {outfit === "moletom" && (
-          <path d="M62 160c-6-34 14-46 38-46s44 12 38 46Z" fill={shirtDark} />
-        )}
-
-        <Outfit type={outfit} w={body.w} color={shirt} dark={shirtDark} skin={skin} skinDark={skinDark} />
-        {/* pescoço */}
-        <path d={`M${100 - body.neck} 120h${body.neck * 2}v26c0 12-${body.neck * 2} 12-${body.neck * 2} 0Z`} fill={skinDark} />
-
-        {/* cabeça */}
-        <ellipse cx={100 - hw - 4} cy="98" rx="11" ry="14" fill={skin} />
-        <ellipse cx={100 + hw + 4} cy="98" rx="11" ry="14" fill={skin} />
-        <ellipse cx={100 - hw - 4} cy="99" rx="5" ry="7" fill={skinDark} />
-        <ellipse cx={100 + hw + 4} cy="99" rx="5" ry="7" fill={skinDark} />
-        <rect x={100 - hw} y="36" width={hw * 2} height={bodyType === "gordo" ? 112 : 108} rx={Math.min(47, hw - 3)} fill={skin} />
-        <path d="M60 60c8-10 22-16 40-16" stroke={skinLight} strokeWidth="7" strokeLinecap="round" fill="none" opacity=".7" />
-        <circle cx={bodyType === "gordo" ? 64 : 68} cy="114" r={bodyType === "gordo" ? 12 : 10} fill="#ff5a7a" opacity=".22" />
-        <circle cx={bodyType === "gordo" ? 136 : 132} cy="114" r={bodyType === "gordo" ? 12 : 10} fill="#ff5a7a" opacity=".22" />
-        {bodyType === "gordo" && (
-          <path d="M82 138c10 6 26 6 36 0" stroke={skinDark} strokeWidth="3.5" strokeLinecap="round" fill="none" />
-        )}
-
-        <g transform={fit}>
-          <FacialHair style={config.beard} color={hair} />
-        </g>
-
-        {/* olhos */}
-        <ellipse cx="79" cy="92" rx="12.5" ry="14.5" fill="#fff" />
-        <ellipse cx="121" cy="92" rx="12.5" ry="14.5" fill="#fff" />
-        <circle cx="81" cy="94" r="7.5" fill={iris} />
-        <circle cx="123" cy="94" r="7.5" fill={iris} />
-        <circle cx="81" cy="94" r="4" fill={INK} />
-        <circle cx="123" cy="94" r="4" fill={INK} />
-        <circle cx="83.5" cy="91" r="2.4" fill="#fff" />
-        <circle cx="125.5" cy="91" r="2.4" fill="#fff" />
-        {/* sobrancelhas */}
-        <path d="M66 73c8-6 18-6 25-1M134 73c-8-6-18-6-25-1" stroke={shade(hair, -0.1)} strokeWidth="5" strokeLinecap="round" fill="none" />
-        {/* nariz e boca */}
-        <path d="M96 105c2 5 6 5 8 0" stroke={skinDark} strokeWidth="4" strokeLinecap="round" fill="none" />
-        <path d="M84 119c6 12 26 12 32 0Z" fill="#7a2233" />
-        <path d="M90 126c6 4 14 4 20 0-4 5-16 5-20 0Z" fill="#ff7b93" />
-        <path d="M84 119c6 12 26 12 32 0" stroke={INK} strokeWidth="3.5" strokeLinecap="round" fill="none" />
-
-        <g transform={fit}>
-          {!hat && <HairFront style={config.hair} color={hair} />}
-          {hat && config.hair !== "careca" && (
-            <path d="M48 94c-2-12 0-22 4-30h96c4 8 6 18 4 30-2-10-6-17-12-22H60c-6 5-10 12-12 22Z" fill={hair} opacity={config.hair === "raspado" || config.hair === "moicano" ? 0.55 : 1} />
-          )}
-        </g>
-
-        <Glasses id={equipped.oculos} />
-        <g transform={fit}>
-          <Hat id={hat} />
-        </g>
-        {equipped.acessorio === "headset" ? (
+        <g className="vd-head">
           <g transform={fit}>
-            <Accessory id="headset" />
+            <HairBack style={config.hair} color={shade(hair, -0.12)} />
           </g>
-        ) : (
-          <Accessory id={equipped.acessorio} />
+        </g>
+
+        <g className="vd-body">
+          {outfit === "moletom" && (
+            <path d="M62 160c-6-34 14-46 38-46s44 12 38 46Z" fill={shirtDark} />
+          )}
+          <Outfit type={outfit} w={body.w} color={shirt} dark={shirtDark} skin={skin} skinDark={skinDark} />
+          {equipped.acessorio !== "headset" && <Accessory id={equipped.acessorio} />}
+        </g>
+        {/* pescoço */}
+        <path d={`M${100 - body.neck} 118h${body.neck * 2}v28c0 12-${body.neck * 2} 12-${body.neck * 2} 0Z`} fill={skinDark} />
+
+        <g className="vd-head">
+          <ellipse cx={100 - hw - 4} cy="98" rx="11" ry="14" fill={skin} />
+          <ellipse cx={100 + hw + 4} cy="98" rx="11" ry="14" fill={skin} />
+          <ellipse cx={100 - hw - 4} cy="99" rx="5" ry="7" fill={skinDark} />
+          <ellipse cx={100 + hw + 4} cy="99" rx="5" ry="7" fill={skinDark} />
+          <rect x={100 - hw} y="36" width={hw * 2} height={bodyType === "gordo" ? 112 : 108} rx={Math.min(47, hw - 3)} fill={skin} />
+          {/* volume: sombra de um lado, luz do outro */}
+          <path d={`M${100 + hw} 84c0 40-18 60-50 60 22-8 36-28 36-64 0-16-6-30-14-38 18 6 28 22 28 42Z`} fill={skinDark} opacity=".28" />
+          <path d="M60 60c8-10 22-16 40-16" stroke={skinLight} strokeWidth="7" strokeLinecap="round" fill="none" opacity=".7" />
+          <circle cx={bodyType === "gordo" ? 64 : 68} cy="114" r={bodyType === "gordo" ? 12 : 10} fill="#ff5a7a" opacity=".22" />
+          <circle cx={bodyType === "gordo" ? 136 : 132} cy="114" r={bodyType === "gordo" ? 12 : 10} fill="#ff5a7a" opacity=".22" />
+          {bodyType === "gordo" && (
+            <path d="M82 138c10 6 26 6 36 0" stroke={skinDark} strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          )}
+
+          <g transform={fit}>
+            <FacialHair style={config.beard} color={hair} />
+          </g>
+
+          <Eye cx={79} iris={iris} />
+          <Eye cx={121} iris={iris} closed={face === "piscadela"} />
+          <Expression mood={face} brow={shade(hair, -0.1)} skinDark={skinDark} />
+
+          <g transform={fit}>
+            {!hat && <HairFront style={config.hair} color={hair} />}
+            {hat && config.hair !== "careca" && (
+              <path d="M48 94c-2-12 0-22 4-30h96c4 8 6 18 4 30-2-10-6-17-12-22H60c-6 5-10 12-12 22Z" fill={hair} opacity={config.hair === "raspado" || config.hair === "moicano" ? 0.55 : 1} />
+            )}
+          </g>
+
+          <Glasses id={equipped.oculos} />
+          <g transform={fit}>
+            <Hat id={hat} />
+            {equipped.acessorio === "headset" && <Accessory id="headset" />}
+          </g>
+        </g>
+
+        {/* braço do tchau: fica escondido embaixo e sobe quando o avatar é tocado */}
+        {(interactive || waveOnMount) && (
+          <g className="vd-arm" onAnimationEnd={() => setWaving(false)}>
+            <rect x="166" y="130" width="26" height="90" rx="13" fill={sleeve} />
+            <rect x="166" y="130" width="26" height="26" rx="13" fill={skin} />
+            <circle cx="179" cy="118" r="17" fill={skin} />
+            <rect x="163" y="94" width="8" height="22" rx="4" fill={skin} />
+            <rect x="172" y="88" width="8" height="26" rx="4" fill={skin} />
+            <rect x="181" y="90" width="8" height="24" rx="4" fill={skin} />
+            <rect x="190" y="96" width="7" height="20" rx="3.5" fill={skin} />
+            <ellipse cx="163" cy="122" rx="6" ry="9" fill={skin} transform="rotate(-35 163 122)" />
+            <path d="M170 124c5 5 13 5 18 0" stroke={skinDark} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          </g>
         )}
       </g>
     </svg>

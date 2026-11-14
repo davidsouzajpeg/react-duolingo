@@ -47,6 +47,14 @@ export const outfitTypes = [
   { id: "regata", label: "Regata" },
 ] as const;
 
+export const moods = [
+  { id: "neutro", label: "Sorriso" },
+  { id: "feliz", label: "Feliz" },
+  { id: "piscadela", label: "Piscadela" },
+  { id: "surpreso", label: "Surpreso" },
+  { id: "triste", label: "Sério" },
+] as const;
+
 export const eyeColors = ["#5a3a22", "#22232a", "#b07a2a", "#3f9a5f", "#3f7fd9"] as const;
 
 export type BodyType = (typeof bodyTypes)[number]["id"];
@@ -98,6 +106,8 @@ export type AvatarConfig = {
   outfit?: OutfitType;
   /** cor dos olhos */
   eyes?: string;
+  /** expressão padrão do rosto */
+  mood?: "neutro" | "feliz" | "surpreso" | "triste" | "piscadela";
   /** cor da roupa */
   shirt: string;
   equipped: Partial<Record<ItemSlot, string>>;

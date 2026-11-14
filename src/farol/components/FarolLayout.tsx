@@ -18,10 +18,6 @@ import dayjs from "dayjs";
 import {
   CoinIcon,
   FlameIcon,
-  MapIcon,
-  MedalIcon,
-  PodiumIcon,
-  StarIcon,
   XpIcon,
 } from "./Icons";
 import {
@@ -37,11 +33,52 @@ import {
 } from "./ui";
 
 const navItems = [
-  { href: "/farol", label: "Trilha", Icon: MapIcon },
-  { href: "/farol/ranking", label: "Divisões", Icon: PodiumIcon },
-  { href: "/farol/loja", label: "Loja", Icon: StarIcon },
-  { href: "/farol/conquistas", label: "Perfil", Icon: MedalIcon },
-];
+  { href: "/farol", label: "Trilha", id: "trilha" },
+  { href: "/farol/ranking", label: "Divisões", id: "divisoes" },
+  { href: "/farol/loja", label: "Loja", id: "loja" },
+  { href: "/farol/conquistas", label: "Perfil", id: "perfil" },
+] as const;
+
+/** Ícones coloridos da navegação (o do perfil é o próprio avatar do vendedor) */
+const NavGlyph = ({ id }: { id: (typeof navItems)[number]["id"] }) => {
+  const avatar = useFarolStore((s) => s.avatar);
+  const tier = useFarolStore((s) => s.league.tier);
+  const size = "h-9 w-9 shrink-0";
+  switch (id) {
+    case "trilha":
+      return (
+        <svg viewBox="0 0 36 36" className={size} aria-hidden>
+          <path d="M18 9 2 3v12Z" fill="#f5b331" opacity=".85" />
+          <path d="M18 9 34 3v12Z" fill="#f5b331" opacity=".85" />
+          <path d="M13 6h10l-2-4h-6Z" fill="#c4006a" />
+          <rect x="13" y="6" width="10" height="6" rx="1.5" fill="#ffe08a" />
+          <path d="M12.500 12h11l2.500 19H10Z" fill="#fff" />
+          <path d="M11.700 18h12.600l.8 6H10.900Z" fill="#ff0084" />
+          <rect x="6" y="30" width="24" height="4" rx="2" fill="#c4006a" />
+        </svg>
+      );
+    case "divisoes":
+      return (
+        <svg viewBox="0 0 36 36" className={size} aria-hidden>
+          <path d="M18 2 32 7v10c0 9-6 14.500-14 17C10 31.500 4 26 4 17V7Z" fill={divisions[tier]!.color} />
+          <path d="M18 6v24.500c6-2.500 10-7 10-13.500V9.500Z" fill="#000" opacity=".18" />
+          <path d="m18 10 2.200 4.600 5 .7-3.600 3.500.900 5-4.500-2.400-4.500 2.400.900-5-3.600-3.500 5-.7Z" fill="#fff" />
+        </svg>
+      );
+    case "loja":
+      return (
+        <svg viewBox="0 0 36 36" className={size} aria-hidden>
+          <path d="M12 13V10a6 6 0 0 1 12 0v3" stroke="#ff0084" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M5 12h26l-2 19a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3Z" fill="#f5b331" />
+          <path d="M5 12h26l-.6 6H5.600Z" fill="#b9841c" />
+          <circle cx="18" cy="24" r="4.5" fill="#fff" />
+          <path d="M18 21.500v5M16.200 23.200c.5-1 3.200-1 3.400.300.200 1.400-3.500.800-3.400 2.300.100 1.200 2.900 1.200 3.600.2" stroke="#b9841c" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        </svg>
+      );
+    case "perfil":
+      return <Avatar config={avatar} className={size} label="" />;
+  }
+};
 
 export const StatsRow = () => {
   const streak = useStreak();
@@ -262,7 +299,7 @@ export const FarolLayout = ({
             v<span className="text-farol-accent">.</span>
           </b>
         </Link>
-        {navItems.map(({ href, label, Icon }) => {
+        {navItems.map(({ href, label, id }) => {
           const active = router.pathname === href;
           return (
             <Link
@@ -275,7 +312,7 @@ export const FarolLayout = ({
                   : "border-transparent text-farol-muted hover:bg-farol-surface2 hover:text-farol-ink"
               }`}
             >
-              <Icon className="h-7 w-7 shrink-0" />
+              <NavGlyph id={id} />
               <span className="sr-only lg:not-sr-only">{label}</span>
             </Link>
           );
@@ -318,22 +355,22 @@ export const FarolLayout = ({
       </div>
 
       {/* Navegação inferior (mobile) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-20 flex justify-around border-t border-farol-line bg-farol-surface pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden">
-        {navItems.map(({ href, label, Icon }) => {
+      <nav aria-label="Navegação" className="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-around border-t-2 border-farol-line bg-farol-bg pb-[max(.6rem,env(safe-area-inset-bottom))] pt-2.5 md:hidden">
+        {navItems.map(({ href, label, id }) => {
           const active = router.pathname === href;
           return (
             <Link
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex flex-col items-center border-t-2 px-2 pt-1 text-xs font-semibold ${
+              className={`rounded-2xl border-2 p-1.5 transition active:scale-95 ${
                 active
-                  ? "-mt-2 border-farol-accent pt-3 text-farol-accent"
-                  : "border-transparent text-farol-muted"
+                  ? "border-farol-accent bg-farol-accent-soft"
+                  : "border-transparent"
               }`}
             >
-              <Icon className="h-7 w-7" />
-              {label}
+              <NavGlyph id={id} />
+              <span className="sr-only">{label}</span>
             </Link>
           );
         })}

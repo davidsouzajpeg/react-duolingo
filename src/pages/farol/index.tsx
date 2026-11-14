@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { allLessons, linhaAtual, units } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
+import { Avatar } from "~/farol/components/Avatar";
 import { TrailEndCard } from "~/farol/components/TrailEnd";
 import { CheckIcon, LockIcon, ShieldIcon, StarIcon } from "~/farol/components/Icons";
 import {
@@ -218,6 +219,7 @@ const FreezeNotice = () => {
 const LinhaHero = () => {
   const records = useFarolStore((s) => s.lessons);
   const name = useFarolStore((s) => s.name);
+  const avatar = useFarolStore((s) => s.avatar);
   const current = getCurrentLesson(records);
   const done = completedLessonCount(records);
   const total = allLessons.length;
@@ -236,7 +238,9 @@ const LinhaHero = () => {
             {done}/{total} <span className="font-body font-normal text-farol-muted">lições</span>
           </span>
         </div>
-        <p className="mt-3 text-sm text-farol-muted">
+        <div className="mt-4 flex items-center gap-3">
+          <Avatar config={avatar} animated interactive className="h-20 w-20 rounded-full border-2 border-farol-accent" />
+        <p className="text-sm text-farol-muted">
           {name ? (
             <>
               <strong className="text-farol-ink">Bora vendê, {name}?</strong>{" "}
@@ -251,6 +255,7 @@ const LinhaHero = () => {
             "Você concluiu a linha inteira! 🌟"
           )}
         </p>
+        </div>
       </div>
     </section>
   );

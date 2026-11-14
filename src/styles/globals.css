@@ -1,3 +1,42 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ------------------------- Vendê: vida do avatar ------------------------- */
+@keyframes vd-bob {
+  0%, 100% { transform: translateY(0) rotate(-1.4deg); }
+  50% { transform: translateY(1.6px) rotate(1.4deg); }
+}
+@keyframes vd-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.018, 1.01); }
+}
+@keyframes vd-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  93%, 96% { transform: scaleY(0.08); }
+}
+@keyframes vd-wave {
+  0% { transform: translateY(110px) rotate(0deg); }
+  14% { transform: translateY(0) rotate(10deg); }
+  28% { transform: translateY(0) rotate(-14deg); }
+  42% { transform: translateY(0) rotate(10deg); }
+  56% { transform: translateY(0) rotate(-14deg); }
+  70% { transform: translateY(0) rotate(10deg); }
+  84% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(110px) rotate(0deg); }
+}
+@keyframes vd-nod {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30% { transform: translateY(-3px) rotate(-5deg); }
+  65% { transform: translateY(-1px) rotate(4deg); }
+}
+.vd-anim .vd-head { animation: vd-bob 5s ease-in-out infinite; transform-origin: 100px 150px; }
+.vd-anim .vd-body { animation: vd-breathe 5s ease-in-out infinite; transform-origin: 100px 200px; }
+.vd-anim .vd-eye { animation: vd-blink 4.6s infinite; transform-box: fill-box; transform-origin: center; }
+.vd-pupil { transform: translate(var(--vd-px, 0px), var(--vd-py, 0px)); transition: transform 0.18s ease-out; }
+.vd-arm { transform: translateY(110px); transform-origin: 179px 215px; }
+.vd-waving .vd-arm { animation: vd-wave 1.9s ease-in-out both; }
+.vd-waving .vd-head { animation: vd-nod 1.9s ease-in-out; transform-origin: 100px 150px; }
+@media (prefers-reduced-motion: reduce) {
+  .vd-anim .vd-head, .vd-anim .vd-body, .vd-anim .vd-eye { animation: none; }
+}

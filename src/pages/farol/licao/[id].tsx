@@ -45,6 +45,7 @@ import {
   type Badge,
   type BadgeContext,
 } from "~/farol/gamification";
+import { Avatar } from "~/farol/components/Avatar";
 import { useHydrated, useSounds } from "~/farol/hooks";
 import { notifyGestorTrailCompleted } from "~/farol/notify";
 import { Parabens } from "~/farol/components/TrailEnd";
@@ -406,6 +407,7 @@ const LessonSummary = ({
   /** última lição da trilha: "Continuar" leva à tela de parabéns */
   onCelebrate?: () => void;
 }) => {
+  const avatar = useFarolStore((s) => s.avatar);
   const perfect = summary.accuracy === 1;
   const sinal = sinalDaPrecisao(summary.accuracy);
   const info = sinalInfo[sinal];
@@ -426,6 +428,14 @@ const LessonSummary = ({
           </h1>
           <p className="mt-2 text-farol-muted">{lesson.title}</p>
         </div>
+        <Avatar
+          config={avatar}
+          animated
+          interactive
+          waveOnMount={sinal === "verde"}
+          mood={sinal === "verde" ? "feliz" : sinal === "amarelo" ? "neutro" : "surpreso"}
+          className="h-28 w-28 rounded-full border-4 border-farol-accent"
+        />
 
         <div className="flex w-full gap-3">
           <StatCard label="XP" value={`+${summary.xp}`} tone="text-farol-accent" />

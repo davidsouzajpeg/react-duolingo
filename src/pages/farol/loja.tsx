@@ -12,6 +12,7 @@ import {
   eyeColors,
   hairColors,
   hairStyles,
+  moods,
   outfitTypes,
   randomAvatar,
   shirtColors,
@@ -121,7 +122,8 @@ const Loja = () => {
           </span>
         </div>
         <div className="mt-4 flex flex-col items-center gap-2 bg-farol-lamp px-5 pb-4 pt-6">
-          <Avatar config={avatar} round={false} className="h-64 w-64 sm:h-72 sm:w-72" />
+          <Avatar config={avatar} round={false} animated interactive className="h-64 w-64 sm:h-72 sm:w-72" />
+          <p className="text-xs text-farol-muted">Toque no avatar para um tchau</p>
           <button
             type="button"
             onClick={() => setAvatar(randomAvatar())}
@@ -168,6 +170,16 @@ const Loja = () => {
             </div>
           </fieldset>
           <Swatches label="Pele" colors={skinTones} value={avatar.skin} onPick={(skin) => setAvatar({ skin })} />
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Expressão</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {moods.map((m) => (
+                <Choice key={m.id} active={(avatar.mood ?? "neutro") === m.id} onClick={() => setAvatar({ mood: m.id })}>
+                  {m.label}
+                </Choice>
+              ))}
+            </div>
+          </fieldset>
           <Swatches label="Olhos" colors={eyeColors} value={avatar.eyes ?? eyeColors[0]} onPick={(eyes) => setAvatar({ eyes })} />
           <fieldset>
             <legend className="text-xs font-semibold uppercase tracking-[.09em] text-farol-muted">Cabelo</legend>
