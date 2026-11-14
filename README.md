@@ -1,3 +1,47 @@
+# Vendê
+
+**Vender se aprende.** Experiência de aprendizagem gamificada em vendas, uma experiência Meu Farol, feita para o time comercial da Open.
+
+- Trilha **Venda Consultiva** baseada no Playbook Vendas Open 2025: 8 unidades, 24 lições e 8 desafios.
+- Cinco tipos de questão (situação real, múltipla escolha, verdadeiro ou falso, ordenar e completar), sempre com explicação.
+- XP, meta diária, sequência de dias, moedas, níveis, conquistas e ranking semanal.
+- Ao concluir a última unidade, o vendedor vê os parabéns e o gestor é avisado para liberar novos módulos.
+
+## Rodar
+
+```bash
+pnpm install
+pnpm dev      # http://localhost:3000 (abre em /farol)
+pnpm build && pnpm start
+```
+
+## Onde mexer
+
+| O quê | Arquivo |
+|---|---|
+| Conteúdo das lições e versão da trilha | `src/farol/content.ts` |
+| Progresso do vendedor (salvo no navegador) | `src/farol/store.ts` |
+| Níveis, conquistas e ranking | `src/farol/gamification.ts` |
+| Aviso ao gestor | `src/farol/notify.ts` e `docs/farol-integracao-gestor.md` |
+| Telas | `src/pages/farol/` e `src/farol/components/` |
+| Cores e fontes | `tailwind.config.ts` (`colors.farol`) |
+
+## Configuração
+
+- `NEXT_PUBLIC_FAROL_API_URL` (opcional): endereço da API do Meu Farol que recebe o aviso de trilha concluída. Sem ela, o aviso fica pendente no aparelho do vendedor.
+
+## Limitações conhecidas
+
+- O progresso fica salvo no navegador de cada vendedor; ainda não há login nem sincronização entre aparelhos.
+- O ranking usa colegas simulados até existir um servidor com os dados do time.
+- As páginas do projeto-base (abaixo) continuam no repositório, mas redirecionam para `/farol`.
+
+---
+
+## Projeto-base
+
+O Vendê foi construído sobre o projeto abaixo.
+
 # React Duolingo
 
 https://react-duolingo-clone.vercel.app/ 

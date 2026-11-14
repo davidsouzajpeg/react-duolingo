@@ -15,8 +15,30 @@ const config = {
    * @see https://github.com/vercel/next.js/issues/41980
    */
   i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
+    locales: ["pt-BR"],
+    defaultLocale: "pt-BR",
+  },
+  /**
+   * O app publicado é o Vendê (/farol). As páginas antigas do projeto-base
+   * continuam no repositório, mas não ficam acessíveis.
+   */
+  async redirects() {
+    const legacy = [
+      "/",
+      "/learn",
+      "/lesson",
+      "/leaderboard",
+      "/profile",
+      "/shop",
+      "/register",
+      "/forgot-password",
+      "/settings/:path*",
+    ];
+    return legacy.map((source) => ({
+      source,
+      destination: "/farol",
+      permanent: false,
+    }));
   },
   images: {
     remotePatterns: [

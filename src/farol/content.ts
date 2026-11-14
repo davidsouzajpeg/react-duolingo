@@ -124,7 +124,7 @@ const seeds: UnitSeed[] = [
             "Quanto custa uma fachada de 6 metros?",
             "Qual resposta segue a cultura consultiva da Open?",
             [
-              "Depende do material. Em ACM sai a partir de R$ 900 o metro.",
+              "Depende do material. Te mando agora o valor do metro em ACM.",
               "Te passo, sim! Antes, me conta: é inauguração ou reforma? Quero entender o que a fachada precisa resolver para indicar a solução certa.",
               "Só consigo falar de valores depois de uma reunião presencial.",
               "Vou te mandar a tabela completa em PDF e você escolhe.",
@@ -803,7 +803,7 @@ const seeds: UnitSeed[] = [
             [
               "Claro! Peço para a criação mandar mais cinco até amanhã.",
               "Não fazemos mais do que duas versões.",
-              "Cada versão extra custa R$ 200.",
+              "Versão extra, só pagando à parte.",
               "Consigo ajustar, sim. Para acertar de primeira: o que você manteria e o que mudaria nessas duas? Com isso fecho uma versão final junto com a proposta.",
             ],
             3,
@@ -1216,9 +1216,9 @@ const seeds: UnitSeed[] = [
             "Após o P.E., desconto abaixo da margem é exceção: você busca a liberação com o gerente, condicionada ao fechamento no dia. (Playbook · Geração de Urgência)",
           ),
           vf(
-            "Gerar urgência significa pressionar o cliente até ele decidir.",
-            false,
-            "Use tom consultivo e envolva o cliente no processo: urgência sem parecer forçado. (Playbook · Geração de Urgência)",
+            "O gatilho de escassez se baseia na limitação de tempo ou de quantidade para incentivar uma decisão rápida.",
+            true,
+            "É a definição do glossário. Só vale com limite real, em tom consultivo: urgência sem parecer forçado. (Playbook · Glossário)",
           ),
           completar(
             "Para reforçar a urgência sem forçar, inclua um ___ adicional, como prazo de entrega diferenciado ou ___ facilitado.",

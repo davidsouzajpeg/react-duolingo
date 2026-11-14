@@ -3,13 +3,9 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { TRAIL_VERSION, allLessons } from "./content";
 
-export const MAX_HEARTS = 5;
-export const HEART_REGEN_MINUTES = 30;
-export const REFILL_HEARTS_COST = 60;
 export const STREAK_FREEZE_COST = 120;
 export const MAX_STREAK_FREEZES = 2;
 
-const HEART_REGEN_MS = HEART_REGEN_MINUTES * 60 * 1000;
 
 export const today = () => dayjs().format("YYYY-MM-DD");
 
@@ -58,8 +54,6 @@ type FarolState = {
   activeDays: string[];
   streakFreezes: number;
   coins: number;
-  hearts: number;
-  heartsUpdatedAt: number;
   lessons: Record<string, LessonRecord>;
   stats: FarolStats;
   soundOn: boolean;
@@ -70,9 +64,6 @@ type FarolState = {
   completeOnboarding: (name: string, dailyGoal: number) => void;
   setDailyGoal: (goal: number) => void;
   toggleSound: () => void;
-  syncHearts: () => void;
-  loseHeart: () => void;
-  refillHearts: () => boolean;
   buyStreakFreeze: () => boolean;
   finishLesson: (result: LessonResult) => void;
   /** marca a conclusão da trilha (uma vez por versão) e deixa o aviso pendente */
@@ -90,8 +81,6 @@ const initialData = {
   activeDays: [] as string[],
   streakFreezes: 0,
   coins: 50,
-  hearts: MAX_HEARTS,
-  heartsUpdatedAt: 0,
   lessons: {} as Record<string, LessonRecord>,
   stats: {
     answered: 0,
@@ -143,42 +132,6 @@ export const useFarolStore = create<FarolState>()(
       setDailyGoal: (dailyGoal) => set({ dailyGoal }),
 
       toggleSound: () => set({ soundOn: !get().soundOn }),
-
-      syncHearts: () => {
-        const { hearts, heartsUpdatedAt } = get();
-        if (hearts >= MAX_HEARTS) return;
-        const now = Date.now();
-        const gained = Math.floor((now - heartsUpdatedAt) / HEART_REGEN_MS);
-        if (gained <= 0) return;
-        const newHearts = Math.min(MAX_HEARTS, hearts + gained);
-        set({
-          hearts: newHearts,
-          heartsUpdatedAt:
-            newHearts >= MAX_HEARTS
-              ? now
-              : heartsUpdatedAt + gained * HEART_REGEN_MS,
-        });
-      },
-
-      loseHeart: () => {
-        const { hearts, heartsUpdatedAt } = get();
-        if (hearts <= 0) return;
-        set({
-          hearts: hearts - 1,
-          heartsUpdatedAt: hearts >= MAX_HEARTS ? Date.now() : heartsUpdatedAt,
-        });
-      },
-
-      refillHearts: () => {
-        const { coins, hearts } = get();
-        if (coins < REFILL_HEARTS_COST || hearts >= MAX_HEARTS) return false;
-        set({
-          coins: coins - REFILL_HEARTS_COST,
-          hearts: MAX_HEARTS,
-          heartsUpdatedAt: Date.now(),
-        });
-        return true;
-      },
 
       buyStreakFreeze: () => {
         const { coins, streakFreezes } = get();
