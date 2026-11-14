@@ -2,16 +2,16 @@ import dayjs from "dayjs";
 import { allLessons, units } from "./content";
 import type { FarolStats, LessonRecord } from "./store";
 
-/* ---------------------------- Patentes (níveis) ---------------------------- */
+/* ------------------------- Níveis (carreira consultiva) ------------------------- */
 
 export const levels = [
   { name: "Aprendiz", minXp: 0, icon: "🌱" },
-  { name: "Prospector", minXp: 100, icon: "🔭" },
+  { name: "Consultor Jr.", minXp: 100, icon: "📐" },
   { name: "Consultor", minXp: 250, icon: "🧭" },
-  { name: "Negociador", minXp: 450, icon: "🤝" },
-  { name: "Closer", minXp: 700, icon: "🎯" },
-  { name: "Mestre de Vendas", minXp: 1000, icon: "🏅" },
-  { name: "Lenda do Farol", minXp: 1400, icon: "🌟" },
+  { name: "Consultor Sênior", minXp: 450, icon: "🤝" },
+  { name: "Especialista em Fachadas", minXp: 700, icon: "🏬" },
+  { name: "Mestre da Proposta", minXp: 1000, icon: "🏅" },
+  { name: "Farol da Equipe", minXp: 1400, icon: "🌟" },
 ] as const;
 
 export type Level = (typeof levels)[number];
@@ -93,7 +93,7 @@ export const badges: Badge[] = [
   {
     id: "first-lesson",
     icon: "🚀",
-    title: "Primeira ligação",
+    title: "Primeira visita",
     description: "Conclua sua primeira lição",
     progress: ({ lessons }) => ({
       value: Math.min(1, completedLessonCount(lessons)),
@@ -110,14 +110,14 @@ export const badges: Badge[] = [
   {
     id: "streak-7",
     icon: "📆",
-    title: "Disciplina de closer",
+    title: "Follow-up em dia",
     description: "Pratique 7 dias seguidos",
     progress: ({ streak }) => ({ value: Math.min(streak, 7), goal: 7 }),
   },
   {
     id: "perfect-3",
     icon: "💎",
-    title: "Sem erro",
+    title: "Farol verde",
     description: "Faça 3 lições sem errar nenhuma questão",
     progress: ({ stats }) => ({
       value: Math.min(stats.perfectLessons, 3),
@@ -127,7 +127,7 @@ export const badges: Badge[] = [
   {
     id: "combo-8",
     icon: "⚡",
-    title: "Embalado",
+    title: "Feixe aceso",
     description: "Acerte 8 questões seguidas em uma lição",
     progress: ({ stats }) => ({ value: Math.min(stats.bestCombo, 8), goal: 8 }),
   },
@@ -138,12 +138,14 @@ export const badges: Badge[] = [
     description: "Acumule 500 XP",
     progress: ({ xpTotal }) => ({ value: Math.min(xpTotal, 500), goal: 500 }),
   },
-  unitBadge(1, "🔦", "Farol aceso"),
-  unitBadge(2, "🩺", "Diagnóstico afiado"),
-  unitBadge(3, "📣", "Pitch de valor"),
-  unitBadge(4, "🛡️", "Domador de objeções"),
-  unitBadge(5, "✍️", "Fechador"),
-  unitBadge(6, "💚", "Cliente pra vida toda"),
+  unitBadge(1, "💡", "Cultura Open"),
+  unitBadge(2, "🔎", "Lição de casa feita"),
+  unitBadge(3, "🎤", "Venda inteligente"),
+  unitBadge(4, "🧩", "Diagnóstico certeiro"),
+  unitBadge(5, "📈", "Solução ampliada"),
+  unitBadge(6, "🛡️", "Quebrador de objeções"),
+  unitBadge(7, "✍️", "Aceite formal"),
+  unitBadge(8, "🤝", "Embaixador da Open"),
 ];
 
 export const isBadgeUnlocked = (badge: Badge, ctx: BadgeContext) => {

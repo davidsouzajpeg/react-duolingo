@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { notifyGestorTrailCompleted } from "./notify";
 import { computeStreak, useFarolStore } from "./store";
 
 /**
@@ -22,6 +23,22 @@ export const useHeartRegen = () => {
     const id = setInterval(syncHearts, 30_000);
     return () => clearInterval(id);
   }, [syncHearts]);
+};
+
+/**
+ * Confere se a trilha foi concluída e tenta (re)enviar o aviso pendente ao
+ * gestor: uma vez ao montar a página e quando a conexão volta.
+ */
+export const useGestorNoticeRetry = () => {
+  useEffect(() => {
+    const attempt = () => {
+      useFarolStore.getState().syncTrailCompletion();
+      void notifyGestorTrailCompleted();
+    };
+    attempt();
+    window.addEventListener("online", attempt);
+    return () => window.removeEventListener("online", attempt);
+  }, []);
 };
 
 /* ---------------------------------- Sons ---------------------------------- */

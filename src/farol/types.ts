@@ -73,3 +73,13 @@ export type Unit = {
   shade: string;
   lessons: Lesson[];
 };
+
+/** Linha de treino: um conjunto de unidades com um tema (ex.: Venda Consultiva) */
+export type Linha = {
+  id: string;
+  title: string;
+  description: string;
+  /** de onde vem o conteúdo (mostrado em "Sobre o conteúdo") */
+  fontes: string[];
+  units: Unit[];
+};

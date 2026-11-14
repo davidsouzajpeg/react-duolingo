@@ -2,24 +2,11 @@ import type { ComponentProps } from "react";
 
 type IconProps = ComponentProps<"svg">;
 
-export const LighthouseLogo = (props: IconProps) => (
-  <svg viewBox="0 0 64 64" fill="none" aria-hidden {...props}>
-    <path d="M32 14 6 4v20l26-10Z" fill="#fde68a" opacity=".55" />
-    <path d="M32 14 58 4v20L32 14Z" fill="#fde68a" opacity=".55" />
-    <path d="M25 10h14v8H25z" fill="#f5a524" />
-    <path d="M23 8h18l-3-5H26l-3 5Z" fill="#0f2742" />
-    <path d="M24 18h16l4 38H20l4-38Z" fill="#fff" stroke="#0f2742" strokeWidth="2.5" strokeLinejoin="round" />
-    <path d="M22.6 31h18.8l1 9H21.6l1-9Z" fill="#f43f5e" />
-    <path d="M14 56h36v4H14z" fill="#0f2742" rx="2" />
-    <rect x="29" y="45" width="6" height="11" rx="1" fill="#0f2742" />
-  </svg>
-);
-
 export const HeartIcon = ({ empty, ...props }: IconProps & { empty?: boolean }) => (
   <svg viewBox="0 0 24 24" aria-hidden {...props}>
     <path
       d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.1 5.2 3 1.6-1.9 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21Z"
-      fill={empty ? "#e5e7eb" : "#f43f5e"}
+      fill={empty ? "#383a43" : "#ff5a4f"}
     />
     {!empty && (
       <path d="M7 8.2c.7-.8 1.8-1 2.6-.6" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" opacity=".7" fill="none" />
@@ -31,33 +18,33 @@ export const FlameIcon = ({ off, ...props }: IconProps & { off?: boolean }) => (
   <svg viewBox="0 0 24 24" aria-hidden {...props}>
     <path
       d="M12 2.5c.6 3-1.2 4.6-2.7 6.2C7.8 10.3 6.5 12 6.5 14.6 6.5 18 9 21 12 21s5.5-3 5.5-6.4c0-2.3-1-3.8-2-5-.3 1.3-1 2.2-2 2.6.5-3.6-.3-7-1.5-8.7Z"
-      fill={off ? "#d1d5db" : "#f97316"}
+      fill={off ? "#4a4c56" : "#f5b331"}
     />
     <path
       d="M12 21c-1.8 0-3-1.5-3-3.3 0-1.9 1.4-2.8 2.2-4.1.4 1 1.1 1.5 1.8 1.6-.2-.9 0-1.8.5-2.4.9 1.1 1.5 2.4 1.5 4 0 2.4-1.2 4.2-3 4.2Z"
-      fill={off ? "#e5e7eb" : "#fde047"}
+      fill={off ? "#383a43" : "#ffe6a8"}
     />
   </svg>
 );
 
 export const CoinIcon = (props: IconProps) => (
   <svg viewBox="0 0 24 24" aria-hidden {...props}>
-    <circle cx="12" cy="12" r="9.5" fill="#f5a524" />
-    <circle cx="12" cy="12" r="7" fill="#fcd34d" />
-    <path d="M12 7.5v9M14.3 9.4c-.4-.6-1.2-1-2.3-1-1.4 0-2.3.7-2.3 1.7 0 2.4 4.8 1.2 4.8 3.7 0 1-1 1.8-2.5 1.8-1.1 0-2-.4-2.5-1.1" stroke="#b45309" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+    <circle cx="12" cy="12" r="9.5" fill="#b9841c" />
+    <circle cx="12" cy="12" r="7.6" fill="#f5b331" />
+    <path d="M12 7.5v9M14.3 9.4c-.4-.6-1.2-1-2.3-1-1.4 0-2.3.7-2.3 1.7 0 2.4 4.8 1.2 4.8 3.7 0 1-1 1.8-2.5 1.8-1.1 0-2-.4-2.5-1.1" stroke="#7a560f" strokeWidth="1.5" strokeLinecap="round" fill="none" />
   </svg>
 );
 
 export const XpIcon = (props: IconProps) => (
   <svg viewBox="0 0 24 24" aria-hidden {...props}>
-    <path d="m13.5 2-9 12h7l-1 8 9-12h-7l1-8Z" fill="#facc15" stroke="#ca8a04" strokeWidth="1.2" strokeLinejoin="round" />
+    <path d="m13.5 2-9 12h7l-1 8 9-12h-7l1-8Z" fill="#ff0084" stroke="#c4006a" strokeWidth="1.2" strokeLinejoin="round" />
   </svg>
 );
 
 export const ShieldIcon = (props: IconProps) => (
   <svg viewBox="0 0 24 24" aria-hidden {...props}>
-    <path d="M12 2.5 4 5.5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10v-6l-8-3Z" fill="#38bdf8" />
-    <path d="m8.5 12 2.5 2.5 4.5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M12 2.5 4 5.5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10v-6l-8-3Z" fill="#3fcf86" />
+    <path d="m8.5 12 2.5 2.5 4.5-5" stroke="#121317" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   </svg>
 );
 

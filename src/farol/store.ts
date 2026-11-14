@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { TRAIL_VERSION, allLessons } from "./content";
 
 export const MAX_HEARTS = 5;
 export const HEART_REGEN_MINUTES = 30;
@@ -36,6 +37,18 @@ export type LessonResult = {
   bestCombo: number;
 };
 
+/** Aviso ao gestor de que o vendedor concluiu a trilha (ver notify.ts) */
+export type GestorNotice = {
+  status: "nenhum" | "pendente" | "enviado";
+  /** ISO de quando o servidor confirmou o recebimento */
+  sentAt?: string;
+  /** versão da trilha a que o aviso se refere */
+  trailVersion: string;
+};
+
+export const isTrailComplete = (lessons: Record<string, LessonRecord>) =>
+  allLessons.every(({ lesson }) => (lessons[lesson.id]?.completions ?? 0) > 0);
+
 type FarolState = {
   name: string;
   dailyGoal: number;
@@ -50,6 +63,9 @@ type FarolState = {
   lessons: Record<string, LessonRecord>;
   stats: FarolStats;
   soundOn: boolean;
+  /** ISO da primeira vez em que todas as lições da versão atual foram concluídas */
+  trailCompletedAt: string | null;
+  gestorNotice: GestorNotice;
 
   completeOnboarding: (name: string, dailyGoal: number) => void;
   setDailyGoal: (goal: number) => void;
@@ -59,6 +75,9 @@ type FarolState = {
   refillHearts: () => boolean;
   buyStreakFreeze: () => boolean;
   finishLesson: (result: LessonResult) => void;
+  /** marca a conclusão da trilha (uma vez por versão) e deixa o aviso pendente */
+  syncTrailCompletion: () => void;
+  markGestorNotified: (trailVersion: string) => void;
   reset: () => void;
 };
 
@@ -82,6 +101,8 @@ const initialData = {
     challengesCompleted: 0,
   } as FarolStats,
   soundOn: true,
+  trailCompletedAt: null as string | null,
+  gestorNotice: { status: "nenhum", trailVersion: "" } as GestorNotice,
 };
 
 /** Sequência atual: conta dias seguidos até hoje (ou até ontem, se hoje ainda não praticou) */
@@ -218,6 +239,30 @@ export const useFarolStore = create<FarolState>()(
               state.stats.challengesCompleted + (result.isChallenge ? 1 : 0),
           },
         });
+        get().syncTrailCompletion();
+      },
+
+      syncTrailCompletion: () => {
+        const { lessons, gestorNotice } = get();
+        if (!isTrailComplete(lessons)) return;
+        // já registrado para esta versão da trilha
+        if (gestorNotice.trailVersion === TRAIL_VERSION) return;
+        set({
+          trailCompletedAt: new Date().toISOString(),
+          gestorNotice: { status: "pendente", trailVersion: TRAIL_VERSION },
+        });
+      },
+
+      markGestorNotified: (trailVersion) => {
+        const { gestorNotice } = get();
+        if (gestorNotice.trailVersion !== trailVersion) return;
+        set({
+          gestorNotice: {
+            status: "enviado",
+            sentAt: new Date().toISOString(),
+            trailVersion,
+          },
+        });
       },
 
       reset: () => set({ ...initialData }),
@@ -225,7 +270,26 @@ export const useFarolStore = create<FarolState>()(
     {
       name: "farol-vendas",
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      // v2: a trilha passou a ser a linha "Venda Consultiva" (Open). Os ids
+      // u1-l1… continuam, mas apontam para lições novas: mantemos XP, moedas,
+      // sequência e estatísticas, e zeramos o progresso por lição.
+      // v3: conclusão da trilha + aviso ao gestor.
+      version: 3,
+      migrate: (persisted, version) => {
+        let state = (persisted ?? {}) as Partial<FarolState>;
+        if (version < 2) state = { ...state, lessons: {} };
+        if (version < 3) {
+          state = {
+            ...state,
+            trailCompletedAt: state.trailCompletedAt ?? null,
+            gestorNotice: state.gestorNotice ?? {
+              status: "nenhum",
+              trailVersion: "",
+            },
+          };
+        }
+        return state as FarolState;
+      },
     },
   ),
 );

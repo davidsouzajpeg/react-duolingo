@@ -17,6 +17,8 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
+    /** Base da API do Meu Farol (ex.: https://opencriativa.com.br/farol/api). Opcional. */
+    NEXT_PUBLIC_FAROL_API_URL: z.string().optional(),
   },
 
   /**
@@ -26,5 +28,6 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    NEXT_PUBLIC_FAROL_API_URL: process.env.NEXT_PUBLIC_FAROL_API_URL,
   },
 });

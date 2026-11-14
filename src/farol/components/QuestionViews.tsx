@@ -127,17 +127,17 @@ type ViewProps<Q extends Question> = {
 };
 
 const Title = ({ children }: { children: ReactNode }) => (
-  <h1 className="mb-6 text-2xl font-extrabold text-[#0f2742] sm:text-3xl">
+  <h1 className="mb-6 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
     {children}
   </h1>
 );
 
 const optionStyle = (state: "idle" | "selected" | "right" | "wrong") =>
   ({
-    idle: "border-gray-200 hover:bg-gray-50",
-    selected: "border-sky-400 bg-sky-50 text-sky-700",
-    right: "border-green-500 bg-green-50 text-green-700",
-    wrong: "border-rose-400 bg-rose-50 text-rose-600",
+    idle: "border-farol-line bg-farol-surface hover:bg-farol-surface2",
+    selected: "border-farol-accent bg-farol-accent-soft text-farol-ink",
+    right: "border-farol-ok bg-farol-ok-soft text-farol-ok",
+    wrong: "border-farol-bad bg-farol-bad-soft text-farol-bad",
   })[state];
 
 const OptionList = ({
@@ -174,9 +174,9 @@ const OptionList = ({
           aria-checked={selected}
           disabled={revealed}
           onClick={() => onChange(optionIndex)}
-          className={`flex items-center gap-3 rounded-2xl border-2 border-b-4 p-4 text-left transition active:translate-y-0.5 disabled:active:translate-y-0 ${optionStyle(state)}`}
+          className={`flex items-center gap-3 rounded-2xl border border-b-4 p-4 text-left transition active:translate-y-0.5 disabled:active:translate-y-0 ${optionStyle(state)}`}
         >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 border-current text-sm font-bold opacity-60">
+          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border font-num text-sm font-extrabold ${state === "selected" ? "border-farol-accent bg-farol-accent text-white" : "border-current opacity-60"}`}>
             {position + 1}
           </span>
           <span className="text-base sm:text-lg">{options[optionIndex]}</span>
@@ -197,23 +197,23 @@ const CenarioView = (props: ViewProps<CenarioQuestion>) => {
   const { question } = props;
   return (
     <>
-      <p className="mb-2 text-sm font-bold uppercase tracking-wider text-rose-500">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-[.09em] text-farol-accent">
         Situação real
       </p>
-      {question.context && <p className="mb-4 text-gray-500">{question.context}</p>}
+      {question.context && <p className="mb-4 text-farol-muted">{question.context}</p>}
       <div className="mb-6 flex items-end gap-3">
         <div
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#0f2742] text-3xl"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-farol-line bg-farol-lamp text-2xl sm:h-16 sm:w-16 sm:text-3xl"
           aria-hidden
         >
           🧑‍💼
         </div>
-        <div className="relative rounded-2xl border-2 border-gray-200 px-4 py-3 text-lg">
+        <div className="relative rounded-2xl bg-farol-papel px-4 py-3 text-base font-medium text-farol-bg sm:text-lg">
           <span className="sr-only">O cliente diz: </span>“{question.customer}”
-          <div className="absolute -left-[9px] bottom-4 h-4 w-4 rotate-45 border-b-2 border-l-2 border-gray-200 bg-white" />
+          <div className="absolute -left-[6px] bottom-4 h-4 w-4 rotate-45 bg-farol-papel" />
         </div>
       </div>
-      <h1 className="mb-4 text-xl font-extrabold text-[#0f2742]">{question.prompt}</h1>
+      <h1 className="mb-4 font-display text-xl font-extrabold tracking-tight">{question.prompt}</h1>
       <OptionList {...props} options={question.options} answer={question.answer} />
     </>
   );
@@ -222,7 +222,7 @@ const CenarioView = (props: ViewProps<CenarioQuestion>) => {
 const VfView = ({ question, value, onChange, revealed }: ViewProps<VerdadeiroFalsoQuestion>) => (
   <>
     <Title>Verdadeiro ou falso?</Title>
-    <blockquote className="mb-6 rounded-2xl border-2 border-gray-200 bg-gray-50 p-5 text-lg sm:text-xl">
+    <blockquote className="mb-6 rounded-2xl border border-l-4 border-farol-line border-l-farol-accent bg-farol-surface p-5 text-lg sm:text-xl">
       {question.statement}
     </blockquote>
     <div className="grid grid-cols-2 gap-3">
@@ -242,7 +242,7 @@ const VfView = ({ question, value, onChange, revealed }: ViewProps<VerdadeiroFal
             key={String(option)}
             disabled={revealed}
             onClick={() => onChange(option)}
-            className={`flex flex-col items-center gap-1 rounded-2xl border-2 border-b-4 p-5 text-lg font-bold transition active:translate-y-0.5 ${optionStyle(state)}`}
+            className={`flex flex-col items-center gap-1 rounded-2xl border border-b-4 p-5 text-lg font-semibold transition active:translate-y-0.5 ${optionStyle(state)}`}
           >
             <span className="text-3xl" aria-hidden>
               {option ? "👍" : "👎"}
@@ -272,14 +272,14 @@ const Chip = ({
   <button
     onClick={onClick}
     disabled={disabled || hidden}
-    className={`rounded-xl border-2 border-b-4 px-3 py-2 text-left text-base transition active:translate-y-0.5 ${
+    className={`rounded-xl border border-b-4 px-3 py-2 text-left text-base transition active:translate-y-0.5 ${
       hidden
-        ? "border-gray-200 bg-gray-200 text-transparent"
+        ? "border-farol-surface2 bg-farol-surface2 text-transparent"
         : tone === "right"
-          ? "border-green-500 bg-green-50 text-green-700"
+          ? "border-farol-ok bg-farol-ok-soft text-farol-ok"
           : tone === "wrong"
-            ? "border-rose-400 bg-rose-50 text-rose-600"
-            : "border-gray-200 bg-white hover:bg-gray-50"
+            ? "border-farol-bad bg-farol-bad-soft text-farol-bad"
+            : "border-farol-line bg-farol-surface hover:bg-farol-surface2"
     }`}
   >
     {children}
@@ -291,14 +291,14 @@ const OrdenarView = ({ question, order, value, onChange, revealed }: ViewProps<O
   return (
     <>
       <Title>{question.prompt}</Title>
-      <p className="-mt-4 mb-4 text-gray-500">Toque nos itens na ordem certa.</p>
-      <ol className="mb-6 flex min-h-[120px] flex-col gap-2 rounded-2xl border-2 border-dashed border-gray-300 p-3">
+      <p className="-mt-4 mb-4 text-farol-muted">Toque nos itens na ordem certa.</p>
+      <ol className="mb-6 flex min-h-[120px] flex-col gap-2 rounded-2xl border border-dashed border-farol-line bg-farol-lamp/40 p-3">
         {picked.length === 0 && (
-          <li className="m-auto text-gray-400">Sua sequência aparece aqui</li>
+          <li className="m-auto text-farol-muted">Sua sequência aparece aqui</li>
         )}
         {picked.map((stepIndex, position) => (
           <li key={stepIndex} className="flex items-center gap-2">
-            <span className="w-6 text-right font-bold text-gray-400">{position + 1}.</span>
+            <span className="w-6 shrink-0 text-right font-num font-extrabold text-farol-muted">{position + 1}.</span>
             <Chip
               disabled={revealed}
               tone={revealed ? (stepIndex === position ? "right" : "wrong") : "idle"}
@@ -346,7 +346,7 @@ const CompletarView = ({ question, order, value, onChange, revealed }: ViewProps
   return (
     <>
       <Title>{question.prompt}</Title>
-      <p className="mb-8 rounded-2xl border-2 border-gray-200 p-5 text-lg leading-[2.6rem] sm:text-xl">
+      <p className="mb-8 rounded-2xl border border-farol-line bg-farol-surface p-5 text-lg leading-[2.6rem] sm:text-xl">
         {parts.map((part, i) => (
           <span key={i}>
             {part}
@@ -355,18 +355,18 @@ const CompletarView = ({ question, order, value, onChange, revealed }: ViewProps
                 <button
                   disabled={revealed}
                   onClick={() => remove(i)}
-                  className={`mx-1 rounded-lg border-2 border-b-4 px-2 py-0.5 font-bold ${
+                  className={`mx-1 rounded-lg border border-b-4 px-2 py-0.5 font-semibold ${
                     revealed
                       ? bank[filled[i]] === question.answer[i]
-                        ? "border-green-500 bg-green-50 text-green-700"
-                        : "border-rose-400 bg-rose-50 text-rose-600"
-                      : "border-sky-300 bg-sky-50 text-sky-700"
+                        ? "border-farol-ok bg-farol-ok-soft text-farol-ok"
+                        : "border-farol-bad bg-farol-bad-soft text-farol-bad"
+                      : "border-farol-accent bg-farol-accent-soft text-farol-ink"
                   }`}
                 >
                   {bank[filled[i]]}
                 </button>
               ) : (
-                <span className="mx-1 inline-block w-24 border-b-2 border-gray-400 align-baseline" aria-label="lacuna" />
+                <span className="mx-1 inline-block w-24 border-b-2 border-farol-muted align-baseline" aria-label="lacuna" />
               ))}
           </span>
         ))}

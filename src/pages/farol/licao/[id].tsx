@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
-import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findLesson } from "~/farol/content";
 import {
@@ -22,7 +22,22 @@ import {
   makeInstance,
   shuffle,
 } from "~/farol/components/QuestionViews";
-import { Button, ProgressBar } from "~/farol/components/ui";
+import {
+  Button,
+  Eyebrow,
+  FarolShell,
+  Faroldo,
+  Feixe,
+  Pill,
+  ProgressBar,
+  Semaforo,
+  buttonBase,
+  buttonVariants,
+  card,
+  sinalDaPrecisao,
+  sinalInfo,
+  type Sinal,
+} from "~/farol/components/ui";
 import {
   badges,
   getLessonStatus,
@@ -32,22 +47,25 @@ import {
   type BadgeContext,
 } from "~/farol/gamification";
 import { useHeartRegen, useHydrated, useSounds } from "~/farol/hooks";
+import { notifyGestorTrailCompleted } from "~/farol/notify";
+import { Parabens } from "~/farol/components/TrailEnd";
 import {
   HEART_REGEN_MINUTES,
   MAX_HEARTS,
   REFILL_HEARTS_COST,
   computeStreak,
+  isTrailComplete,
   useFarolStore,
 } from "~/farol/store";
-import type { Lesson, Unit } from "~/farol/types";
+import type { Lesson } from "~/farol/types";
 
 const praise = [
   "Mandou bem!",
-  "Isso aí!",
-  "Venda fechada!",
-  "Excelente!",
-  "Perfeito!",
-  "Na mosca!",
+  "Isso aí, consultor!",
+  "Farol verde!",
+  "Excelente leitura!",
+  "É assim que se vende valor!",
+  "Na medida!",
 ];
 
 const badgeContext = (): BadgeContext => {
@@ -70,11 +88,13 @@ type Summary = {
   streakAfter: number;
   levelUp: string | null;
   newBadges: Badge[];
+  /** esta lição fechou a trilha inteira */
+  trailJustCompleted: boolean;
 };
 
 /* ------------------------------ Player ------------------------------------ */
 
-const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
+const LessonPlayer = ({ lesson }: { lesson: Lesson }) => {
   const router = useRouter();
   const hearts = useFarolStore((s) => s.hearts);
   const loseHeart = useFarolStore((s) => s.loseHeart);
@@ -84,7 +104,6 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
 
   const total = lesson.questions.length;
   const isChallenge = lesson.kind === "desafio";
-  const accent = isChallenge ? "#0f2742" : unit.color;
 
   const [queue, setQueue] = useState<QuestionInstance[]>(() =>
     shuffle(lesson.questions).map(makeInstance),
@@ -105,6 +124,7 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
   const [praiseText, setPraiseText] = useState(praise[0]!);
   const [quitOpen, setQuitOpen] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
   const [outOfHearts, setOutOfHearts] = useState(false);
   const startedAt = useRef(Date.now());
 
@@ -166,6 +186,10 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
     const after = useFarolStore.getState();
     const ctxAfter = badgeContext();
     const levelAfter = getLevel(after.xpTotal);
+    const trailJustCompleted =
+      !isTrailComplete(before.lessons) && isTrailComplete(after.lessons);
+    // finishLesson já deixou o aviso "pendente"; tenta enviar agora
+    if (trailJustCompleted) void notifyGestorTrailCompleted();
 
     sounds.finish();
     setSummary({
@@ -180,6 +204,7 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
       newBadges: badges.filter(
         (b) => !isBadgeUnlocked(b, ctxBefore) && isBadgeUnlocked(b, ctxAfter),
       ),
+      trailJustCompleted,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missed, comboXp, answered, solved, bestCombo]);
@@ -220,8 +245,18 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
     return () => window.removeEventListener("keydown", onKey);
   }, [status, check, next, current, summary, quitOpen, outOfHearts]);
 
+  if (summary && celebrating) return <Parabens />;
+
   if (summary) {
-    return <LessonSummary summary={summary} lesson={lesson} accent={accent} />;
+    return (
+      <LessonSummary
+        summary={summary}
+        lesson={lesson}
+        onCelebrate={
+          summary.trailJustCompleted ? () => setCelebrating(true) : undefined
+        }
+      />
+    );
   }
 
   if (outOfHearts || (hearts <= 0 && status === "answering" && answered === 0)) {
@@ -236,20 +271,20 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
       <header className="mx-auto flex w-full max-w-4xl items-center gap-4 px-4 pt-6 sm:pt-10">
         <button
           onClick={() => setQuitOpen(true)}
-          className="text-gray-400 hover:text-gray-600"
+          className="text-farol-muted hover:text-farol-ink"
           aria-label="Sair da lição"
         >
           <CloseIcon className="h-7 w-7" />
         </button>
         <div className="relative grow">
-          <ProgressBar value={solved / total} color={accent} className="h-4" />
+          <ProgressBar value={solved / total} className="h-4" />
           {combo >= 3 && (
-            <span className="absolute -top-6 right-0 text-sm font-extrabold text-orange-500">
+            <span className="absolute -top-6 right-0 font-num text-sm font-extrabold text-farol-warn">
               🔥 combo x{combo}
             </span>
           )}
         </div>
-        <span className="flex items-center gap-1 font-bold text-rose-500" aria-label={`${hearts} vidas`}>
+        <span className="flex items-center gap-1 font-num text-lg font-extrabold tabular-nums text-farol-bad" aria-label={`${hearts} vidas`}>
           <HeartIcon className="h-7 w-7" empty={hearts === 0} />
           {hearts}
         </span>
@@ -257,12 +292,12 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
 
       <main className="mx-auto w-full max-w-2xl grow px-4 pb-64 pt-8 sm:pt-14">
         {isChallenge && pos === 0 && status === "answering" && (
-          <p className="mb-3 inline-block rounded-full bg-[#0f2742] px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-300">
-            Desafio · XP em dobro
-          </p>
+          <Pill tone="amarelo" className="mb-3 uppercase tracking-[.09em]">
+            🏆 Desafio · XP em dobro
+          </Pill>
         )}
         {missed.has(questionId(current)) && status === "answering" && pos >= total && (
-          <p className="mb-3 text-sm font-bold uppercase tracking-wider text-orange-500">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[.09em] text-farol-warn">
             ↻ Revisando um erro
           </p>
         )}
@@ -277,22 +312,22 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
       </main>
 
       <footer
-        className={`fixed bottom-0 left-0 right-0 border-t-2 ${
+        className={`fixed bottom-0 left-0 right-0 z-10 max-h-[78vh] overflow-y-auto border-t ${
           status === "right"
-            ? "border-transparent bg-green-100"
+            ? "border-farol-ok bg-farol-ok-soft"
             : status === "wrong"
-              ? "border-transparent bg-rose-100"
-              : "border-gray-200 bg-white"
+              ? "border-farol-bad bg-farol-bad-soft"
+              : "border-farol-line bg-farol-surface"
         }`}
       >
         <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:py-8">
           {status === "answering" ? (
             <>
-              <p className="hidden text-sm text-gray-400 sm:block">
+              <p className="hidden text-sm text-farol-muted sm:block">
                 Dica: use as teclas 1–4 e Enter
               </p>
               <Button
-                variant="success"
+                variant="primary"
                 className="w-full sm:w-auto sm:min-w-[180px]"
                 disabled={!canCheck(current.question, answer)}
                 onClick={check}
@@ -303,19 +338,23 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
           ) : (
             <>
               <div className="flex gap-3" role="status" aria-live="polite">
-                <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-3xl sm:flex" aria-hidden>
-                  {status === "right" ? "✅" : "💡"}
-                </span>
-                <div>
-                  <p className={`text-xl font-extrabold ${status === "right" ? "text-green-700" : "text-rose-600"}`}>
-                    {status === "right" ? praiseText : "Quase! Resposta certa:"}
+                <Faroldo
+                  className="h-11 w-11 sm:h-14 sm:w-14"
+                  mood={status === "right" ? "feliz" : "atento"}
+                />
+                <div className="min-w-0">
+                  <Eyebrow className={status === "right" ? "text-farol-ok" : "text-farol-bad"}>
+                    Faroldo diz
+                  </Eyebrow>
+                  <p className={`font-display text-xl font-extrabold leading-tight tracking-tight ${status === "right" ? "text-farol-ok" : "text-farol-bad"}`}>
+                    {status === "right" ? praiseText : "Quase! A resposta certa é:"}
                   </p>
                   {status === "wrong" && (
-                    <p className="font-bold text-rose-600">
+                    <p className="mt-1 font-semibold text-farol-ink">
                       {correctAnswerText(current.question)}
                     </p>
                   )}
-                  <p className={`mt-1 text-sm ${status === "right" ? "text-green-800" : "text-rose-700"}`}>
+                  <p className="mt-1 text-sm text-farol-ink/85">
                     {current.question.explanation}
                   </p>
                 </div>
@@ -334,20 +373,20 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
       </footer>
 
       {quitOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" onClick={() => setQuitOpen(false)}>
-          <div className="w-full max-w-md rounded-t-3xl bg-white p-6 text-center sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
-            <p className="text-4xl" aria-hidden>🚪</p>
-            <h2 className="mt-2 text-xl font-extrabold text-[#0f2742]">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-farol-lamp/80 sm:items-center" onClick={() => setQuitOpen(false)}>
+          <div className="w-full max-w-md rounded-t-3xl border border-farol-line bg-farol-surface p-6 text-center sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+            <Faroldo className="mx-auto h-14 w-14" mood="atento" />
+            <h2 className="mt-3 font-display text-xl font-extrabold tracking-tight">
               Sair agora?
             </h2>
-            <p className="mt-1 text-gray-500">
+            <p className="mt-1 text-farol-muted">
               Você vai perder o progresso desta lição.
             </p>
             <div className="mt-5 flex flex-col gap-3">
               <Button variant="primary" onClick={() => setQuitOpen(false)}>
                 Continuar treinando
               </Button>
-              <Link href="/farol" className="py-2 font-extrabold uppercase text-rose-500">
+              <Link href="/farol" className="py-2 font-display font-extrabold uppercase tracking-wide text-farol-bad">
                 Sair da lição
               </Link>
             </div>
@@ -360,73 +399,116 @@ const LessonPlayer = ({ lesson, unit }: { lesson: Lesson; unit: Unit }) => {
 
 /* ------------------------------ Telas finais ------------------------------ */
 
-const StatCard = ({ label, value, color }: { label: string; value: string; color: string }) => (
-  <div className="flex-1 overflow-hidden rounded-2xl border-2" style={{ borderColor: color }}>
-    <p className="py-1 text-xs font-extrabold uppercase tracking-wide text-white" style={{ backgroundColor: color }}>
-      {label}
-    </p>
-    <p className="py-3 text-xl font-extrabold" style={{ color }}>
-      {value}
-    </p>
+const StatCard = ({ label, value, tone }: { label: string; value: string; tone: string }) => (
+  <div className={`${card} flex-1 px-2 py-3`}>
+    <Eyebrow>{label}</Eyebrow>
+    <p className={`mt-1 font-num text-2xl font-black tabular-nums ${tone}`}>{value}</p>
   </div>
 );
 
-const LessonSummary = ({ summary, lesson, accent }: { summary: Summary; lesson: Lesson; accent: string }) => {
+const faroldoResumo: Record<Sinal, string> = {
+  verde:
+    "Farol verde! Você dominou essa lição. Leve esse raciocínio para a próxima visita.",
+  amarelo:
+    "Farol amarelo: bom caminho, mas vale refazer para fixar os pontos em que você hesitou.",
+  vermelho:
+    "Farol vermelho: sem crise, é treinando que acende. Refaça a lição com calma e leia as explicações.",
+};
+
+const Row = ({ children, className }: { children: ReactNode; className: string }) => (
+  <p className={`flex items-center gap-2 rounded-xl px-4 py-3 font-semibold ${className}`}>
+    {children}
+  </p>
+);
+
+const LessonSummary = ({
+  summary,
+  lesson,
+  onCelebrate,
+}: {
+  summary: Summary;
+  lesson: Lesson;
+  /** última lição da trilha: "Continuar" leva à tela de parabéns */
+  onCelebrate?: () => void;
+}) => {
   const perfect = summary.accuracy === 1;
+  const sinal = sinalDaPrecisao(summary.accuracy);
+  const info = sinalInfo[sinal];
   const mins = Math.floor(summary.seconds / 60);
   const secs = String(summary.seconds % 60).padStart(2, "0");
   const streakGrew = summary.streakAfter > summary.streakBefore;
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-10 text-center">
-      <div className="flex grow flex-col items-center justify-center gap-4">
-        <div className="text-7xl" aria-hidden>{perfect ? "🏆" : "🎉"}</div>
-        <h1 className="text-3xl font-extrabold" style={{ color: accent }}>
-          {perfect ? "Lição perfeita!" : "Lição concluída!"}
-        </h1>
-        <p className="text-gray-500">{lesson.title}</p>
+    <div className="relative mx-auto flex min-h-screen max-w-lg flex-col overflow-hidden px-4 py-8 text-center sm:py-10">
+      <Feixe className="-top-40 left-1/2 -ml-56 h-[28rem] w-[28rem]" />
+      <div className="relative flex grow flex-col items-center justify-center gap-4">
+        <Semaforo sinal={sinal} size="lg" />
+        <div>
+          <Pill tone={sinal} className="uppercase tracking-[.09em]">
+            {info.label} · {Math.round(summary.accuracy * 100)}% de precisão
+          </Pill>
+          <h1 className="mt-3 font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl">
+            {perfect ? "Lição perfeita!" : "Lição concluída!"}
+          </h1>
+          <p className="mt-2 text-farol-muted">{lesson.title}</p>
+        </div>
 
-        <div className="mt-2 flex w-full gap-3">
-          <StatCard label="XP total" value={`+${summary.xp}`} color="#eab308" />
-          <StatCard label="Precisão" value={`${Math.round(summary.accuracy * 100)}%`} color="#22c55e" />
-          <StatCard label="Tempo" value={`${mins}:${secs}`} color="#0ea5e9" />
+        <div className="flex w-full gap-3">
+          <StatCard label="XP" value={`+${summary.xp}`} tone="text-farol-accent" />
+          <StatCard label="Precisão" value={`${Math.round(summary.accuracy * 100)}%`} tone={info.text} />
+          <StatCard label="Tempo" value={`${mins}:${secs}`} tone="text-farol-ink" />
+        </div>
+
+        <div className={`${card} flex w-full items-start gap-3 p-4 text-left`}>
+          <Faroldo className="h-11 w-11" mood={sinal === "verde" ? "feliz" : "atento"} />
+          <div>
+            <Eyebrow className="text-farol-accent">Faroldo diz</Eyebrow>
+            <p className="mt-0.5 text-sm">{faroldoResumo[sinal]}</p>
+          </div>
         </div>
 
         <div className="flex w-full flex-col gap-2 text-left">
-          <p className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 font-bold text-amber-700">
+          <Row className="bg-farol-warn-soft text-farol-warn">
             <CoinIcon className="h-6 w-6" /> +{summary.coins} moedas
-          </p>
+          </Row>
           {summary.bestCombo >= 3 && (
-            <p className="flex items-center gap-2 rounded-xl bg-orange-50 px-4 py-3 font-bold text-orange-600">
+            <Row className="bg-farol-accent-soft text-farol-accent">
               <XpIcon className="h-6 w-6" /> Melhor combo: {summary.bestCombo} seguidas
-            </p>
+            </Row>
           )}
           {streakGrew && (
-            <p className="flex items-center gap-2 rounded-xl bg-orange-50 px-4 py-3 font-bold text-orange-600">
+            <Row className="bg-farol-warn-soft text-farol-warn">
               <FlameIcon className="h-6 w-6" /> Sequência de {summary.streakAfter} {summary.streakAfter === 1 ? "dia" : "dias"}!
-            </p>
+            </Row>
           )}
           {summary.levelUp && (
-            <p className="flex items-center gap-2 rounded-xl bg-[#0f2742] px-4 py-3 font-bold text-amber-300">
-              ⬆️ Nova patente: {summary.levelUp}
-            </p>
+            <Row className="bg-farol-accent text-white">
+              ⬆️ Novo nível: {summary.levelUp}
+            </Row>
           )}
           {summary.newBadges.map((b) => (
-            <p key={b.id} className="flex items-center gap-2 rounded-xl bg-sky-50 px-4 py-3 font-bold text-sky-700">
+            <Row key={b.id} className="bg-farol-ok-soft text-farol-ok">
               <span aria-hidden>{b.icon}</span> Conquista desbloqueada: {b.title}
-            </p>
+            </Row>
           ))}
         </div>
       </div>
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row-reverse">
-        <Link
-          href="/farol"
-          className="flex-1 rounded-2xl border-b-4 border-green-700 bg-green-500 py-3 font-extrabold uppercase tracking-wide text-white transition hover:brightness-105"
-        >
-          Continuar
-        </Link>
+      <div className="relative mt-8 flex flex-col gap-3 sm:flex-row-reverse">
+        {onCelebrate ? (
+          <button
+            onClick={onCelebrate}
+            autoFocus
+            className={`flex-1 ${buttonBase} ${buttonVariants.primary}`}
+          >
+            Continuar
+          </button>
+        ) : (
+          <Link href="/farol" className={`flex-1 ${buttonBase} ${buttonVariants.primary}`}>
+            Continuar
+          </Link>
+        )}
         <a
           href={`/farol/licao/${lesson.id}`}
-          className="flex-1 rounded-2xl border-2 border-b-4 border-gray-300 py-3 font-extrabold uppercase tracking-wide text-gray-500 hover:bg-gray-50"
+          className={`flex-1 ${buttonBase} ${buttonVariants.ghost}`}
         >
           Refazer lição
         </a>
@@ -446,8 +528,8 @@ const OutOfHearts = ({ onQuit, onRefilled }: { onQuit: () => void; onRefilled: (
           <HeartIcon key={i} className="h-10 w-10" empty />
         ))}
       </div>
-      <h1 className="text-2xl font-extrabold text-[#0f2742]">Suas vidas acabaram</h1>
-      <p className="text-gray-500">
+      <h1 className="font-display text-2xl font-extrabold tracking-tight">Suas vidas acabaram</h1>
+      <p className="text-farol-muted">
         Você ganha 1 vida a cada {HEART_REGEN_MINUTES} minutos, ou pode
         recarregar agora com moedas.
       </p>
@@ -459,9 +541,9 @@ const OutOfHearts = ({ onQuit, onRefilled }: { onQuit: () => void; onRefilled: (
         Recarregar vidas · <CoinIcon className="h-5 w-5" /> {REFILL_HEARTS_COST}
       </Button>
       {!canRefill && (
-        <p className="text-sm text-gray-400">Você tem {coins} moedas.</p>
+        <p className="text-sm text-farol-muted">Você tem {coins} moedas.</p>
       )}
-      <button onClick={onQuit} className="py-2 font-extrabold uppercase text-gray-400 hover:text-gray-600">
+      <button onClick={onQuit} className="py-2 font-display font-extrabold uppercase tracking-wide text-farol-muted hover:text-farol-ink">
         Voltar para a trilha
       </button>
     </div>
@@ -479,23 +561,20 @@ const LessonPage: NextPage = () => {
   const locked = found ? getLessonStatus(found.lesson.id, records) === "locked" : false;
 
   return (
-    <>
-      <Head>
-        <title>{`${found?.lesson.title ?? "Lição"} · Farol Vendas`}</title>
-      </Head>
+    <FarolShell title={found?.lesson.title ?? "Lição"}>
       {!hydrated || !router.isReady ? null : found && !locked ? (
-        <LessonPlayer key={id} lesson={found.lesson} unit={found.unit} />
+        <LessonPlayer key={id} lesson={found.lesson} />
       ) : (
         <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-          <p className="text-xl font-bold text-[#0f2742]">
+          <p className="font-display text-xl font-extrabold tracking-tight">
             {locked ? "Essa lição ainda está bloqueada." : "Lição não encontrada."}
           </p>
-          <Link href="/farol" className="font-bold text-sky-500">
+          <Link href="/farol" className="font-semibold text-farol-accent hover:underline">
             Voltar para a trilha
           </Link>
         </div>
       )}
-    </>
+    </FarolShell>
   );
 };
 

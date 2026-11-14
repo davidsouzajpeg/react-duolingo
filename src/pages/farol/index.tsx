@@ -1,14 +1,24 @@
 import type { NextPage } from "next";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { units } from "~/farol/content";
+import { allLessons, linhaAtual, units } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
+import { TrailEndCard } from "~/farol/components/TrailEnd";
+import { CheckIcon, LockIcon, StarIcon } from "~/farol/components/Icons";
 import {
-  CheckIcon,
-  LockIcon,
-  StarIcon,
-} from "~/farol/components/Icons";
+  Eyebrow,
+  Feixe,
+  Pill,
+  ProgressBar,
+  Semaforo,
+  buttonBase,
+  buttonVariants,
+  card,
+  sinalDaPrecisao,
+  sinalInfo,
+} from "~/farol/components/ui";
 import {
+  completedLessonCount,
   getCurrentLesson,
   getLessonStatus,
   type LessonStatus,
@@ -19,27 +29,31 @@ import type { Lesson, Unit } from "~/farol/types";
 /** deslocamento horizontal em zigue-zague dos nós da trilha */
 const offsets = [0, 44, 70, 44, 0, -44, -70, -44];
 
+const nodeColors: Record<LessonStatus, { bg: string; shade: string }> = {
+  done: { bg: "#3fcf86", shade: "#2a9c63" },
+  current: { bg: "#ff0084", shade: "#c4006a" },
+  locked: { bg: "#2d2f36", shade: "#1f2026" },
+};
+
 const nodeIcon = (lesson: Lesson, status: LessonStatus) => {
   if (status === "locked")
     return lesson.kind === "desafio" ? (
-      <span className="text-3xl grayscale">🏆</span>
+      <span className="text-3xl opacity-40 grayscale">🏆</span>
     ) : (
-      <LockIcon className="h-8 w-8 text-gray-400" />
+      <LockIcon className="h-7 w-7 text-farol-muted/70" />
     );
   if (lesson.kind === "desafio") return <span className="text-3xl">🏆</span>;
-  if (status === "done") return <CheckIcon className="h-9 w-9 text-white" />;
+  if (status === "done") return <CheckIcon className="h-9 w-9 text-farol-lamp" />;
   return <StarIcon className="h-9 w-9 text-white" />;
 };
 
 const LessonNode = ({
   lesson,
-  unit,
   index,
   selected,
   onSelect,
 }: {
   lesson: Lesson;
-  unit: Unit;
   index: number;
   selected: boolean;
   onSelect: () => void;
@@ -49,15 +63,7 @@ const LessonNode = ({
   const record = records[lesson.id];
   const offset = offsets[index % offsets.length]!;
   const isChallenge = lesson.kind === "desafio";
-
-  const bg =
-    status === "locked"
-      ? "#e5e7eb"
-      : isChallenge
-        ? "#0f2742"
-        : unit.color;
-  const border =
-    status === "locked" ? "#c4c7cc" : isChallenge ? "#06162a" : unit.shade;
+  const { bg, shade } = nodeColors[status];
 
   return (
     <div
@@ -65,100 +71,109 @@ const LessonNode = ({
       style={{ transform: `translateX(${offset}px)` }}
     >
       {status === "current" && !selected && (
-        <div className="absolute -top-12 z-10 animate-bounce whitespace-nowrap rounded-xl border-2 border-gray-200 bg-white px-3 py-2 text-sm font-extrabold uppercase tracking-wide shadow-sm" style={{ color: unit.color }}>
-          {record ? "Repetir" : "Começar"}
-          <div className="absolute -bottom-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-gray-200 bg-white" />
+        <div className="absolute -top-12 z-10 animate-bounce whitespace-nowrap rounded-xl bg-farol-papel px-3 py-2 font-display text-sm font-extrabold uppercase tracking-wide text-farol-accent-dark shadow-lg motion-reduce:animate-none">
+          Começar
+          <div className="absolute -bottom-[5px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-farol-papel" />
         </div>
       )}
 
-      {status === "current" && (
-        <div
-          className="absolute -inset-2 rounded-full border-[6px] opacity-30"
-          style={{ borderColor: unit.color }}
-          aria-hidden
+      <div className="relative">
+        {status === "current" && (
+          <div
+            className="absolute -inset-2.5 animate-farol-pulso rounded-full border-[5px] border-farol-accent motion-reduce:animate-none"
+            style={{ boxShadow: "0 0 26px rgba(255,0,132,.55)" }}
+            aria-hidden
+          />
+        )}
+        <button
+          onClick={onSelect}
+          aria-label={`${lesson.title}${status === "locked" ? " (bloqueada)" : ""}`}
+          aria-expanded={selected}
+          className={`relative flex items-center justify-center rounded-full transition active:translate-y-1 ${
+            isChallenge ? "h-[76px] w-[76px]" : "h-[70px] w-[70px]"
+          } ${status === "locked" ? "border border-farol-line" : ""}`}
+          style={{ backgroundColor: bg, boxShadow: `0 7px 0 ${shade}` }}
+        >
+          {nodeIcon(lesson, status)}
+        </button>
+      </div>
+
+      {/* Farol da lição: melhor precisão já alcançada */}
+      {record && (
+        <Semaforo
+          horizontal
+          size="xs"
+          sinal={sinalDaPrecisao(record.bestAccuracy)}
+          className="mt-4"
         />
       )}
 
-      <button
-        onClick={onSelect}
-        aria-label={`${lesson.title}${status === "locked" ? " (bloqueada)" : ""}`}
-        className={`relative flex items-center justify-center rounded-full transition active:translate-y-1 ${
-          isChallenge ? "h-[76px] w-[76px]" : "h-[70px] w-[70px]"
-        }`}
-        style={{
-          backgroundColor: bg,
-          boxShadow: `0 7px 0 ${border}`,
-        }}
-      >
-        {nodeIcon(lesson, status)}
-      </button>
-
-      {record && (
-        <div className="mt-3 flex gap-0.5" aria-label={`Melhor precisão ${Math.round(record.bestAccuracy * 100)}%`}>
-          {[0.5, 0.8, 1].map((threshold) => (
-            <StarIcon
-              key={threshold}
-              className={`h-4 w-4 ${record.bestAccuracy >= threshold ? "text-amber-400" : "text-gray-200"}`}
-            />
-          ))}
-        </div>
-      )}
-
-      {selected && (
-        <LessonPopover lesson={lesson} unit={unit} status={status} />
-      )}
+      {selected && <LessonPopover lesson={lesson} status={status} offset={offset} />}
     </div>
   );
 };
 
 const LessonPopover = ({
   lesson,
-  unit,
   status,
+  offset,
 }: {
   lesson: Lesson;
-  unit: Unit;
   status: LessonStatus;
+  /** deslocamento do nó: o balão volta para o centro da coluna */
+  offset: number;
 }) => {
   const hearts = useFarolStore((s) => s.hearts);
+  const record = useFarolStore((s) => s.lessons[lesson.id]);
   const locked = status === "locked";
   const isChallenge = lesson.kind === "desafio";
-  const color = locked ? "#e5e7eb" : isChallenge ? "#0f2742" : unit.color;
+  const sinal = record ? sinalDaPrecisao(record.bestAccuracy) : null;
 
   return (
     <div
-      className="absolute top-[92px] z-20 w-72 rounded-2xl p-4 text-left shadow-lg"
-      style={{ backgroundColor: color }}
+      className="absolute top-[94px] z-20 w-72 rounded-2xl border border-farol-line bg-farol-surface2 p-4 text-left shadow-2xl"
+      style={{ transform: `translateX(${-offset}px)` }}
       onClick={(e) => e.stopPropagation()}
     >
       <div
-        className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45"
-        style={{ backgroundColor: color }}
+        className="absolute -top-2 h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-farol-line bg-farol-surface2"
+        style={{ left: `calc(50% + ${offset}px)` }}
       />
-      <p className={`text-lg font-extrabold ${locked ? "text-gray-500" : "text-white"}`}>
-        {lesson.title}
-      </p>
-      <p className={`mb-3 text-sm ${locked ? "text-gray-500" : "text-white/85"}`}>
+      <div className="relative flex items-start justify-between gap-3">
+        <div>
+          <Eyebrow className={isChallenge ? "text-farol-warn" : "text-farol-muted"}>
+            {isChallenge ? "Desafio · XP em dobro" : "Lição"}
+          </Eyebrow>
+          <p className="mt-1 font-display text-lg font-extrabold leading-tight tracking-tight">
+            {lesson.title}
+          </p>
+        </div>
+        <Semaforo sinal={sinal} size="sm" />
+      </div>
+      <p className="mb-3 mt-2 text-sm text-farol-muted">
         {locked
           ? "Conclua as lições anteriores para desbloquear."
-          : `${lesson.questions.length} questões${isChallenge ? " · XP em dobro" : ""}`}
+          : sinal && record
+            ? `${sinalInfo[sinal].label} · melhor precisão ${Math.round(record.bestAccuracy * 100)}%`
+            : `${lesson.questions.length} questões · cerca de 3 minutos`}
       </p>
       {locked ? (
-        <span className="block w-full rounded-2xl bg-gray-300 py-3 text-center font-extrabold uppercase text-gray-500">
+        <span className="block w-full rounded-2xl border border-farol-line bg-farol-surface py-3 text-center font-display font-extrabold uppercase tracking-wide text-farol-muted">
           Bloqueada
         </span>
       ) : hearts === 0 ? (
         <Link
           href="/farol/conquistas#loja"
-          className="block w-full rounded-2xl border-b-4 border-gray-300 bg-white py-3 text-center font-extrabold uppercase text-rose-500"
+          className={`block w-full ${buttonBase} ${buttonVariants.danger}`}
         >
           Sem vidas · recarregar
         </Link>
       ) : (
         <Link
           href={`/farol/licao/${lesson.id}`}
-          className="block w-full rounded-2xl border-b-4 border-gray-300 bg-white py-3 text-center font-extrabold uppercase transition hover:brightness-95"
-          style={{ color: isChallenge ? "#0f2742" : unit.shade }}
+          className={`block w-full ${buttonBase} ${
+            status === "done" ? buttonVariants.ghost : buttonVariants.primary
+          }`}
         >
           {status === "done" ? "Praticar de novo" : "Começar"}
         </Link>
@@ -167,30 +182,77 @@ const LessonPopover = ({
   );
 };
 
-const UnitHeader = ({ unit }: { unit: Unit }) => (
-  <header
-    className="flex items-center justify-between rounded-2xl p-5 text-white"
-    style={{ backgroundColor: unit.color, boxShadow: `0 5px 0 ${unit.shade}` }}
-  >
-    <div>
-      <p className="text-sm font-bold uppercase tracking-wider text-white/80">
-        Unidade {unit.number}
-      </p>
-      <h2 className="text-2xl font-extrabold">{unit.title}</h2>
-      <p className="text-white/90">{unit.description}</p>
-    </div>
-  </header>
-);
+const UnitHeader = ({ unit }: { unit: Unit }) => {
+  const records = useFarolStore((s) => s.lessons);
+  const done = unit.lessons.filter((l) => records[l.id]?.completions).length;
+  const complete = done === unit.lessons.length;
+  return (
+    <header className={`${card} flex items-center gap-4 border-l-4 p-5 ${complete ? "border-l-farol-ok" : "border-l-farol-accent"}`}>
+      <div className="min-w-0 grow">
+        <Eyebrow>Unidade {unit.number}</Eyebrow>
+        <h2 className="mt-1 font-display text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
+          {unit.title}
+        </h2>
+        <p className="mt-1 text-sm text-farol-muted">{unit.description}</p>
+      </div>
+      <Pill tone={complete ? "verde" : done > 0 ? "rosa" : "neutro"} className="shrink-0 font-num text-sm font-extrabold tabular-nums">
+        {done}/{unit.lessons.length}
+      </Pill>
+    </header>
+  );
+};
+
+const LinhaHero = () => {
+  const records = useFarolStore((s) => s.lessons);
+  const name = useFarolStore((s) => s.name);
+  const current = getCurrentLesson(records);
+  const done = completedLessonCount(records);
+  const total = allLessons.length;
+  return (
+    <section className={`${card} relative mb-8 overflow-hidden p-5 sm:p-6`}>
+      <Feixe />
+      <div className="relative">
+        <Eyebrow className="text-farol-accent">Linha de treino</Eyebrow>
+        <h1 className="mt-1 font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl">
+          {linhaAtual.title}
+        </h1>
+        <p className="mt-2 max-w-md text-sm text-farol-muted">{linhaAtual.description}</p>
+        <div className="mt-5 flex items-center gap-3">
+          <ProgressBar value={done / total} className="h-2.5" />
+          <span className="shrink-0 font-num text-sm font-extrabold tabular-nums">
+            {done}/{total} <span className="font-body font-normal text-farol-muted">lições</span>
+          </span>
+        </div>
+        <p className="mt-3 text-sm text-farol-muted">
+          {name ? (
+            <>
+              Olá, <strong className="text-farol-ink">{name}</strong>!{" "}
+            </>
+          ) : null}
+          {current ? (
+            <>
+              Próxima parada:{" "}
+              <strong className="text-farol-ink">{current.lesson.title}</strong>.
+            </>
+          ) : (
+            "Você concluiu a linha inteira! 🌟"
+          )}
+        </p>
+      </div>
+    </section>
+  );
+};
 
 const Trail = () => {
   const records = useFarolStore((s) => s.lessons);
-  const name = useFarolStore((s) => s.name);
   const [selected, setSelected] = useState<string | null>(null);
   const currentRef = useRef<HTMLDivElement>(null);
   const current = getCurrentLesson(records);
+  const started = completedLessonCount(records) > 0;
 
   useEffect(() => {
-    currentRef.current?.scrollIntoView({ block: "center" });
+    if (started) currentRef.current?.scrollIntoView({ block: "center" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -201,17 +263,10 @@ const Trail = () => {
 
   return (
     <>
-      {name && (
-        <p className="mb-4 text-gray-500">
-          Olá, <strong className="text-[#0f2742]">{name}</strong>!{" "}
-          {current
-            ? `Próxima parada: ${current.lesson.title}.`
-            : "Você concluiu a trilha inteira! 🌟"}
-        </p>
-      )}
+      <LinhaHero />
       <div className="flex flex-col gap-10">
         {units.map((unit) => (
-          <section key={unit.id} className="flex flex-col gap-10">
+          <section key={unit.id} className="flex flex-col gap-12">
             <UnitHeader unit={unit} />
             <div className="flex flex-col items-center gap-12 pb-4">
               {unit.lessons.map((lesson, i) => (
@@ -223,7 +278,6 @@ const Trail = () => {
                 >
                   <LessonNode
                     lesson={lesson}
-                    unit={unit}
                     index={i}
                     selected={selected === lesson.id}
                     onSelect={() =>
@@ -236,6 +290,14 @@ const Trail = () => {
           </section>
         ))}
       </div>
+      {/* fim da trilha: parabéns + aviso ao gestor; senão, espaço para o balão da última lição */}
+      {completedLessonCount(records) === allLessons.length ? (
+        <div className="mt-40">
+          <TrailEndCard />
+        </div>
+      ) : (
+        <div className="h-40" />
+      )}
     </>
   );
 };
