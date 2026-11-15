@@ -1,10 +1,11 @@
 /**
  * Sons do Vendê, sintetizados na hora com Web Audio (sem arquivos de áudio).
  *
- * Caráter: sóbrio e caloroso. Timbre de marimba e de teclas macias (ondas
- * senoidais e triangulares), registro médio-grave, acordes suaves de fundo e
- * uma reverberação curta. Nada de ondas quadradas, pratos ou notas muito
- * agudas: tudo passa por um filtro que corta o brilho excessivo.
+ * Caráter: discreto e limpo. Tons puros (senoidais), curtos e baixos de
+ * volume, com uma reverberação pequena. Referências de medida, tiradas da
+ * análise de um app de aprendizagem conhecido: o som de acerto dura cerca de
+ * 0,3 s e tem duas notas puras; o de erro são dois tons graves e curtos; o de
+ * fim de lição dura cerca de 1,5 s. As melodias e os intervalos são do Vendê.
  */
 
 type AudioWindow = Window & { webkitAudioContext?: typeof AudioContext };
@@ -59,34 +60,6 @@ const engine = () => {
 };
 
 const note = (semitonesFromA4: number) => 440 * Math.pow(2, semitonesFromA4 / 12);
-// atalhos (semitons a partir do Lá 4): registro médio, sem notas muito agudas
-const A3 = -12, C4 = -9, E4 = -5, G4 = -2, A4 = 0, C5 = 3, D5 = 5, E5 = 7, G5 = 10;
-
-/** tecla de marimba: ataque macio, corpo curto e um harmônico que some rápido */
-const mallet = (semitone: number, at: number, dur = 0.5, vol = 0.2) => {
-  const e = engine();
-  if (!e) return;
-  const t = e.ctx.currentTime + at;
-  const freq = note(semitone);
-  const partials: [number, number, number][] = [
-    [1, 1, dur],
-    [4, 0.16, dur * 0.22],
-  ];
-  for (const [ratio, level, d] of partials) {
-    const osc = e.ctx.createOscillator();
-    const gain = e.ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq * ratio;
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(vol * level, t + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    osc.connect(gain);
-    gain.connect(e.out);
-    gain.connect(e.room);
-    osc.start(t);
-    osc.stop(t + d + 0.05);
-  }
-};
 
 /** acorde de fundo: entra e sai devagar, dá calor sem chamar atenção */
 const pad = (semitones: number[], at: number, dur: number, vol = 0.05) => {
@@ -114,24 +87,6 @@ const pad = (semitones: number[], at: number, dur: number, vol = 0.05) => {
   }
 };
 
-/** batida grave e curta, como um toque de tambor abafado */
-const thump = (at: number, vol = 0.2) => {
-  const e = engine();
-  if (!e) return;
-  const t = e.ctx.currentTime + at;
-  const osc = e.ctx.createOscillator();
-  const gain = e.ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(120, t);
-  osc.frequency.exponentialRampToValueAtTime(52, t + 0.12);
-  gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(vol, t + 0.008);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
-  osc.connect(gain).connect(e.out);
-  osc.start(t);
-  osc.stop(t + 0.26);
-};
-
 /** ruído abafado: toque de madeira, chocalho suave ou sopro */
 const breath = (at: number, dur: number, vol: number, from: number, to?: number) => {
   const e = engine();
@@ -155,112 +110,137 @@ const breath = (at: number, dur: number, vol: number, from: number, to?: number)
   src.start(t);
 };
 
-/** graus de uma escala pentatônica: sobe sem nunca soar tenso */
-const climb = [0, 2, 4, 7, 9];
+/** sino de vidro: tom puro com um harmônico bem fraco, ataque macio e cauda curta */
+const bell = (freq: number, at: number, dur = 0.3, vol = 0.12) => {
+  const e = engine();
+  if (!e) return;
+  const t = e.ctx.currentTime + at;
+  const partials: [number, number, number][] = [
+    [1, 1, dur],
+    [2, 0.07, dur * 0.4],
+  ];
+  for (const [ratio, level, d] of partials) {
+    const osc = e.ctx.createOscillator();
+    const gain = e.ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq * ratio;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(vol * level, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    osc.connect(gain);
+    gain.connect(e.out);
+    gain.connect(e.room);
+    osc.start(t);
+    osc.stop(t + d + 0.05);
+  }
+};
+
+// notas usadas nas melodias (Hz)
+const N = {
+  G3: 196, C4: 261.6, E4: 329.6, G4: 392, A4: 440,
+  C5: 523.3, D5: 587.3, E5: 659.3, G5: 784, A5: 880, C6: 1046.5, D6: 1174.7, E6: 1318.5,
+};
+
+/** a cada acerto seguido o som sobe um pouco, sem passar de um tom e meio */
+const climb = [1, 1.06, 1.122, 1.19];
 
 export const sfx = {
-  /** toque em opção ou botão: um toque de madeira, quase só tátil */
+  /** toque em opção ou botão: um ponto de som, quase só tátil */
   tap: () => {
-    breath(0, 0.03, 0.09, 1500);
-    mallet(G4, 0, 0.09, 0.11);
+    bell(N.G5, 0, 0.06, 0.1);
   },
 
-  /** acerto: duas teclas de marimba subindo; sobe um grau a cada acerto seguido */
+  /** acerto: duas notas puras subindo, curtas e discretas */
   correct: (combo = 1) => {
-    const up = climb[Math.min(combo - 1, climb.length - 1)] ?? 0;
-    mallet(C4 + up, 0, 0.35, 0.2);
-    mallet(G4 + up, 0.09, 0.6, 0.2);
-    pad([C4 + up, G4 + up], 0, 0.6, 0.03);
-    if (combo >= 3) mallet(C5 + up, 0.2, 0.7, 0.14);
+    const k = climb[Math.min(combo - 1, climb.length - 1)] ?? 1;
+    bell(N.G5 * k, 0, 0.16, 0.12);
+    bell(N.C6 * k, 0.12, 0.28, 0.12);
+    if (combo >= 3) bell(N.E6 * k, 0.24, 0.3, 0.07);
   },
 
-  /** erro: duas teclas graves descendo, sem buzina nem susto */
+  /** erro: dois tons graves e curtos */
   wrong: () => {
-    mallet(E4, 0, 0.3, 0.16);
-    mallet(A3, 0.13, 0.55, 0.18);
+    bell(N.G3, 0, 0.2, 0.2);
+    bell(N.G3 * 0.84, 0.19, 0.3, 0.2);
   },
 
-  /** moeda: duas teclas curtas e um toque de chocalho */
+  /** moeda: duas notas rápidas */
   coin: () => {
-    mallet(E5, 0, 0.18, 0.13);
-    mallet(G5, 0.08, 0.45, 0.13);
-    breath(0, 0.05, 0.03, 2400);
+    bell(N.E5, 0, 0.1, 0.1);
+    bell(N.A5, 0.08, 0.3, 0.1);
   },
 
   /** balão de conversa e pequenos destaques */
   pop: () => {
-    mallet(A4, 0, 0.2, 0.16);
+    bell(N.A4, 0, 0.12, 0.1);
   },
 
   /** entrada em uma lição ou tela: um sopro que abre */
   whoosh: () => {
-    breath(0, 0.38, 0.05, 280, 1500);
-    pad([C4, G4], 0, 0.45, 0.025);
+    breath(0, 0.34, 0.4, 280, 1400);
   },
 
   /** algo foi liberado */
   unlock: () => {
-    mallet(G4, 0, 0.25, 0.15);
-    mallet(C5, 0.1, 0.5, 0.15);
+    bell(N.E5, 0, 0.14, 0.11);
+    bell(N.A5, 0.11, 0.32, 0.11);
   },
 
-  /** fim de lição: frase de marimba sobre um acorde, de acordo com o farol */
+  /** a chama acende: sopro grave que sobe e uma nota */
+  ignite: () => {
+    breath(0, 0.9, 0.07, 180, 1100);
+    pad([-9, -2], 0.1, 1.1, 0.035);
+    bell(N.C5, 0.55, 0.5, 0.1);
+    bell(N.G5, 0.68, 0.7, 0.09);
+  },
+
+  /** fim de lição: frase curta, de cerca de um segundo e meio */
   finish: (sinal: "verde" | "amarelo" | "vermelho") => {
     if (sinal === "vermelho") {
-      // incentivo curto e acolhedor
-      pad([A3, E4], 0, 0.9, 0.04);
-      mallet(A3, 0, 0.4, 0.16);
-      mallet(C4, 0.2, 0.7, 0.16);
+      bell(N.G4, 0, 0.3, 0.12);
+      bell(N.C5, 0.18, 0.55, 0.12);
       return;
     }
-    thump(0);
-    pad([C4, E4, G4], 0, sinal === "verde" ? 2.4 : 1.4, 0.045);
-    mallet(G4, 0.02, 0.3, 0.18);
-    mallet(C5, 0.16, 0.3, 0.18);
-    mallet(E5, 0.3, 0.55, 0.18);
+    pad([-9, -5, -2], 0, sinal === "verde" ? 1.5 : 1.0, 0.03);
+    bell(N.C5, 0, 0.2, 0.11);
+    bell(N.E5, 0.12, 0.2, 0.11);
+    bell(N.G5, 0.24, 0.3, 0.11);
     if (sinal === "amarelo") {
-      mallet(C5, 0.5, 0.9, 0.14);
+      bell(N.E5, 0.44, 0.6, 0.1);
       return;
     }
-    // verde: a frase continua e resolve no acorde
-    mallet(G5, 0.46, 0.5, 0.17);
-    mallet(E5, 0.72, 0.3, 0.14);
-    mallet(G5, 0.86, 0.3, 0.14);
-    thump(1.04, 0.16);
-    pad([C4, G4, D5], 1.04, 1.6, 0.04);
-    mallet(C5, 1.04, 1.3, 0.17);
-    mallet(E5, 1.04, 1.3, 0.14);
-    mallet(G5, 1.1, 1.3, 0.12);
+    bell(N.C6, 0.4, 0.3, 0.11);
+    bell(N.A5, 0.58, 0.18, 0.09);
+    bell(N.C6, 0.72, 0.8, 0.11);
+    bell(N.E5, 0.72, 0.8, 0.08);
+    bell(N.G5, 0.72, 0.8, 0.08);
   },
 
-  /** subir de nível ou de divisão: arpejo subindo sobre um acorde */
+  /** subir de nível ou de divisão */
   levelUp: () => {
-    [C4, E4, G4, C5, E5].forEach((n, i) => mallet(n, i * 0.085, 0.4, 0.16));
-    thump(0.44, 0.18);
-    pad([C4, G4, E5], 0.44, 1.6, 0.045);
-    mallet(G5, 0.44, 1.2, 0.15);
-    mallet(C5, 0.44, 1.2, 0.13);
+    pad([-9, -2, 7], 0.3, 1.2, 0.03);
+    [N.C5, N.E5, N.G5, N.C6].forEach((f, i) => bell(f, i * 0.09, 0.25, 0.11));
+    bell(N.E6, 0.4, 0.9, 0.08);
+    bell(N.C6, 0.4, 0.9, 0.09);
+    bell(N.G5, 0.4, 0.9, 0.08);
   },
 
   /** presente: batidas de madeira, com a expectativa subindo */
   giftShake: () => {
     for (let i = 0; i < 6; i++) {
-      breath(i * 0.17, 0.06, 0.06, 1300 + (i % 2) * 400);
-      mallet(C4 + (i % 2) * 2, i * 0.17, 0.09, 0.07);
+      breath(i * 0.17, 0.05, 0.05, 1100 + (i % 2) * 300);
+      bell(N.C4 * (1 + (i % 2) * 0.12), i * 0.17, 0.07, 0.07);
     }
-    pad([C4, G4], 0.1, 1.05, 0.03);
-    breath(0.35, 0.75, 0.035, 250, 1300);
+    breath(0.35, 0.75, 0.03, 250, 1200);
   },
 
-  /** presente: abre com uma batida e uma frase curta que resolve */
+  /** presente: abre com um sopro e uma frase curta que resolve */
   giftOpen: () => {
-    thump(0, 0.24);
-    breath(0, 0.3, 0.05, 400, 1800);
-    pad([C4, E4, G4], 0, 1.9, 0.05);
-    [G4, C5, E5, G5].forEach((n, i) => mallet(n, 0.04 + i * 0.09, 0.4, 0.17));
-    thump(0.56, 0.14);
-    mallet(C5, 0.56, 1.3, 0.16);
-    mallet(E5, 0.56, 1.3, 0.14);
-    mallet(G5, 0.62, 1.3, 0.12);
+    breath(0, 0.3, 0.05, 400, 1600);
+    pad([-9, -5, -2], 0, 1.4, 0.035);
+    [N.G4, N.C5, N.E5, N.G5].forEach((f, i) => bell(f, 0.03 + i * 0.085, 0.22, 0.11));
+    bell(N.C6, 0.42, 0.9, 0.11);
+    bell(N.E5, 0.42, 0.9, 0.08);
+    bell(N.G5, 0.42, 0.9, 0.08);
   },
 };

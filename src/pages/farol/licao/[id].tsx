@@ -2,6 +2,7 @@ import type { NextPage } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
+import dayjs from "dayjs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findLesson, lessonListOf } from "~/farol/content";
 import {
@@ -131,6 +132,10 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
   };
   const [summary, setSummary] = useState<Summary | null>(null);
   const [celebrating, setCelebrating] = useState(false);
+  // pausa antes da rodada de correção e etapa da chama antes do resumo
+  const [reviewIntro, setReviewIntro] = useState(false);
+  const [chamaSeen, setChamaSeen] = useState(false);
+  const [gain, setGain] = useState(0);
   const startedAt = useRef(Date.now());
   // erros e acertos parciais por questão (para a ajuda nas repetições)
   const errorCount = useRef<Record<string, number>>({});
@@ -151,6 +156,12 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
       setCombo(nextCombo);
       setBestCombo((b) => Math.max(b, nextCombo));
       if (nextCombo >= 3) setComboXp((x) => x + 1);
+      // faíscas só contam para o que foi acertado de primeira
+      setGain(
+        missed.has(questionId(current))
+          ? 0
+          : (2 + (nextCombo >= 3 ? 1 : 0)) * (isChallenge ? 2 : 1),
+      );
       setPraiseText(
         nextCombo >= 3
           ? `${nextCombo} seguidas! 🔥`
@@ -173,7 +184,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
       ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, current, answer, combo]);
+  }, [status, current, answer, combo, missed]);
 
   const finish = useCallback(() => {
     const firstTry = total - missed.size;
@@ -206,8 +217,14 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     // finishLesson já deixou o aviso "pendente"; tenta enviar agora
     if (trailJustCompleted) void notifyGestorTrailCompleted();
 
-    sounds.finish(sinalDaPrecisao(accuracy));
-    if (levelAfter.index > levelBefore) setTimeout(() => sounds.levelUp(), 2300);
+    const leveledUp = levelAfter.index > levelBefore;
+    if (ctxAfter.streak > ctxBefore.streak) {
+      // primeiro a chama acende; a fanfarra do resultado fica para o resumo
+      setTimeout(() => sounds.ignite(), 450);
+    } else {
+      sounds.finish(sinalDaPrecisao(accuracy));
+      if (leveledUp) setTimeout(() => sounds.levelUp(), 2300);
+    }
     window.scrollTo(0, 0);
     setSummary({
       xp,
@@ -235,12 +252,42 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     setPos(nextPos);
     setAnswer(initialAnswer(queue[nextPos]!.question, queue[nextPos]!.help));
     setStatus("answering");
+    // acabou a primeira passada: avisa que agora é a rodada de correção
+    if (nextPos === total) {
+      sounds.whoosh();
+      setReviewIntro(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, solved, total, finish, pos, queue]);
+
+  const closeChama = () => {
+    if (!summary) return;
+    setChamaSeen(true);
+    window.scrollTo(0, 0);
+    sounds.finish(sinalDaPrecisao(summary.accuracy));
+    if (summary.levelUp) setTimeout(() => sounds.levelUp(), 2300);
+  };
+  const showChama =
+    !!summary && !chamaSeen && summary.streakAfter > summary.streakBefore;
 
   // Atalhos de teclado: Enter verifica/continua; 1–4 escolhem opções
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (showChama) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          closeChama();
+        }
+        return;
+      }
       if (summary || quitOpen) return;
+      if (reviewIntro) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          setReviewIntro(false);
+        }
+        return;
+      }
       if (!started) {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -267,7 +314,8 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [status, check, next, current, summary, quitOpen, started]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, check, next, current, summary, quitOpen, started, reviewIntro, showChama]);
 
   if (summary && celebrating) return <Parabens />;
 
@@ -305,6 +353,38 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     );
   }
 
+  if (summary && showChama) {
+    return <ChamaStep before={summary.streakBefore} after={summary.streakAfter} onContinue={closeChama} />;
+  }
+
+  if (reviewIntro) {
+    const pending = queue.length - pos;
+    return (
+      <div className="relative mx-auto flex min-h-screen max-w-lg flex-col overflow-hidden px-4 py-8 sm:py-10">
+        <div aria-hidden className="vd-aura vd-aura-ouro left-[-25%] top-[18%] h-72 w-72" />
+        <div aria-hidden className="vd-aura vd-aura-rosa right-[-30%] top-[42%] h-72 w-72" />
+        <div className="vd-stagger relative flex grow flex-col items-center justify-center gap-5 text-center">
+          <Faroldo className="vd-hop h-24 w-24" mood="atento" />
+          <div>
+            <Eyebrow className="text-farol-warn">Rodada de correção</Eyebrow>
+            <h1 className="mt-2 font-display text-3xl font-extrabold leading-tight tracking-tight">
+              {pending === 1 ? "Falta só uma situação" : `Faltam ${pending} situações`}
+            </h1>
+          </div>
+          <p className="max-w-sm text-farol-muted">
+            Vamos rever o que escapou. O que você já acertou fica marcado: é só
+            completar o que falta.
+          </p>
+        </div>
+        <footer className="relative mt-8">
+          <Button className="w-full" onClick={() => setReviewIntro(false)} autoFocus>
+            Continuar
+          </Button>
+        </footer>
+      </div>
+    );
+  }
+
   if (summary) {
     return (
       <LessonSummary
@@ -330,11 +410,12 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
         </button>
         <div className="relative grow">
           <div key={solved} className={solved > 0 ? "vd-glow" : ""}>
-            <ProgressBar value={solved / total} className="h-4" />
+            {/* em sequência de acertos a barra vira ouro */}
+            <ProgressBar value={solved / total} className="h-4" color={combo >= 3 ? "#f5b331" : "#ff0084"} />
           </div>
           {combo >= 3 && (
-            <span key={combo} className="vd-pop absolute -top-6 right-0 font-num text-sm font-extrabold text-farol-warn">
-              🔥 combo x{combo}
+            <span key={combo} className="vd-combo absolute -top-7 right-0 flex items-center gap-1 rounded-full px-2.5 py-0.5 font-num text-xs font-black uppercase tracking-wider text-farol-lamp">
+              <FlameIcon className="h-3.5 w-3.5" /> Combo x{combo}
             </span>
           )}
         </div>
@@ -413,6 +494,11 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
                   </Eyebrow>
                   <p className={`font-display text-xl font-extrabold leading-tight tracking-tight ${status === "right" ? "text-farol-ok" : "text-farol-bad"}`}>
                     {status === "right" ? praiseText : "Essa não foi a melhor escolha. Veja o porquê:"}
+                    {status === "right" && gain > 0 && (
+                      <span className="vd-float ml-2 inline-flex items-center gap-0.5 align-middle font-num text-sm font-black text-farol-accent">
+                        <XpIcon className="h-4 w-4" />+{gain}
+                      </span>
+                    )}
                   </p>
                   {status === "wrong" && (
                     <p className="mt-1 font-semibold text-farol-ink">
@@ -464,6 +550,88 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
 
 /* ------------------------------ Telas finais ------------------------------ */
 
+const weekLetters = ["S", "T", "Q", "Q", "S", "S", "D"];
+
+/** Etapa da chama: o dia de hoje acende e o contador vira para o novo número */
+const ChamaStep = ({
+  before,
+  after,
+  onContinue,
+}: {
+  before: number;
+  after: number;
+  onContinue: () => void;
+}) => {
+  const activeDays = useFarolStore((s) => s.activeDays);
+  const frozenDays = useFarolStore((s) => s.frozenDays);
+  const now = dayjs();
+  const monday = now.subtract((now.day() + 6) % 7, "day");
+  return (
+    <div className="relative mx-auto flex min-h-screen max-w-lg flex-col overflow-hidden px-4 py-8 text-center sm:py-10">
+      <div aria-hidden className="vd-aura vd-aura-ouro left-1/2 top-[14%] -ml-40 h-80 w-80" />
+      <div className="relative flex grow flex-col items-center justify-center gap-5">
+        <Eyebrow className="text-farol-warn">Lição concluída · chama acesa</Eyebrow>
+        <div className="relative flex h-44 w-44 items-center justify-center">
+          <div aria-hidden className="vd-ember absolute inset-4 rounded-full" />
+          <FlameIcon className="vd-ignite relative h-40 w-40" />
+        </div>
+        <div
+          className="vd-roll relative h-[4.5rem] overflow-hidden font-num text-7xl font-black tabular-nums leading-[4.5rem]"
+          role="status"
+          aria-label={`${after} ${after === 1 ? "dia" : "dias"} de chama`}
+        >
+          <div className="vd-roll-track">
+            <span className="block text-farol-muted">{before}</span>
+            <span className="vd-gold block">{after}</span>
+          </div>
+        </div>
+        <p className="font-display text-xl font-extrabold tracking-tight">
+          {after === 1 ? "dia de chama acesa" : "dias de chama acesa"}
+        </p>
+        <ol className={`${card} flex w-full justify-between gap-1 p-4`}>
+          {weekLetters.map((letter, i) => {
+            const date = monday.add(i, "day");
+            const key = date.format("YYYY-MM-DD");
+            const isToday = date.isSame(now, "day");
+            const done = activeDays.includes(key);
+            const frozen = frozenDays.includes(key);
+            return (
+              <li key={key} className="flex flex-1 flex-col items-center gap-1.5">
+                <span className={`text-xs font-semibold ${isToday ? "text-farol-warn" : "text-farol-muted"}`}>
+                  {letter}
+                </span>
+                <span
+                  className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                    isToday
+                      ? "vd-day-on"
+                      : done
+                        ? "bg-farol-warn-soft"
+                        : frozen
+                          ? "bg-farol-ok-soft"
+                          : "bg-farol-surface2"
+                  }`}
+                >
+                  {(done || isToday) && <FlameIcon className="h-5 w-5" />}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+        <p className="max-w-xs text-sm text-farol-muted">
+          {after === 1
+            ? "Primeiro dia aceso. Volte amanhã para manter a chama."
+            : "Um pouco por dia vale mais que muito de vez em quando."}
+        </p>
+      </div>
+      <footer className="relative mt-8">
+        <Button className="w-full" onClick={onContinue} autoFocus>
+          Continuar
+        </Button>
+      </footer>
+    </div>
+  );
+};
+
 const StatCard = ({ label, value, tone }: { label: string; value: ReactNode; tone: string }) => (
   <div className={`${card} flex-1 px-2 py-3`}>
     <Eyebrow>{label}</Eyebrow>
@@ -508,7 +676,6 @@ const LessonSummary = ({
   const info = sinalInfo[sinal];
   const mins = Math.floor(summary.seconds / 60);
   const secs = String(summary.seconds % 60).padStart(2, "0");
-  const streakGrew = summary.streakAfter > summary.streakBefore;
   return (
     <div className="relative mx-auto flex min-h-screen max-w-lg flex-col overflow-hidden px-4 py-8 text-center sm:py-10">
       {sinal !== "vermelho" && <Confetti kind="rain" count={sinal === "verde" ? 90 : 40} />}
@@ -582,11 +749,6 @@ const LessonSummary = ({
           {summary.bestCombo >= 3 && (
             <Row className="bg-farol-accent-soft text-farol-accent">
               <XpIcon className="h-6 w-6" /> Melhor combo: {summary.bestCombo} seguidas
-            </Row>
-          )}
-          {streakGrew && (
-            <Row className="bg-farol-warn-soft text-farol-warn">
-              <FlameIcon className="h-6 w-6" /> Chama acesa há {summary.streakAfter} {summary.streakAfter === 1 ? "dia" : "dias"}!
             </Row>
           )}
           {summary.levelUp && (
