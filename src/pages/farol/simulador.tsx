@@ -1,9 +1,10 @@
 import type { NextPage } from "next";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { matchSpeech, useVoz } from "~/farol/voz";
 import { Avatar } from "~/farol/components/Avatar";
 import { Confetti, CountUp } from "~/farol/components/Celebrate";
 import { FarolLayout } from "~/farol/components/FarolLayout";
-import { CloseIcon, CoinIcon, XpIcon } from "~/farol/components/Icons";
+import { CloseIcon, CoinIcon, MicIcon, SpeakerIcon, XpIcon } from "~/farol/components/Icons";
 import {
   Button,
   Eyebrow,
@@ -24,7 +25,7 @@ import {
 } from "~/farol/simulador";
 import { useFarolStore } from "~/farol/store";
 
-type Message = { from: "cliente" | "eu"; text: string };
+type Message = { from: "cliente" | "eu"; text: string; voz?: boolean };
 
 const shuffled = (n: number) => {
   const a = Array.from({ length: n }, (_, i) => i);
@@ -163,31 +164,46 @@ const Chat = ({
   const orders = useMemo(() => scenario.rounds.map((r) => shuffled(r.options.length)), [scenario]);
   const endRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const voz = useVoz();
+  // ler as mensagens do cliente em voz alta assim que chegam
+  const [autoVoz, setAutoVoz] = useState(false);
+  // o que o vendedor falou e a resposta em que a fala foi encaixada
+  const [spoken, setSpoken] = useState<{ text: string; index: number; sure: boolean } | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
-  }, [messages, typing, round]);
+  }, [messages, typing, round, spoken, voz.listening, voz.partial]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const current = scenario.rounds[round];
   const finished = choices.length === scenario.rounds.length;
 
-  const choose = (optionIndex: number) => {
+  const choose = (optionIndex: number, saidText?: string) => {
     if (typing || !current) return;
     const option = current.options[optionIndex]!;
     const nextChoices = [...choices, optionIndex];
     sounds.pop();
-    setMessages((m) => [...m, { from: "eu", text: option.text }]);
+    setSpoken(null);
+    // respondeu falando: a conversa mostra o que ele disse de verdade
+    setMessages((m) => [...m, { from: "eu", text: saidText ?? option.text, voz: !!saidText }]);
     setChoices(nextChoices);
     setTyping(true);
     timers.current.push(
       setTimeout(() => {
         setMessages((m) => [...m, { from: "cliente", text: option.reply }]);
+        if (autoVoz) voz.speak(option.reply);
         setTyping(false);
         if (round + 1 < scenario.rounds.length) setRound(round + 1);
         else timers.current.push(setTimeout(() => onDone(nextChoices), 1300));
       }, 1100),
     );
+  };
+
+  const listen = () => {
+    if (!current) return;
+    sounds.tap();
+    const options = current.options.map((o) => o.text);
+    voz.startListening((text) => setSpoken({ text, ...matchSpeech(text, options) }));
   };
 
   return (
@@ -205,6 +221,24 @@ const Chat = ({
             {typing ? "digitando…" : scenario.cliente.empresa}
           </p>
         </div>
+        {voz.canSpeak && (
+          <button
+            onClick={() => {
+              const on = !autoVoz;
+              setAutoVoz(on);
+              if (!on) return voz.stopSpeaking();
+              const last = [...messages].reverse().find((m) => m.from === "cliente");
+              if (last) voz.speak(last.text);
+            }}
+            aria-pressed={autoVoz}
+            aria-label={autoVoz ? "Parar de ler as mensagens do cliente em voz alta" : "Ler as mensagens do cliente em voz alta"}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
+              autoVoz ? "border-farol-accent bg-farol-accent-soft text-farol-accent" : "border-farol-line text-farol-muted hover:text-farol-ink"
+            }`}
+          >
+            <SpeakerIcon className="h-5 w-5" off={!autoVoz} />
+          </button>
+        )}
         <span className="shrink-0 font-num text-sm font-extrabold tabular-nums text-farol-muted">
           {Math.min(choices.length + 1, scenario.rounds.length)}/{scenario.rounds.length}
         </span>
@@ -230,11 +264,23 @@ const Chat = ({
                 <span className="sr-only">{scenario.cliente.nome}: </span>
                 {m.text}
               </p>
+              {voz.canSpeak && (
+                <button
+                  onClick={() => (voz.speaking === m.text ? voz.stopSpeaking() : voz.speak(m.text))}
+                  aria-label={voz.speaking === m.text ? "Parar o áudio" : "Ouvir esta mensagem"}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${
+                    voz.speaking === m.text ? "vd-pulse bg-farol-accent text-white" : "bg-farol-surface2 text-farol-muted hover:text-farol-ink"
+                  }`}
+                >
+                  <SpeakerIcon className="h-4 w-4" />
+                </button>
+              )}
             </div>
           ) : (
             <div key={i} className="vd-in flex max-w-[85%] items-end gap-2 self-end">
               <p className="rounded-2xl rounded-br-md bg-farol-accent px-4 py-2.5 text-white">
                 <span className="sr-only">Você: </span>
+                {m.voz && <MicIcon className="mr-1.5 inline h-4 w-4 align-[-2px] opacity-80" />}
                 {m.text}
               </p>
               <Avatar config={avatar} className="h-8 w-8" label="" />
@@ -260,14 +306,74 @@ const Chat = ({
           <p className="py-3 text-center text-sm text-farol-muted">Fechando a conversa…</p>
         ) : (
           <>
-            <Eyebrow>Como você responde?</Eyebrow>
-            <div className="mt-2 flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <Eyebrow>{spoken ? "Você falou" : voz.listening ? "Ouvindo você…" : "Como você responde?"}</Eyebrow>
+              {voz.canListen && !spoken && (
+                <button
+                  onClick={voz.listening ? voz.stopListening : listen}
+                  disabled={typing}
+                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[.09em] transition disabled:opacity-40 ${
+                    voz.listening ? "vd-pulse bg-farol-bad text-white" : "bg-farol-accent-soft text-farol-accent hover:brightness-125"
+                  }`}
+                >
+                  <MicIcon className="h-4 w-4" />
+                  {voz.listening ? "Concluir" : "Responder falando"}
+                </button>
+              )}
+            </div>
+            {voz.listening && (
+              <p className="mt-2 min-h-[3rem] rounded-2xl border border-dashed border-farol-accent/60 bg-farol-bg px-4 py-3 text-sm" aria-live="polite">
+                {voz.partial || <span className="text-farol-muted">Fale como você responderia ao cliente. Toque em “Concluir” quando terminar.</span>}
+              </p>
+            )}
+            {voz.listenError && !voz.listening && !spoken && (
+              <p className="mt-2 text-xs text-farol-warn" role="status">
+                {voz.listenError === "negado"
+                  ? "O microfone não foi liberado. Libere o acesso no navegador ou toque em uma das respostas."
+                  : voz.listenError === "silencio"
+                    ? "Não ouvi nada. Tente de novo mais perto do microfone ou toque em uma das respostas."
+                    : "A transcrição não está disponível neste navegador. Toque em uma das respostas."}
+              </p>
+            )}
+            {spoken && current && (
+              <div className="vd-in mt-2 flex flex-col gap-2">
+                <p className="rounded-2xl bg-farol-accent-soft px-4 py-3 text-sm">“{spoken.text}”</p>
+                {spoken.sure ? (
+                  <>
+                    <p className="text-xs text-farol-muted">
+                      Entendi como a resposta abaixo. É isso?
+                    </p>
+                    <p className="rounded-2xl border border-farol-accent bg-farol-bg px-4 py-3 text-sm">
+                      {current.options[spoken.index]!.text}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button className="flex-1 !px-3 !py-2.5 text-sm" onClick={() => choose(spoken.index, spoken.text)}>
+                        Enviar
+                      </Button>
+                      <Button variant="ghost" className="flex-1 !px-3 !py-2.5 text-sm" onClick={() => setSpoken({ ...spoken, sure: false })}>
+                        Não é isso
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-farol-warn">
+                    Toque na resposta que mais se parece com o que você falou, ou grave de novo.
+                  </p>
+                )}
+                {!spoken.sure && (
+                  <button onClick={() => setSpoken(null)} className="self-start text-xs font-semibold uppercase tracking-[.09em] text-farol-accent">
+                    ↻ Gravar de novo
+                  </button>
+                )}
+              </div>
+            )}
+            <div className={`mt-2 flex-col gap-2 ${voz.listening || spoken?.sure ? "hidden" : "flex"}`}>
               {current &&
                 orders[round]!.map((optionIndex) => (
                   <button
                     key={`${round}-${optionIndex}`}
                     disabled={typing}
-                    onClick={() => choose(optionIndex)}
+                    onClick={() => choose(optionIndex, spoken?.text)}
                     className="rounded-2xl border border-b-4 border-farol-line bg-farol-bg px-4 py-3 text-left text-sm transition hover:border-farol-accent active:translate-y-0.5 disabled:opacity-40 sm:text-base"
                   >
                     {current.options[optionIndex]!.text}

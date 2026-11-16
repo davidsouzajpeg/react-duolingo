@@ -304,3 +304,11 @@
   .vd-ember { opacity: 0.6; }
   .vd-day-on { background-color: rgba(245, 179, 49, 0.28); }
 }
+
+/* voz: botão pulsando enquanto ouve ou fala */
+@keyframes vd-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 0, 132, 0.45); }
+  50% { box-shadow: 0 0 0 9px rgba(255, 0, 132, 0); }
+}
+.vd-pulse { animation: vd-pulse 1.3s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .vd-pulse { animation: none; } }

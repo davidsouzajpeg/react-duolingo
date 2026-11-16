@@ -158,3 +158,21 @@ export const MedalIcon = (props: IconProps) => (
     <path d="m12 11.8 1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3 1-2Z" fill="currentColor" />
   </svg>
 );
+
+export const MicIcon = (props: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden {...props}>
+    <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
+    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+export const SpeakerIcon = ({ off, ...props }: IconProps & { off?: boolean }) => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden {...props}>
+    <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4v-5Z" fill="currentColor" />
+    {off ? (
+      <path d="m15.5 9.5 5 5m0-5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    ) : (
+      <path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    )}
+  </svg>
+);
