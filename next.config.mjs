@@ -4,8 +4,16 @@
  */
 await import("./src/env.mjs");
 
+/**
+ * `VENDE_EXPORT=1` gera o app como arquivos estáticos (pasta `out/`), para
+ * hospedagem comum (Hostinger, por exemplo). Nesse modo não existem
+ * redirecionamentos nem idiomas do Next: quem cuida disso é
+ * `scripts/exportar.mjs`. `VENDE_BASE_PATH` serve para publicar em subpasta.
+ */
+const exportMode = process.env.VENDE_EXPORT === "1";
+
 /** @type {import("next").NextConfig} */
-const config = {
+const base = {
   reactStrictMode: true,
 
   /**
@@ -41,6 +49,7 @@ const config = {
     }));
   },
   images: {
+    unoptimized: exportMode,
     remotePatterns: [
       {
         protocol: "https",
@@ -51,4 +60,16 @@ const config = {
     ],
   },
 };
+
+const { i18n: _i18n, redirects: _redirects, ...staticBase } = base;
+
+/** @type {import("next").NextConfig} */
+const config = exportMode
+  ? {
+      ...staticBase,
+      output: "export",
+      trailingSlash: true,
+      basePath: process.env.VENDE_BASE_PATH || undefined,
+    }
+  : base;
 export default config;

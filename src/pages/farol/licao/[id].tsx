@@ -1,10 +1,10 @@
-import type { NextPage } from "next";
+import type { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findLesson, lessonListOf } from "~/farol/content";
+import { everyLesson, findLesson, lessonListOf } from "~/farol/content";
 import {
   CloseIcon,
   CoinIcon,
@@ -831,5 +831,12 @@ const LessonPage: NextPage = () => {
     </FarolShell>
   );
 };
+
+/** uma página pronta por lição: permite publicar o app como arquivos estáticos */
+export const getStaticPaths: GetStaticPaths = () => ({
+  paths: everyLesson.map(({ lesson }) => ({ params: { id: lesson.id } })),
+  fallback: false,
+});
+export const getStaticProps: GetStaticProps = () => ({ props: {} });
 
 export default LessonPage;
