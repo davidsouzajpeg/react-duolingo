@@ -1,0 +1,5 @@
+# só o index.php responde; configuração e outros arquivos ficam fechados
+<FilesMatch "^(config.*\.php|.*\.(sqlite|log|md))$">
+  Require all denied
+</FilesMatch>
+Options -Indexes

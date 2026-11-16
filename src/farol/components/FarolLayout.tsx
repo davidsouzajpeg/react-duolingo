@@ -192,7 +192,8 @@ const Onboarding = () => {
   const completeOnboarding = useFarolStore((s) => s.completeOnboarding);
   const avatar = useFarolStore((s) => s.avatar);
   const setAvatar = useFarolStore((s) => s.setAvatar);
-  const [name, setName] = useState("");
+  // com conta, o nome já vem do cadastro feito pelo gestor
+  const [name, setName] = useState(() => useFarolStore.getState().name);
   const [goal, setGoal] = useState(30);
   const goals = [
     { xp: 15, label: "Leve", desc: "1 lição por dia" },

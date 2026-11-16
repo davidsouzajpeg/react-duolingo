@@ -1,4 +1,6 @@
 import type { NextPage } from "next";
+import { TrocarSenhaForm } from "~/farol/components/Acesso";
+import { useConta } from "~/farol/conta";
 import { useState } from "react";
 import { everyLesson, linhaAtual } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
@@ -163,6 +165,8 @@ const Conquistas = () => {
         </div>
       </section>
 
+      <ContaCard />
+
       {/* Sobre o conteúdo */}
       <section id="sobre">
         <h2 className="mb-3 font-display text-xl font-extrabold tracking-tight">Sobre o conteúdo</h2>
@@ -245,3 +249,56 @@ const ConquistasPage: NextPage = () => (
 );
 
 export default ConquistasPage;
+
+/** Conta: quem está conectado, se o progresso está salvo, trocar senha e sair */
+function ContaCard() {
+  const usuario = useConta((s) => s.usuario);
+  const status = useConta((s) => s.status);
+  const salvoEm = useConta((s) => s.salvoEm);
+  const erroSync = useConta((s) => s.erroSync);
+  const semInternet = useConta((s) => s.semInternet);
+  const sair = useConta((s) => s.sair);
+  const [trocando, setTrocando] = useState(false);
+  const [trocou, setTrocou] = useState(false);
+  if (status !== "dentro" || !usuario) return null;
+  return (
+    <section className={`${card} p-5`} aria-label="Conta">
+      <Eyebrow>Conta</Eyebrow>
+      <p className="mt-2 font-semibold">
+        {usuario.nome} <span className="font-normal text-farol-muted">· {usuario.usuario}</span>
+      </p>
+      <p className={`mt-1 text-sm ${erroSync || semInternet ? "text-farol-warn" : "text-farol-muted"}`} role="status">
+        {erroSync || semInternet
+          ? "Sem conexão agora. Seu progresso fica neste aparelho e é enviado quando a internet voltar."
+          : salvoEm
+            ? "Progresso salvo na sua conta."
+            : "Seu progresso é salvo na sua conta automaticamente."}
+      </p>
+      {usuario.papel === "gestor" && (
+        <Link href="/farol/gestor" className={`mt-4 block ${buttonBase} ${buttonVariants.primary}`}>
+          Painel do gestor
+        </Link>
+      )}
+      {trocou && <p className="mt-3 text-sm font-semibold text-farol-ok">Senha alterada.</p>}
+      {trocando ? (
+        <div className="mt-4">
+          <TrocarSenhaForm
+            onDone={() => {
+              setTrocando(false);
+              setTrocou(true);
+            }}
+          />
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+          <button className="text-sm font-semibold text-farol-accent hover:underline" onClick={() => { setTrocou(false); setTrocando(true); }}>
+            Trocar senha
+          </button>
+          <button className="text-sm font-semibold text-farol-bad hover:underline" onClick={() => void sair()}>
+            Sair da conta
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}

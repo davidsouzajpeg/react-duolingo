@@ -8,14 +8,21 @@
  * direto para a pasta pública do domínio, ex.: public_html).
  */
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 
 const basePath = process.env.VENDE_BASE_PATH ?? "";
 // scripts e estilos ficam numa pasta com a data da publicação (ver next.config.mjs)
 const assetDir = `v${new Date().toISOString().replace(/\D/g, "").slice(0, 12)}`;
 execSync("npx next build", {
   stdio: "inherit",
-  env: { ...process.env, VENDE_EXPORT: "1", VENDE_ASSET_DIR: assetDir, SKIP_ENV_VALIDATION: "1" },
+  env: {
+    ...process.env,
+    VENDE_EXPORT: "1",
+    VENDE_ASSET_DIR: assetDir,
+    SKIP_ENV_VALIDATION: "1",
+    // login e progresso no servidor (servidor/api); VENDE_SEM_CONTA=1 publica sem login
+    NEXT_PUBLIC_VENDE_API: process.env.VENDE_SEM_CONTA === "1" ? "" : `${basePath}/api/index.php`,
+  },
 });
 mkdirSync(`out/${assetDir}`, { recursive: true });
 renameSync("out/_next", `out/${assetDir}/_next`);
@@ -24,6 +31,11 @@ renameSync("out/_next", `out/${assetDir}/_next`);
 for (const legacy of ["learn", "lesson", "leaderboard", "profile", "shop", "register", "forgot-password", "settings"]) {
   rmSync(`out/${legacy}`, { recursive: true, force: true });
   rmSync(`out/${legacy}.html`, { force: true });
+}
+
+// API em PHP (o config.php com as credenciais existe só no servidor)
+if (process.env.VENDE_SEM_CONTA !== "1") {
+  cpSync("servidor/api", "out/api", { recursive: true, filter: (f) => !f.endsWith("config.php") });
 }
 
 // a entrada do domínio leva direto para o app

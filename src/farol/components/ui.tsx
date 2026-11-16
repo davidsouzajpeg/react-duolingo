@@ -1,6 +1,7 @@
 import Head from "next/head";
 import type { ComponentProps, ReactNode } from "react";
 import { useEffect } from "react";
+import { Acesso } from "./Acesso";
 
 /* ------------------------------ Casca / tema ------------------------------ */
 
@@ -39,7 +40,7 @@ export const FarolShell = ({
         <link rel="stylesheet" href={FONTS_URL} />
       </Head>
       <div className="min-h-screen overflow-x-clip bg-farol-bg font-body text-farol-ink antialiased [color-scheme:dark]">
-        {children}
+        <Acesso>{children}</Acesso>
       </div>
     </>
   );
