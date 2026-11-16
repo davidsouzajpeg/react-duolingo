@@ -8,13 +8,17 @@
  * direto para a pasta pública do domínio, ex.: public_html).
  */
 import { execSync } from "node:child_process";
-import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 
 const basePath = process.env.VENDE_BASE_PATH ?? "";
+// scripts e estilos ficam numa pasta com a data da publicação (ver next.config.mjs)
+const assetDir = `v${new Date().toISOString().replace(/\D/g, "").slice(0, 12)}`;
 execSync("npx next build", {
   stdio: "inherit",
-  env: { ...process.env, VENDE_EXPORT: "1", SKIP_ENV_VALIDATION: "1" },
+  env: { ...process.env, VENDE_EXPORT: "1", VENDE_ASSET_DIR: assetDir, SKIP_ENV_VALIDATION: "1" },
 });
+mkdirSync(`out/${assetDir}`, { recursive: true });
+renameSync("out/_next", `out/${assetDir}/_next`);
 
 // páginas do projeto-base que não fazem parte do Vendê
 for (const legacy of ["learn", "lesson", "leaderboard", "profile", "shop", "register", "forgot-password", "settings"]) {
@@ -47,4 +51,5 @@ writeFileSync(
 
 if (existsSync("vende-site.zip")) rmSync("vende-site.zip");
 execSync("cd out && zip -qr ../vende-site.zip . -x '*.DS_Store'", { stdio: "inherit" });
-console.log("\nPronto: pasta out/ e vende-site.zip");
+console.log(`\nPronto: pasta out/ e vende-site.zip (arquivos em ${assetDir}/)`);
+console.log("Ao enviar arquivo por arquivo, suba as páginas .html por último.");

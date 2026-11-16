@@ -70,6 +70,11 @@ const config = exportMode
       output: "export",
       trailingSlash: true,
       basePath: process.env.VENDE_BASE_PATH || undefined,
+      // pasta de arquivos com versão: cada publicação tem endereços novos,
+      // então nenhum navegador reaproveita um arquivo antigo ou incompleto
+      assetPrefix: process.env.VENDE_ASSET_DIR
+        ? `${process.env.VENDE_BASE_PATH ?? ""}/${process.env.VENDE_ASSET_DIR}`
+        : undefined,
     }
   : base;
 export default config;
