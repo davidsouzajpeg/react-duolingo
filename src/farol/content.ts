@@ -1503,7 +1503,8 @@ const emOrdem: UnitSeed[] = [
 ].map((u, i) => ({ ...u, number: i + 1 }));
 
 /** Unidades da trilha, já na ordem e numeradas */
-export const units: Unit[] = buildUnits(emOrdem);
+const baseUnits: Unit[] = buildUnits(emOrdem);
+export const units: Unit[] = [...baseUnits];
 
 /** Linhas de treino disponíveis (hoje, uma só, com vendas e produto intercalados) */
 export const linhas: Linha[] = [
@@ -1544,3 +1545,67 @@ export const lessonListOf = (lessonId: string) =>
 
 export const findLesson = (id: string) =>
   everyLesson.find(({ lesson }) => lesson.id === id);
+
+/* ------------------- Unidades criadas pelo gestor no painel ------------------- */
+
+/** Unidade como o gestor edita e o servidor guarda */
+export type UnidadeGestor = {
+  id: string;
+  title: string;
+  description: string;
+  tema: "vendas" | "produto";
+  publicada: boolean;
+  lessons: { id: string; title: string; tip?: string; questions: Question[] }[];
+};
+
+/** mínimo de questões para uma lição entrar na trilha */
+export const MIN_QUESTOES = 3;
+
+const prontas = (u: UnidadeGestor) => u.lessons.filter((l) => l.questions.length >= MIN_QUESTOES);
+
+const montar = (lista: UnidadeGestor[], primeiroNumero: number): Unit[] =>
+  buildUnits(
+    lista.map((u, i) => ({
+      id: u.id,
+      number: primeiroNumero + i,
+      title: u.title,
+      description: u.description,
+      tema: u.tema,
+      lessons: prontas(u).map((l) => ({ id: l.id, title: l.title, tip: l.tip || undefined, questions: l.questions })),
+    })),
+  );
+
+/** inclusive rascunhos: usado só para o gestor testar uma lição antes de publicar */
+let rascunhos: { lesson: Lesson; unit: Unit }[] = [];
+
+/**
+ * Recebe as unidades do gestor e as coloca no FIM da trilha (só as publicadas
+ * e com lições completas). As listas exportadas são atualizadas no lugar, para
+ * todas as telas enxergarem o conteúdo novo.
+ */
+export const setUnidadesGestor = (lista: UnidadeGestor[]) => {
+  const publicadas = lista.filter((u) => u.publicada && prontas(u).length > 0);
+  units.splice(0, units.length, ...baseUnits, ...montar(publicadas, baseUnits.length + 1));
+  allLessons.splice(0, allLessons.length, ...lessonsOf(linhaAtual));
+  for (const linha of linhas) {
+    const alvo = lessonsByLinha[linha.id]!;
+    alvo.splice(0, alvo.length, ...lessonsOf(linha));
+  }
+  everyLesson.splice(0, everyLesson.length, ...Object.values(lessonsByLinha).flat());
+  rascunhos = montar(lista.filter((u) => prontas(u).length > 0), baseUnits.length + 1).flatMap((unit) =>
+    unit.lessons.map((lesson) => ({ lesson, unit })),
+  );
+};
+
+/** como findLesson, mas enxerga também o que ainda é rascunho */
+export const findLessonComRascunho = (id: string) =>
+  findLesson(id) ?? rascunhos.find(({ lesson }) => lesson.id === id);
+
+const idsBase = new Set(baseUnits.flatMap((u) => u.lessons.map((l) => l.id)));
+
+/**
+ * Endereço de uma lição. As da trilha original têm página própria; as criadas
+ * pelo gestor usam uma página única, porque não existem na hora de publicar o app.
+ */
+export const lessonHref = (id: string) =>
+  idsBase.has(id) ? `/farol/licao/${id}` : `/farol/praticar?id=${encodeURIComponent(id)}`;

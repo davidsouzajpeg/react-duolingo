@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import Link from "next/link";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
-import { lessonsByLinha, linhaAtual, linhas } from "~/farol/content";
+import { lessonHref, lessonsByLinha, linhaAtual, linhas } from "~/farol/content";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { Avatar } from "~/farol/components/Avatar";
 import { Confetti, CountUp } from "~/farol/components/Celebrate";
@@ -199,7 +199,7 @@ const LessonPopover = ({
         </span>
       ) : (
         <Link
-          href={`/farol/licao/${lesson.id}`}
+          href={lessonHref(lesson.id)}
           className={`block w-full ${buttonBase} ${
             status === "done" ? buttonVariants.ghost : buttonVariants.primary
           }`}

@@ -3,6 +3,7 @@ import type { NextPage } from "next";
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { EditorConteudo } from "~/farol/components/EditorConteudo";
 import { FarolLayout } from "~/farol/components/FarolLayout";
 import { Button, Eyebrow, Pill, ProgressBar, card } from "~/farol/components/ui";
 import { ApiError, api, contaAtiva, useConta } from "~/farol/conta";
@@ -34,13 +35,12 @@ type Linha = {
   estado: Estado | null;
 };
 
-const totalLicoes = everyLesson.length;
 const quando = (utc: string | null) =>
   utc ? dayjs(`${utc.replace(" ", "T")}Z`).format("DD/MM/YYYY HH:mm") : "nunca";
 
 const resumo = (l: Linha) => {
   const e = l.estado ?? {};
-  const feitas = Object.values(e.lessons ?? {}).filter((r) => (r.completions ?? 0) > 0).length;
+  const feitas = everyLesson.filter(({ lesson }) => (e.lessons?.[lesson.id]?.completions ?? 0) > 0).length;
   const respondidas = e.stats?.answered ?? 0;
   const diasSemTreinar = l.progressoEm
     ? dayjs().diff(dayjs(`${l.progressoEm.replace(" ", "T")}Z`), "day")
@@ -52,7 +52,8 @@ const resumo = (l: Linha) => {
     feitas,
     precisao: respondidas ? Math.round(((e.stats?.correct ?? 0) / respondidas) * 100) : null,
     sims: Object.keys(e.sims ?? {}).length,
-    concluiu: !!e.trailCompletedAt,
+    concluiu: everyLesson.every(({ lesson }) => (e.lessons?.[lesson.id]?.completions ?? 0) > 0),
+    total: everyLesson.length,
     diasSemTreinar,
   };
 };
@@ -123,6 +124,9 @@ const Painel = () => {
   const [usuario, setUsuario] = useState("");
   const [papel, setPapel] = useState<"vendedor" | "gestor">("vendedor");
   const [ocupado, setOcupado] = useState(false);
+  const [aba, setAba] = useState<"equipe" | "licoes">(() =>
+    typeof window !== "undefined" && window.location.hash === "#licoes" ? "licoes" : "equipe",
+  );
 
   const carregar = useCallback(() => {
     api<{ usuarios: Linha[] }>("gestor/usuarios")
@@ -184,6 +188,34 @@ const Painel = () => {
         <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight">Equipe no Vendê</h1>
       </header>
 
+      <div className="flex gap-2" role="tablist" aria-label="Seções do painel">
+        {(
+          [
+            ["equipe", "Equipe"],
+            ["licoes", "Lições"],
+          ] as const
+        ).map(([id, rotulo]) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={aba === id}
+            onClick={() => {
+              setAba(id);
+              window.history.replaceState(null, "", id === "licoes" ? "#licoes" : window.location.pathname);
+            }}
+            className={`flex-1 rounded-2xl border px-4 py-2.5 font-display font-extrabold uppercase tracking-wide transition ${
+              aba === id ? "border-farol-accent bg-farol-accent-soft text-farol-accent" : "border-farol-line text-farol-muted"
+            }`}
+          >
+            {rotulo}
+          </button>
+        ))}
+      </div>
+
+      {aba === "licoes" ? (
+        <EditorConteudo />
+      ) : (
+        <>
       <div className="grid grid-cols-3 gap-2">
         <Numero rotulo="Vendedores" valor={vendedores.length} />
         <Numero rotulo="Treinaram em 7 dias" valor={treinaram} />
@@ -229,11 +261,11 @@ const Painel = () => {
               </span>
             </button>
             <div className="mt-3">
-              <ProgressBar value={r.feitas / totalLicoes} className="h-2" />
+              <ProgressBar value={r.feitas / r.total} className="h-2" />
             </div>
             <dl className="mt-3 grid grid-cols-4 gap-2 text-center">
               {[
-                ["Lições", `${r.feitas}/${totalLicoes}`],
+                ["Lições", `${r.feitas}/${r.total}`],
                 ["Precisão", r.precisao === null ? "–" : `${r.precisao}%`],
                 ["Chama", `${r.chama}d`],
                 ["Faíscas", r.faiscas],
@@ -317,6 +349,9 @@ const Painel = () => {
           </Button>
         </form>
       </section>
+
+        </>
+      )}
 
       {confirmar && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-farol-lamp/80 sm:items-center" onClick={() => setConfirmar(null)}>

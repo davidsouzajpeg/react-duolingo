@@ -72,6 +72,11 @@ function criarTabelas(PDO $db, bool $mysql): void {
         estado $texto NOT NULL,
         atualizado_em DATETIME NOT NULL
     )$fim");
+    $db->exec("CREATE TABLE IF NOT EXISTS vende_conteudo (
+        id INT PRIMARY KEY,
+        dados $texto NOT NULL,
+        atualizado_em DATETIME NOT NULL
+    )$fim");
     $db->exec("CREATE TABLE IF NOT EXISTS vende_tentativas (
         chave VARCHAR(80) PRIMARY KEY,
         erros INT NOT NULL,
@@ -273,6 +278,43 @@ try {
                 $db->prepare('INSERT INTO vende_progresso (usuario_id, estado, atualizado_em) VALUES (?, ?, ?)')->execute([$u['id'], $json, agora()]);
             }
             responder(200, ['ok' => true]);
+        }
+
+        /* unidades criadas pelo gestor: vendedor recebe só as publicadas */
+        case 'conteudo': {
+            $u = exigirLogin($db);
+            criarTabelas($db, $mysql);
+            $linha = $db->query('SELECT dados, atualizado_em FROM vende_conteudo WHERE id = 1')->fetch();
+            $dados = $linha ? json_decode($linha['dados'], true) : null;
+            $unidades = is_array($dados['unidades'] ?? null) ? $dados['unidades'] : [];
+            if ($u['papel'] !== 'gestor') {
+                $unidades = array_values(array_filter($unidades, fn ($x) => !empty($x['publicada'])));
+            }
+            responder(200, ['unidades' => $unidades, 'atualizadoEm' => $linha['atualizado_em'] ?? null]);
+        }
+
+        case 'gestor/conteudo': {
+            exigirEscrita();
+            exigirGestor($db);
+            criarTabelas($db, $mysql);
+            $in = corpo();
+            if (!isset($in['unidades']) || !is_array($in['unidades']) || !array_is_list($in['unidades'])) erro(422, 'conteudo', 'Conteúdo inválido.');
+            // outra pessoa salvou depois que este painel foi aberto: não sobrescreve
+            $atual = $db->query('SELECT atualizado_em FROM vende_conteudo WHERE id = 1')->fetchColumn() ?: null;
+            if (($in['base'] ?? null) !== $atual) erro(409, 'conflito', 'O conteúdo foi alterado em outro aparelho. Recarregue a página antes de salvar.');
+            foreach ($in['unidades'] as $un) {
+                if (!is_array($un) || !preg_match('/^c[a-z0-9]{4,20}$/', (string) ($un['id'] ?? '')) || !is_array($un['lessons'] ?? null)) erro(422, 'conteudo', 'Unidade inválida.');
+                foreach ($un['lessons'] as $li) {
+                    if (!is_array($li) || !preg_match('/^c[a-z0-9]{4,20}-l[a-z0-9]{1,12}$/', (string) ($li['id'] ?? '')) || !is_array($li['questions'] ?? null)) erro(422, 'conteudo', 'Lição inválida.');
+                }
+            }
+            $json = json_encode(['unidades' => $in['unidades']], JSON_UNESCAPED_UNICODE);
+            if ($json === false || strlen($json) > MAX_PROGRESSO_BYTES) erro(413, 'grande_demais', 'Conteúdo grande demais.');
+            $quando = agora();
+            if ($quando === $atual) $quando = agora(1);
+            $db->prepare('DELETE FROM vende_conteudo WHERE id = 1')->execute();
+            $db->prepare('INSERT INTO vende_conteudo (id, dados, atualizado_em) VALUES (1, ?, ?)')->execute([$json, $quando]);
+            responder(200, ['ok' => true, 'atualizadoEm' => $quando]);
         }
 
         /* ------------------------------- gestor ------------------------------- */

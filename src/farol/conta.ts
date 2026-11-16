@@ -9,6 +9,7 @@
  * rápida; a versão do servidor é a que vale ao entrar.
  */
 import { create } from "zustand";
+import { type UnidadeGestor, setUnidadesGestor } from "./content";
 import { useFarolStore } from "./store";
 
 const API = process.env.NEXT_PUBLIC_VENDE_API ?? "";
@@ -64,6 +65,24 @@ const gravar = (chave: string, valor: string | null) => {
     else localStorage.setItem(chave, valor);
   } catch {
     /* navegador sem armazenamento: segue só com o servidor */
+  }
+};
+
+/* --------------------- Unidades criadas pelo gestor ----------------------- */
+
+const CONTEUDO = "vende-conteudo"; // cópia para abrir sem internet
+
+/** busca as unidades do gestor e as coloca na trilha; devolve a lista e a versão */
+export const carregarConteudo = async () => {
+  try {
+    const r = await api<{ unidades: UnidadeGestor[]; atualizadoEm: string | null }>("conteudo");
+    setUnidadesGestor(r.unidades);
+    gravar(CONTEUDO, JSON.stringify(r.unidades));
+    return r;
+  } catch (e) {
+    const guardado = ler(CONTEUDO);
+    if (guardado) setUnidadesGestor(JSON.parse(guardado) as UnidadeGestor[]);
+    throw e;
   }
 };
 
@@ -176,6 +195,7 @@ const aposEntrar = async (usuario: Usuario) => {
     useConta.setState({ status: "trocar", usuario });
     return;
   }
+  await carregarConteudo().catch(() => undefined);
   await carregarProgresso(usuario);
   useConta.setState({ status: "dentro", usuario, semInternet: false });
 };
@@ -201,6 +221,8 @@ export const useConta = create<ContaState>()((set, get) => ({
       if (e instanceof ApiError && e.status === 0 && guardado && dono) {
         const usuario = JSON.parse(guardado) as Usuario;
         if (String(usuario.id) === dono && !usuario.trocarSenha) {
+          const conteudo = ler(CONTEUDO);
+          if (conteudo) setUnidadesGestor(JSON.parse(conteudo) as UnidadeGestor[]);
           iniciarSync();
           return set({ status: "dentro", usuario, semInternet: true });
         }
@@ -225,6 +247,8 @@ export const useConta = create<ContaState>()((set, get) => ({
     await api("sair", {}).catch(() => undefined);
     gravar(CONTA, null);
     gravar(DONO, null);
+    gravar(CONTEUDO, null);
+    setUnidadesGestor([]);
     useFarolStore.getState().reset();
     set({ status: "fora", usuario: null, salvoEm: null, erroSync: false });
   },

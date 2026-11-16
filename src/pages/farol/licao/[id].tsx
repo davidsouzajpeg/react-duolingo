@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { everyLesson, findLesson, lessonListOf } from "~/farol/content";
+import { everyLesson, findLesson, findLessonComRascunho, lessonHref, lessonListOf } from "~/farol/content";
 import {
   CloseIcon,
   CoinIcon,
@@ -50,6 +50,7 @@ import {
 } from "~/farol/gamification";
 import { Avatar } from "~/farol/components/Avatar";
 import { Confetti, CountUp } from "~/farol/components/Celebrate";
+import { useConta } from "~/farol/conta";
 import { useHydrated, useSounds } from "~/farol/hooks";
 import { notifyGestorTrailCompleted } from "~/farol/notify";
 import { Parabens } from "~/farol/components/TrailEnd";
@@ -98,7 +99,16 @@ type Summary = {
 
 /* ------------------------------ Player ------------------------------------ */
 
-const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => void }) => {
+const LessonPlayer = ({
+  lesson,
+  onRestart,
+  preview = false,
+}: {
+  lesson: Lesson;
+  onRestart: () => void;
+  /** teste do gestor: joga a lição sem gravar progresso */
+  preview?: boolean;
+}) => {
   const finishLesson = useFarolStore((s) => s.finishLesson);
   const sounds = useSounds();
 
@@ -198,7 +208,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     const ctxBefore = badgeContext();
     const levelBefore = getLevel(before.xpTotal).index;
 
-    finishLesson({
+    if (!preview) finishLesson({
       lessonId: lesson.id,
       isChallenge,
       xp,
@@ -213,7 +223,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
     const ctxAfter = badgeContext();
     const levelAfter = getLevel(after.xpTotal);
     const trailJustCompleted =
-      !isTrailComplete(before.lessons) && isTrailComplete(after.lessons);
+      !preview && !isTrailComplete(before.lessons) && isTrailComplete(after.lessons);
     // finishLesson já deixou o aviso "pendente"; tenta enviar agora
     if (trailJustCompleted) void notifyGestorTrailCompleted();
 
@@ -322,13 +332,13 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
   if (!started) {
     return (
       <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8 sm:py-10">
-        <Link href="/farol" aria-label="Voltar à trilha" className="self-start text-farol-muted hover:text-farol-ink">
+        <Link href={preview ? "/farol/gestor#licoes" : "/farol"} aria-label="Voltar" className="self-start text-farol-muted hover:text-farol-ink">
           <CloseIcon className="h-7 w-7" />
         </Link>
         <div className="vd-stagger flex grow flex-col justify-center gap-5">
           <div>
             <Eyebrow className="text-farol-accent">
-              {isChallenge ? "Desafio da unidade" : "Antes de praticar"}
+              {preview ? "Teste do gestor · não conta progresso" : isChallenge ? "Desafio da unidade" : "Antes de praticar"}
             </Eyebrow>
             <h1 className="mt-2 font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
               {lesson.title}
@@ -391,6 +401,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
         summary={summary}
         lesson={lesson}
         onRestart={onRestart}
+        preview={preview}
         onCelebrate={
           summary.trailJustCompleted ? () => setCelebrating(true) : undefined
         }
@@ -537,7 +548,7 @@ const LessonPlayer = ({ lesson, onRestart }: { lesson: Lesson; onRestart: () => 
               <Button variant="primary" onClick={() => setQuitOpen(false)}>
                 Continuar treinando
               </Button>
-              <Link href="/farol" className="py-2 font-display font-extrabold uppercase tracking-wide text-farol-bad">
+              <Link href={preview ? "/farol/gestor#licoes" : "/farol"} className="py-2 font-display font-extrabold uppercase tracking-wide text-farol-bad">
                 Sair da lição
               </Link>
             </div>
@@ -659,9 +670,11 @@ const LessonSummary = ({
   lesson,
   onCelebrate,
   onRestart,
+  preview = false,
 }: {
   summary: Summary;
   lesson: Lesson;
+  preview?: boolean;
   /** última lição da trilha: "Continuar" leva à tela de parabéns */
   onCelebrate?: () => void;
   onRestart: () => void;
@@ -764,7 +777,11 @@ const LessonSummary = ({
         </div>
       </div>
       <div className="relative mt-8 flex flex-col gap-3 sm:flex-row-reverse">
-        {onCelebrate ? (
+        {preview ? (
+          <Link href="/farol/gestor#licoes" className={`flex-1 ${buttonBase} ${buttonVariants.primary}`}>
+            Voltar ao painel
+          </Link>
+        ) : onCelebrate ? (
           <button
             onClick={onCelebrate}
             autoFocus
@@ -773,7 +790,7 @@ const LessonSummary = ({
             Continuar
           </button>
         ) : nextLessonId ? (
-          <Link href={`/farol/licao/${nextLessonId}`} className={`flex-1 ${buttonBase} ${buttonVariants.primary}`}>
+          <Link href={lessonHref(nextLessonId)} className={`flex-1 ${buttonBase} ${buttonVariants.primary}`}>
             Próxima lição
           </Link>
         ) : (
@@ -781,9 +798,11 @@ const LessonSummary = ({
             Continuar
           </Link>
         )}
-        <Link href="/farol" className={`flex-1 ${buttonBase} ${buttonVariants.ghost}`}>
-          Voltar à trilha
-        </Link>
+        {!preview && (
+          <Link href="/farol" className={`flex-1 ${buttonBase} ${buttonVariants.ghost}`}>
+            Voltar à trilha
+          </Link>
+        )}
       </div>
       <button
         onClick={onRestart}
@@ -798,13 +817,15 @@ const LessonSummary = ({
 
 /* -------------------------------- Página ---------------------------------- */
 
-const LessonPage: NextPage = () => {
+/** Tela da lição; `preview` é o teste do gestor (enxerga rascunhos, não grava nada) */
+export const LessonScreen = ({ id, preview = false }: { id: string; preview?: boolean }) => {
   const router = useRouter();
   const hydrated = useHydrated();
-  const id = typeof router.query.id === "string" ? router.query.id : "";
-  const found = findLesson(id);
+  const papel = useConta((s) => s.usuario?.papel);
+  const teste = preview && papel === "gestor";
+  const found = teste ? findLessonComRascunho(id) : findLesson(id);
   const records = useFarolStore((s) => s.lessons);
-  const locked = found ? getLessonStatus(found.lesson.id, records) === "locked" : false;
+  const locked = found && !teste ? getLessonStatus(found.lesson.id, records) === "locked" : false;
   const [attempt, setAttempt] = useState(0);
 
   return (
@@ -813,6 +834,7 @@ const LessonPage: NextPage = () => {
         <LessonPlayer
           key={`${id}-${attempt}`}
           lesson={found.lesson}
+          preview={teste}
           onRestart={() => {
             window.scrollTo(0, 0);
             setAttempt((n) => n + 1);
@@ -830,6 +852,11 @@ const LessonPage: NextPage = () => {
       )}
     </FarolShell>
   );
+};
+
+const LessonPage: NextPage = () => {
+  const router = useRouter();
+  return <LessonScreen id={typeof router.query.id === "string" ? router.query.id : ""} />;
 };
 
 /** uma página pronta por lição: permite publicar o app como arquivos estáticos */
